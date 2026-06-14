@@ -1,0 +1,84 @@
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+
+class BackgroundPattern extends StatelessWidget {
+  const BackgroundPattern({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          width: double.infinity,
+          height: double.infinity,
+          child: Stack(
+            children: [
+              // Top Left Cluster
+              _buildPatternIcon(constraints, Icons.favorite, AppColors.accentPink, 0.7, 48, 0.05, 0.12, -15),
+              _buildPatternIcon(constraints, Icons.menu_book, AppColors.primaryDark, 0.6, 36, 0.18, 0.06, 35),
+              _buildPatternIcon(constraints, Icons.star_rounded, AppColors.accentYellow, 0.8, 30, 0.08, 0.28, 20),
+              _buildPatternIcon(constraints, Icons.schedule, AppColors.primary, 0.6, 44, 0.22, 0.22, -25),
+              _buildPatternIcon(constraints, Icons.lightbulb, AppColors.accentPeach, 0.7, 28, 0.32, 0.08, 15),
+
+              // Top Right Cluster
+              _buildPatternIcon(constraints, Icons.local_florist, AppColors.accentPeach, 0.7, 48, 0.08, null, 15, right: 0.15),
+              _buildPatternIcon(constraints, Icons.cloud, AppColors.primaryDark, 0.5, 40, 0.22, null, -10, right: 0.25),
+              _buildPatternIcon(constraints, Icons.auto_awesome, AppColors.accentYellow, 0.8, 32, 0.06, null, 45, right: 0.35),
+              _buildPatternIcon(constraints, Icons.filter_vintage, AppColors.accentPink, 0.6, 36, 0.30, null, -20, right: 0.08),
+              _buildPatternIcon(constraints, Icons.wb_sunny, AppColors.accentYellow, 0.6, 26, 0.15, null, 30, right: 0.05),
+
+              // Bottom Left Cluster
+              _buildPatternIcon(constraints, Icons.eco, AppColors.primaryDark, 0.6, 48, null, 0.08, 25, bottom: 0.12),
+              _buildPatternIcon(constraints, Icons.edit, AppColors.accentPink, 0.6, 38, null, 0.25, -15, bottom: 0.22),
+              _buildPatternIcon(constraints, Icons.note, AppColors.accentPeach, 0.7, 44, null, 0.30, 15, bottom: 0.05),
+              _buildPatternIcon(constraints, Icons.emoji_objects, AppColors.accentYellow, 0.7, 30, null, 0.12, -10, bottom: 0.30),
+              _buildPatternIcon(constraints, Icons.flag, AppColors.primary, 0.5, 34, null, 0.05, 5, bottom: 0.40),
+
+              // Bottom Right Cluster
+              _buildPatternIcon(constraints, Icons.local_cafe, AppColors.primary, 0.7, 48, null, null, -20, bottom: 0.18, right: 0.18),
+              _buildPatternIcon(constraints, Icons.sentiment_satisfied_alt, AppColors.accentYellow, 0.7, 38, null, null, 30, bottom: 0.08, right: 0.35),
+              _buildPatternIcon(constraints, Icons.check_circle, AppColors.primaryDark, 0.6, 44, null, null, 10, bottom: 0.28, right: 0.10),
+              _buildPatternIcon(constraints, Icons.headset, AppColors.accentPink, 0.6, 32, null, null, -15, bottom: 0.05, right: 0.10),
+              _buildPatternIcon(constraints, Icons.directions_run, AppColors.accentPeach, 0.6, 40, null, null, 20, bottom: 0.40, right: 0.05),
+
+              // Center Perimeter
+              _buildPatternIcon(constraints, Icons.calendar_month, AppColors.accentPeach, 0.6, 32, 0.38, 0.10, 45),
+              _buildPatternIcon(constraints, Icons.favorite, AppColors.accentPink, 0.6, 40, null, null, -30, bottom: 0.45, right: 0.15),
+              _buildPatternIcon(constraints, Icons.bolt, AppColors.accentYellow, 0.7, 36, 0.45, null, 15, right: 0.25),
+              _buildPatternIcon(constraints, Icons.push_pin, AppColors.primaryDark, 0.5, 30, null, 0.35, -20, bottom: 0.35),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPatternIcon(
+    BoxConstraints constraints,
+    IconData icon,
+    Color color,
+    double opacity,
+    double size,
+    double? topPos,
+    double? leftPos,
+    double rotationDegrees, {
+    double? right,
+    double? bottom,
+  }) {
+    return Positioned(
+      top: topPos != null ? constraints.maxHeight * topPos : null,
+      left: leftPos != null ? constraints.maxWidth * leftPos : null,
+      right: right != null ? constraints.maxWidth * right : null,
+      bottom: bottom != null ? constraints.maxHeight * bottom : null,
+      child: Transform.rotate(
+        angle: rotationDegrees * (math.pi / 180),
+        child: Icon(
+          icon,
+          color: color.withAlpha((255 * opacity).round()),
+          size: size,
+        ),
+      ),
+    );
+  }
+}
