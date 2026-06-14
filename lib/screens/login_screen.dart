@@ -3,6 +3,8 @@ import '../theme/app_colors.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/background_pattern.dart';
+import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -154,7 +156,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  // Forgot password action
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                                  );
                                 },
                                 child: const Text(
                                   'Forgot password?',
@@ -238,7 +242,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            // Navigate to Sign Up
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                            );
                           },
                           child: const Text(
                             'Create account',
