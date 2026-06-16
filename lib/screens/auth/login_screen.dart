@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/background_pattern.dart';
-import 'login_screen.dart';
+import '../../theme/app_colors.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/background_pattern.dart';
+import 'register_screen.dart';
+import 'forgot_password_screen.dart';
+import '../home/home_screen.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
-  final _nameController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
 
-  void _handleRegister() {
-    // Mock register logic
+  void _handleLogin() {
+    // Mock login logic
     setState(() {
       _isLoading = true;
     });
@@ -30,11 +30,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account created successfully!'),
-            backgroundColor: AppColors.primaryDark,
-          ),
+        // Navigate to Home Dashboard
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       }
     });
@@ -42,10 +40,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -78,16 +74,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Start managing your time and focus today.',
+                      'Small steps, calm days, better focus.',
                       style: TextStyle(
                         fontSize: 16,
                         color: AppColors.textSecondary,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
 
-                    // Register Card
+                    // Login Card
                     Container(
                       width: double.infinity,
                       constraints: const BoxConstraints(maxWidth: 480),
@@ -108,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const Text(
-                            'Create Account',
+                            'Welcome back',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 24,
@@ -116,25 +111,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 32),
-
-                          // Name Input
+                          const SizedBox(height: 8),
                           const Text(
-                            'Full Name',
+                            'Log in to continue your peaceful planner.',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          CustomTextField(
-                            hintText: 'John Doe',
-                            controller: _nameController,
-                            keyboardType: TextInputType.name,
-                            prefixIcon: const Icon(Icons.person_outline),
-                          ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 32),
 
                           // Email Input
                           const Text(
@@ -155,13 +141,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
 
                           // Password Input
-                          const Text(
-                            'Password',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Password',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                                  );
+                                },
+                                child: const Text(
+                                  'Forgot password?',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primaryDark,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           CustomTextField(
@@ -171,37 +177,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.visibility_off_outlined),
-                              onPressed: () {},
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Confirm Password Input
-                          const Text(
-                            'Confirm Password',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          CustomTextField(
-                            hintText: '••••••••',
-                            controller: _confirmPasswordController,
-                            obscureText: true,
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.visibility_off_outlined),
-                              onPressed: () {},
+                              onPressed: () {
+                                // Toggle password visibility (mock)
+                              },
                             ),
                           ),
                           const SizedBox(height: 32),
 
-                          // Register Button
+                          // Login Button
                           CustomButton(
-                            text: 'Sign Up',
-                            onPressed: _handleRegister,
+                            text: 'Log in',
+                            onPressed: _handleLogin,
                             isLoading: _isLoading,
                           ),
                           
@@ -230,9 +216,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           // Social Login
                           CustomButton(
-                            text: 'Sign up with Google',
+                            text: 'Continue with Google',
                             onPressed: () {},
                             isPrimary: false,
+                            // Use basic Material icon for Google for now, or text character
                             icon: const Icon(Icons.g_mobiledata, size: 32, color: AppColors.textPrimary),
                           ),
                         ],
@@ -245,7 +232,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
-                          "Already have an account? ",
+                          "Don't have an account? ",
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,
@@ -254,11 +241,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         GestureDetector(
                           onTap: () {
                             Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                              MaterialPageRoute(builder: (context) => const RegisterScreen()),
                             );
                           },
                           child: const Text(
-                            'Log in',
+                            'Create account',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,

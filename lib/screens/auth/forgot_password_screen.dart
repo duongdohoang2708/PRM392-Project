@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/background_pattern.dart';
+import '../../theme/app_colors.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/background_pattern.dart';
 import 'login_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -56,7 +56,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -92,7 +95,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         border: Border.all(color: AppColors.border),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.textPrimary.withAlpha((255 * 0.08).round()),
+                            color: AppColors.textPrimary.withAlpha(
+                              (255 * 0.08).round(),
+                            ),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -152,7 +157,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             child: GestureDetector(
                               onTap: () {
                                 Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginScreen(),
+                                  ),
                                 );
                               },
                               child: const Row(
