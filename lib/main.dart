@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
-import 'screens/splash_screen.dart';
+import 'screens/auth/splash_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/task/task_list_screen.dart';
+import 'providers/task_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,11 +15,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'TaskFlow',
-      theme: AppTheme.lightTheme,
-      debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TaskProvider()),
+      ],
+      child: MaterialApp(
+        title: 'TaskFlow',
+        theme: AppTheme.lightTheme,
+        debugShowCheckedModeBanner: false,
+        home: const SplashScreen(),
+        routes: {
+          '/home': (context) => const HomeScreen(),
+          '/task-list': (context) => const TaskListScreen(),
+        },
+      ),
     );
   }
 }
