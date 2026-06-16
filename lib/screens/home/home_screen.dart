@@ -28,7 +28,10 @@ class HomeScreen extends StatelessWidget {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
@@ -83,7 +86,10 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, {required bool showMenuIcon}) {
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context, {
+    required bool showMenuIcon,
+  }) {
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,

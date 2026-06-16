@@ -16,9 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => TaskProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => TaskProvider())],
       child: MaterialApp(
         title: 'TaskFlow',
         theme: AppTheme.lightTheme,

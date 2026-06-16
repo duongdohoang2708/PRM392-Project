@@ -29,10 +29,13 @@ class AppDrawer extends StatelessWidget {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.only(top: 60, bottom: 24, left: 24, right: 24),
-            decoration: const BoxDecoration(
-              color: AppColors.primaryLight,
+            padding: const EdgeInsets.only(
+              top: 60,
+              bottom: 24,
+              left: 24,
+              right: 24,
             ),
+            decoration: const BoxDecoration(color: AppColors.primaryLight),
             child: Row(
               children: [
                 const CircleAvatar(
@@ -66,7 +69,7 @@ class AppDrawer extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 16),
 
           // Menu Items
@@ -84,7 +87,11 @@ class AppDrawer extends StatelessWidget {
                       Navigator.pop(context); // Close drawer
                     }
                     if (activeRoute != '/home') {
-                      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/home',
+                        (route) => false,
+                      );
                     }
                   },
                 ),
@@ -159,7 +166,9 @@ class AppDrawer extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final color = isActive ? AppColors.primaryDark : AppColors.textSecondary;
-    final bgColor = isActive ? AppColors.primaryLight.withAlpha((255 * 0.3).round()) : Colors.transparent;
+    final bgColor = isActive
+        ? AppColors.primaryLight.withAlpha((255 * 0.3).round())
+        : Colors.transparent;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

@@ -4,21 +4,20 @@ import 'package:intl/intl.dart';
 import '../../models/task_model.dart';
 import 'package:provider/provider.dart';
 import '../../providers/task_provider.dart';
+import '../../screens/task/task_detail_screen.dart';
 import '../../screens/focus/focus_session_screen.dart';
 
 class TaskListItem extends StatefulWidget {
   final Task task;
 
-  const TaskListItem({
-    super.key,
-    required this.task,
-  });
+  const TaskListItem({super.key, required this.task});
 
   @override
   State<TaskListItem> createState() => _TaskListItemState();
 }
 
-class _TaskListItemState extends State<TaskListItem> with SingleTickerProviderStateMixin {
+class _TaskListItemState extends State<TaskListItem>
+    with SingleTickerProviderStateMixin {
   late bool _isCompletedLocal;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -58,7 +57,8 @@ class _TaskListItemState extends State<TaskListItem> with SingleTickerProviderSt
         _isAnimating = false;
       });
       _animationController.reset();
-    } else if (widget.task.isCompleted != oldWidget.task.isCompleted && !_isAnimating) {
+    } else if (widget.task.isCompleted != oldWidget.task.isCompleted &&
+        !_isAnimating) {
       setState(() {
         _isCompletedLocal = widget.task.isCompleted;
       });
@@ -79,7 +79,7 @@ class _TaskListItemState extends State<TaskListItem> with SingleTickerProviderSt
     });
 
     _animationController.forward();
-    
+
     // Use Future.delayed as a robust fallback to guarantee completion
     // even if Tickers are suspended or throttled by headless browsers
     Future.delayed(const Duration(milliseconds: 650), () {
@@ -128,13 +128,18 @@ class _TaskListItemState extends State<TaskListItem> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final priorityColor = _getPriorityColor();
-    
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final isOverdue = widget.task.dueDate != null &&
-        DateTime(widget.task.dueDate!.year, widget.task.dueDate!.month, widget.task.dueDate!.day).isBefore(today) &&
+    final isOverdue =
+        widget.task.dueDate != null &&
+        DateTime(
+          widget.task.dueDate!.year,
+          widget.task.dueDate!.month,
+          widget.task.dueDate!.day,
+        ).isBefore(today) &&
         !widget.task.isCompleted;
-    
+
     final timeString = _formatDate(widget.task.dueDate, isOverdue);
 
     return SizeTransition(
@@ -149,13 +154,15 @@ class _TaskListItemState extends State<TaskListItem> with SingleTickerProviderSt
             color: _isCompletedLocal ? AppColors.background : AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
-            boxShadow: _isCompletedLocal ? null : [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: _isCompletedLocal
+                ? null
+                : [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -169,9 +176,13 @@ class _TaskListItemState extends State<TaskListItem> with SingleTickerProviderSt
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _isCompletedLocal ? AppColors.primaryDark : Colors.transparent,
+                    color: _isCompletedLocal
+                        ? AppColors.primaryDark
+                        : Colors.transparent,
                     border: Border.all(
-                      color: _isCompletedLocal ? AppColors.primaryDark : AppColors.textSecondary.withValues(alpha: 0.5),
+                      color: _isCompletedLocal
+                          ? AppColors.primaryDark
+                          : AppColors.textSecondary.withValues(alpha: 0.5),
                       width: 2,
                     ),
                   ),
@@ -179,123 +190,169 @@ class _TaskListItemState extends State<TaskListItem> with SingleTickerProviderSt
                     scale: _isCompletedLocal ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.elasticOut,
-                    child: const Icon(Icons.check, size: 16, color: Colors.white),
+                    child: const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 16),
               // Content
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
-                      alignment: Alignment.centerLeft,
-                      children: [
-                        Text(
-                          widget.task.title,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: _isCompletedLocal ? AppColors.textSecondary : AppColors.textPrimary,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskDetailScreen(taskId: widget.task.id),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Stack(
+                        alignment: Alignment.centerLeft,
+                        children: [
+                          Text(
+                            widget.task.title,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: _isCompletedLocal
+                                  ? AppColors.textSecondary
+                                  : AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (_isCompletedLocal || _isAnimating)
-                          Positioned.fill(
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: TweenAnimationBuilder<double>(
-                                tween: Tween<double>(
-                                  begin: widget.task.isCompleted ? 1.0 : 0.0,
-                                  end: _isCompletedLocal ? 1.0 : 0.0,
+                          if (_isCompletedLocal || _isAnimating)
+                            Positioned.fill(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: TweenAnimationBuilder<double>(
+                                  tween: Tween<double>(
+                                    begin: widget.task.isCompleted ? 1.0 : 0.0,
+                                    end: _isCompletedLocal ? 1.0 : 0.0,
+                                  ),
+                                  duration: const Duration(milliseconds: 300),
+                                  builder: (context, value, child) {
+                                    return FractionallySizedBox(
+                                      widthFactor: value,
+                                      child: Container(
+                                        height: 1.5,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    );
+                                  },
                                 ),
-                                duration: const Duration(milliseconds: 300),
-                                builder: (context, value, child) {
-                                  return FractionallySizedBox(
-                                    widthFactor: value,
-                                    child: Container(
-                                      height: 1.5,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  );
-                                },
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Project
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.folder_outlined, size: 14, color: AppColors.textSecondary),
-                            const SizedBox(width: 4),
-                            Text(
-                              widget.task.project,
-                              style: theme.textTheme.labelMedium?.copyWith(color: AppColors.textSecondary),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 4,
-                          children: [
-                            // Priority
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.flag, size: 14, color: priorityColor),
-                                const SizedBox(width: 4),
-                                Text(
-                                  widget.task.priority,
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: priorityColor,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Project
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.folder_outlined,
+                                size: 14,
+                                color: AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                widget.task.project,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: AppColors.textSecondary,
                                 ),
-                              ],
-                            ),
-                             if (widget.task.dueDate != null)
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 4,
+                            children: [
+                              // Priority
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    _isCompletedLocal ? Icons.calendar_today : Icons.schedule,
+                                    Icons.flag,
                                     size: 14,
-                                    color: _isCompletedLocal ? AppColors.textSecondary : (isOverdue ? const Color(0xFFE57373) : AppColors.primaryDark),
+                                    color: priorityColor,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    timeString,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: _isCompletedLocal ? AppColors.textSecondary : (isOverdue ? const Color(0xFFE57373) : AppColors.primaryDark),
-                                      fontWeight: isOverdue ? FontWeight.bold : FontWeight.w600,
-                                    ),
+                                    widget.task.priority,
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: priorityColor,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                   ),
                                 ],
                               ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                              if (widget.task.dueDate != null)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _isCompletedLocal
+                                          ? Icons.calendar_today
+                                          : Icons.schedule,
+                                      size: 14,
+                                      color: _isCompletedLocal
+                                          ? AppColors.textSecondary
+                                          : (isOverdue
+                                                ? const Color(0xFFE57373)
+                                                : AppColors.primaryDark),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      timeString,
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            color: _isCompletedLocal
+                                                ? AppColors.textSecondary
+                                                : (isOverdue
+                                                      ? const Color(0xFFE57373)
+                                                      : AppColors.primaryDark),
+                                            fontWeight: isOverdue
+                                                ? FontWeight.bold
+                                                : FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
               // Star Action
               GestureDetector(
                 onTap: () {
-                  context.read<TaskProvider>().toggleTaskImportance(widget.task.id);
+                  context.read<TaskProvider>().toggleTaskImportance(
+                    widget.task.id,
+                  );
                 },
                 child: Icon(
                   widget.task.isImportant ? Icons.star : Icons.star_border,
-                  color: widget.task.isImportant ? AppColors.accentYellow : AppColors.textSecondary.withValues(alpha: 0.5),
+                  color: widget.task.isImportant
+                      ? AppColors.accentYellow
+                      : AppColors.textSecondary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(width: 12),
@@ -305,14 +362,17 @@ class _TaskListItemState extends State<TaskListItem> with SingleTickerProviderSt
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => FocusSessionScreen(taskId: widget.task.id),
+                      builder: (context) =>
+                          FocusSessionScreen(taskId: widget.task.id),
                     ),
                   );
                 },
                 child: Icon(
                   Icons.play_circle_fill,
                   size: 28,
-                  color: _isCompletedLocal ? AppColors.textSecondary.withValues(alpha: 0.5) : AppColors.primary,
+                  color: _isCompletedLocal
+                      ? AppColors.textSecondary.withValues(alpha: 0.5)
+                      : AppColors.primary,
                 ),
               ),
             ],

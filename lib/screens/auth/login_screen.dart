@@ -58,7 +58,10 @@ class _LoginScreenState extends State<LoginScreen> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -93,7 +96,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         border: Border.all(color: AppColors.border),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.textPrimary.withAlpha((255 * 0.08).round()),
+                            color: AppColors.textPrimary.withAlpha(
+                              (255 * 0.08).round(),
+                            ),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -155,7 +160,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               GestureDetector(
                                 onTap: () {
                                   Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ForgotPasswordScreen(),
+                                    ),
                                   );
                                 },
                                 child: const Text(
@@ -190,15 +198,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: _handleLogin,
                             isLoading: _isLoading,
                           ),
-                          
+
                           // Divider
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 24),
                             child: Row(
                               children: [
-                                const Expanded(child: Divider(color: AppColors.border)),
+                                const Expanded(
+                                  child: Divider(color: AppColors.border),
+                                ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
                                   child: Text(
                                     'OR',
                                     style: TextStyle(
@@ -209,7 +221,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ),
-                                const Expanded(child: Divider(color: AppColors.border)),
+                                const Expanded(
+                                  child: Divider(color: AppColors.border),
+                                ),
                               ],
                             ),
                           ),
@@ -220,7 +234,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {},
                             isPrimary: false,
                             // Use basic Material icon for Google for now, or text character
-                            icon: const Icon(Icons.g_mobiledata, size: 32, color: AppColors.textPrimary),
+                            icon: const Icon(
+                              Icons.g_mobiledata,
+                              size: 32,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ],
                       ),
@@ -241,7 +259,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         GestureDetector(
                           onTap: () {
                             Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterScreen(),
+                              ),
                             );
                           },
                           child: const Text(

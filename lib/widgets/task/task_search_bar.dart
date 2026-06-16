@@ -27,11 +27,10 @@ class TaskSearchBar extends StatelessWidget {
         },
         decoration: InputDecoration(
           hintText: 'Search tasks...',
-          hintStyle: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-          prefixIcon: const Icon(
-            Icons.search,
+          hintStyle: theme.textTheme.bodyMedium?.copyWith(
             color: AppColors.textSecondary,
           ),
+          prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,

@@ -31,16 +31,15 @@ class CustomButton extends StatelessWidget {
                 width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.textPrimary),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.textPrimary,
+                  ),
                 ),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
-                    icon!,
-                    const SizedBox(width: 8),
-                  ],
+                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
                   Text(text),
                 ],
               ),
@@ -53,9 +52,7 @@ class CustomButton extends StatelessWidget {
         foregroundColor: AppColors.textPrimary,
         minimumSize: const Size(double.infinity, 56),
         side: const BorderSide(color: AppColors.border, width: 2),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       ),
       child: isLoading
           ? const SizedBox(
@@ -63,16 +60,15 @@ class CustomButton extends StatelessWidget {
               width: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.textPrimary),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.textPrimary,
+                ),
               ),
             )
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (icon != null) ...[
-                  icon!,
-                  const SizedBox(width: 8),
-                ],
+                if (icon != null) ...[icon!, const SizedBox(width: 8)],
                 Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),

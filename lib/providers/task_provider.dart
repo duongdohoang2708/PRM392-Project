@@ -11,7 +11,7 @@ class TaskProvider with ChangeNotifier {
   void _initializeMockTasks() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     _tasks.addAll([
       Task(
         id: '1',
@@ -19,6 +19,17 @@ class TaskProvider with ChangeNotifier {
         project: 'PRM392 Mobile App',
         priority: 'High',
         dueDate: today.add(const Duration(hours: 10)),
+        notes:
+            'Read chapters 4 and 5 in the Flutter Cookbook. Implement API service and write unit tests.',
+        subTasks: [
+          SubTask(id: '1_1', title: 'Read chapters 4 and 5', isCompleted: true),
+          SubTask(
+            id: '1_2',
+            title: 'Implement API service',
+            isCompleted: false,
+          ),
+          SubTask(id: '1_3', title: 'Write unit tests', isCompleted: false),
+        ],
       ),
       Task(
         id: '2',
@@ -151,8 +162,18 @@ class TaskProvider with ChangeNotifier {
     return ['All Projects', ...projects];
   }
 
-  List<String> get availablePriorities => ['All Priorities', 'High', 'Medium', 'Low'];
-  List<String> get availableStatuses => ['All Status', 'Pending', 'Completed', 'Overdue'];
+  List<String> get availablePriorities => [
+    'All Priorities',
+    'High',
+    'Medium',
+    'Low',
+  ];
+  List<String> get availableStatuses => [
+    'All Status',
+    'Pending',
+    'Completed',
+    'Overdue',
+  ];
   List<String> get sortOptions => ['Due Date', 'Priority', 'Name'];
 
   // Filter tasks based on all active filters and search query
@@ -167,22 +188,35 @@ class TaskProvider with ChangeNotifier {
       case 'Today':
         result = _tasks.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isAtSameMomentAs(today);
         });
         break;
       case 'Tomorrow':
         result = _tasks.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isAtSameMomentAs(today.add(const Duration(days: 1)));
         });
         break;
       case 'This Week':
         result = _tasks.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
-          return tDate.isAfter(today.add(const Duration(days: 1))) && tDate.isBefore(nextWeek);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
+          return tDate.isAfter(today.add(const Duration(days: 1))) &&
+              tDate.isBefore(nextWeek);
         });
         break;
       case 'Important':
@@ -200,7 +234,11 @@ class TaskProvider with ChangeNotifier {
       case 'Overdue':
         result = _tasks.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isBefore(today) && !t.isCompleted;
         });
         break;
@@ -231,13 +269,21 @@ class TaskProvider with ChangeNotifier {
         result = result.where((t) {
           if (t.isCompleted) return false;
           if (t.dueDate == null) return true;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return !tDate.isBefore(today); // Exclude overdue tasks
         });
       } else if (_filterStatus == 'Overdue') {
         result = result.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isBefore(today) && !t.isCompleted;
         });
       }
@@ -275,38 +321,60 @@ class TaskProvider with ChangeNotifier {
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
     final nextWeek = today.add(const Duration(days: 7));
-    
+
     final tasksToFilter = filteredTasks;
 
     switch (group) {
       case 'Today':
         return tasksToFilter.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isAtSameMomentAs(today) && !t.isCompleted;
         }).toList();
       case 'Tomorrow':
         return tasksToFilter.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isAtSameMomentAs(tomorrow) && !t.isCompleted;
         }).toList();
       case 'This Week':
         return tasksToFilter.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
-          return tDate.isAfter(tomorrow) && tDate.isBefore(nextWeek) && !t.isCompleted;
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
+          return tDate.isAfter(tomorrow) &&
+              tDate.isBefore(nextWeek) &&
+              !t.isCompleted;
         }).toList();
       case 'Later':
         return tasksToFilter.where((t) {
           if (t.dueDate == null) return true;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isAtSameMomentAs(nextWeek) || tDate.isAfter(nextWeek);
         }).toList();
       case 'Overdue':
         return tasksToFilter.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isBefore(today) && !t.isCompleted;
         }).toList();
       case 'Completed':
@@ -326,20 +394,35 @@ class TaskProvider with ChangeNotifier {
       case 'Today':
         return _tasks.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isAtSameMomentAs(today) && !t.isCompleted;
         }).length;
       case 'Tomorrow':
         return _tasks.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
-          return tDate.isAtSameMomentAs(today.add(const Duration(days: 1))) && !t.isCompleted;
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
+          return tDate.isAtSameMomentAs(today.add(const Duration(days: 1))) &&
+              !t.isCompleted;
         }).length;
       case 'This Week':
         return _tasks.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
-          return tDate.isAfter(today.add(const Duration(days: 1))) && tDate.isBefore(nextWeek) && !t.isCompleted;
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
+          return tDate.isAfter(today.add(const Duration(days: 1))) &&
+              tDate.isBefore(nextWeek) &&
+              !t.isCompleted;
         }).length;
       case 'Important':
         return _tasks.where((t) => t.isImportant && !t.isCompleted).length;
@@ -352,7 +435,11 @@ class TaskProvider with ChangeNotifier {
       case 'Overdue':
         return _tasks.where((t) {
           if (t.dueDate == null) return false;
-          final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+          final tDate = DateTime(
+            t.dueDate!.year,
+            t.dueDate!.month,
+            t.dueDate!.day,
+          );
           return tDate.isBefore(today) && !t.isCompleted;
         }).length;
       case 'All':
@@ -365,7 +452,7 @@ class TaskProvider with ChangeNotifier {
   double getProjectProgress(String projectName) {
     final projectTasks = _tasks.where((t) => t.project == projectName).toList();
     if (projectTasks.isEmpty) return 0.0;
-    
+
     final completed = projectTasks.where((t) => t.isCompleted).length;
     return completed / projectTasks.length;
   }
@@ -408,7 +495,9 @@ class TaskProvider with ChangeNotifier {
   void toggleTaskCompletion(String id) {
     final index = _tasks.indexWhere((t) => t.id == id);
     if (index != -1) {
-      _tasks[index] = _tasks[index].copyWith(isCompleted: !_tasks[index].isCompleted);
+      _tasks[index] = _tasks[index].copyWith(
+        isCompleted: !_tasks[index].isCompleted,
+      );
       notifyListeners();
     }
   }
@@ -416,9 +505,29 @@ class TaskProvider with ChangeNotifier {
   void toggleTaskImportance(String id) {
     final index = _tasks.indexWhere((t) => t.id == id);
     if (index != -1) {
-      _tasks[index] = _tasks[index].copyWith(isImportant: !_tasks[index].isImportant);
+      _tasks[index] = _tasks[index].copyWith(
+        isImportant: !_tasks[index].isImportant,
+      );
       notifyListeners();
     }
+  }
+
+  void addTask(Task task) {
+    _tasks.add(task);
+    notifyListeners();
+  }
+
+  void updateTask(Task updatedTask) {
+    final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
+    if (index != -1) {
+      _tasks[index] = updatedTask;
+      notifyListeners();
+    }
+  }
+
+  void deleteTask(String id) {
+    _tasks.removeWhere((t) => t.id == id);
+    notifyListeners();
   }
 
   // Dashboard Metrics

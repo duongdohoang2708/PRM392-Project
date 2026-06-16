@@ -27,7 +27,9 @@ class ProjectsSection extends StatelessWidget {
             TextButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('View all projects coming soon')),
+                  const SnackBar(
+                    content: Text('View all projects coming soon'),
+                  ),
                 );
               },
               style: TextButton.styleFrom(
@@ -49,7 +51,8 @@ class ProjectsSection extends StatelessWidget {
             children: [
               _buildProjectCard(
                 title: 'PRM392 Mobile App',
-                taskCount: '${taskProvider.getProjectTaskCount('PRM392 Mobile App')} tasks',
+                taskCount:
+                    '${taskProvider.getProjectTaskCount('PRM392 Mobile App')} tasks',
                 progress: taskProvider.getProjectProgress('PRM392 Mobile App'),
                 color: AppColors.primaryDark,
                 bgColor: AppColors.primaryLight.withAlpha(50),
@@ -57,7 +60,8 @@ class ProjectsSection extends StatelessWidget {
               const SizedBox(width: 16),
               _buildProjectCard(
                 title: 'Learn Flutter',
-                taskCount: '${taskProvider.getProjectTaskCount('Learn Flutter')} tasks',
+                taskCount:
+                    '${taskProvider.getProjectTaskCount('Learn Flutter')} tasks',
                 progress: taskProvider.getProjectProgress('Learn Flutter'),
                 color: AppColors.accentPeach,
                 bgColor: AppColors.accentPeach.withAlpha(50),
@@ -65,7 +69,8 @@ class ProjectsSection extends StatelessWidget {
               const SizedBox(width: 16),
               _buildProjectCard(
                 title: 'Personal Goals',
-                taskCount: '${taskProvider.getProjectTaskCount('Personal Goals')} tasks',
+                taskCount:
+                    '${taskProvider.getProjectTaskCount('Personal Goals')} tasks',
                 progress: taskProvider.getProjectProgress('Personal Goals'),
                 color: AppColors.accentYellow,
                 bgColor: AppColors.accentYellow.withAlpha(50),

@@ -1,3 +1,19 @@
+class SubTask {
+  final String id;
+  final String title;
+  final bool isCompleted;
+
+  SubTask({required this.id, required this.title, this.isCompleted = false});
+
+  SubTask copyWith({String? id, String? title, bool? isCompleted}) {
+    return SubTask(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      isCompleted: isCompleted ?? this.isCompleted,
+    );
+  }
+}
+
 class Task {
   final String id;
   final String title;
@@ -6,6 +22,8 @@ class Task {
   final DateTime? dueDate;
   final bool isCompleted;
   final bool isImportant;
+  final String notes;
+  final List<SubTask> subTasks;
 
   Task({
     required this.id,
@@ -15,6 +33,8 @@ class Task {
     this.dueDate,
     this.isCompleted = false,
     this.isImportant = false,
+    this.notes = '',
+    this.subTasks = const [],
   });
 
   Task copyWith({
@@ -24,6 +44,8 @@ class Task {
     DateTime? dueDate,
     bool? isCompleted,
     bool? isImportant,
+    String? notes,
+    List<SubTask>? subTasks,
   }) {
     return Task(
       id: id,
@@ -33,6 +55,8 @@ class Task {
       dueDate: dueDate ?? this.dueDate,
       isCompleted: isCompleted ?? this.isCompleted,
       isImportant: isImportant ?? this.isImportant,
+      notes: notes ?? this.notes,
+      subTasks: subTasks ?? this.subTasks,
     );
   }
 }

@@ -47,7 +47,9 @@ class ActiveFocusSection extends StatelessWidget {
                       value: 0.65, // Mock progress
                       strokeWidth: 6,
                       backgroundColor: Colors.white.withAlpha(50),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.white,
+                      ),
                     ),
                   ),
                   const Icon(Icons.timer, color: Colors.white, size: 24),
@@ -85,7 +87,11 @@ class ActiveFocusSection extends StatelessWidget {
                     const SnackBar(content: Text('Pause timer coming soon!')),
                   );
                 },
-                icon: const Icon(Icons.pause_circle_filled, color: Colors.white, size: 40),
+                icon: const Icon(
+                  Icons.pause_circle_filled,
+                  color: Colors.white,
+                  size: 40,
+                ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),

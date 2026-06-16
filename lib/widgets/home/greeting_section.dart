@@ -9,7 +9,7 @@ class GreetingSection extends StatelessWidget {
     final hour = DateTime.now().hour;
     String greeting;
     String subtitle;
-    
+
     if (hour < 12) {
       greeting = 'Good morning,';
       subtitle = "Let's make today productive!";
@@ -26,10 +26,7 @@ class GreetingSection extends StatelessWidget {
       children: [
         Text(
           greeting,
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppColors.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 4),
         const Text(

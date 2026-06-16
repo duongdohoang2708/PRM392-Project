@@ -17,27 +17,27 @@ class TaskSortDropdowns extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-            _buildDropdownButton(
-              context: context, 
-              icon: Icons.folder_open_outlined, 
-              label: 'Project',
-              value: provider.filterProject,
-              items: provider.availableProjects,
-              onChanged: (val) {
-                if (val != null) provider.setFilterProject(val);
-              },
-            ),
-            const SizedBox(width: 8),
-            _buildDropdownButton(
-              context: context, 
-              icon: Icons.flag_outlined, 
-              label: 'Priority',
-              value: provider.filterPriority,
-              items: provider.availablePriorities,
-              onChanged: (val) {
-                if (val != null) provider.setFilterPriority(val);
-              },
-            ),
+              _buildDropdownButton(
+                context: context,
+                icon: Icons.folder_open_outlined,
+                label: 'Project',
+                value: provider.filterProject,
+                items: provider.availableProjects,
+                onChanged: (val) {
+                  if (val != null) provider.setFilterProject(val);
+                },
+              ),
+              const SizedBox(width: 8),
+              _buildDropdownButton(
+                context: context,
+                icon: Icons.flag_outlined,
+                label: 'Priority',
+                value: provider.filterPriority,
+                items: provider.availablePriorities,
+                onChanged: (val) {
+                  if (val != null) provider.setFilterPriority(val);
+                },
+              ),
             ],
           ),
         ),
@@ -46,8 +46,8 @@ class TaskSortDropdowns extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             _buildDropdownButton(
-              context: context, 
-              icon: Icons.schedule, 
+              context: context,
+              icon: Icons.schedule,
               label: 'Status',
               value: provider.filterStatus,
               items: provider.availableStatuses,
@@ -59,31 +59,40 @@ class TaskSortDropdowns extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-            Text(
-              'Sort by: ',
-              style: theme.textTheme.labelMedium?.copyWith(color: AppColors.textSecondary),
+                Text(
+                  'Sort by: ',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: provider.sortBy,
+                    icon: const Icon(
+                      Icons.expand_more,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    isDense: true,
+                    onChanged: (val) {
+                      if (val != null) {
+                        provider.setSortBy(val);
+                      }
+                    },
+                    items: ['Due Date', 'Priority', 'Name'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
-            DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: provider.sortBy,
-                icon: const Icon(Icons.expand_more, size: 16, color: AppColors.textSecondary),
-                style: theme.textTheme.labelMedium?.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.bold),
-                isDense: true,
-                onChanged: (val) {
-                  if (val != null) {
-                    provider.setSortBy(val);
-                  }
-                },
-                items: ['Due Date', 'Priority', 'Name'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
           ],
         ),
       ],
@@ -91,8 +100,8 @@ class TaskSortDropdowns extends StatelessWidget {
   }
 
   Widget _buildDropdownButton({
-    required BuildContext context, 
-    required IconData icon, 
+    required BuildContext context,
+    required IconData icon,
     required String label,
     required String value,
     required List<String> items,
@@ -116,8 +125,14 @@ class TaskSortDropdowns extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          icon: const Icon(Icons.expand_more, size: 16, color: AppColors.textSecondary),
-          style: theme.textTheme.labelMedium?.copyWith(color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.expand_more,
+            size: 16,
+            color: AppColors.textSecondary,
+          ),
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: AppColors.textPrimary,
+          ),
           isDense: true,
           onChanged: onChanged,
           items: items.map((String val) {
@@ -126,7 +141,8 @@ class TaskSortDropdowns extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (val == value) Icon(icon, size: 14, color: AppColors.primary),
+                  if (val == value)
+                    Icon(icon, size: 14, color: AppColors.primary),
                   if (val == value) const SizedBox(width: 4),
                   Text(val.startsWith('All') ? label : val),
                 ],

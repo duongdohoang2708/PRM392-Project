@@ -11,17 +11,17 @@ class UpNextTasksSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
-    
+
     // Get up to 4 upcoming tasks from Today
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     final upcomingTasks = taskProvider.tasks.where((t) {
       if (t.dueDate == null) return false;
       final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
       return tDate.isAtSameMomentAs(today) && !t.isCompleted;
     }).toList();
-        
+
     upcomingTasks.sort((a, b) {
       if (a.dueDate == null && b.dueDate == null) return 0;
       if (a.dueDate == null) return 1;
@@ -60,15 +60,18 @@ class UpNextTasksSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         if (displayTasks.isEmpty)
-           const Padding(
-             padding: EdgeInsets.symmetric(vertical: 20),
-             child: Text("No upcoming tasks. Enjoy your day!", style: TextStyle(color: AppColors.textSecondary)),
-           ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              "No upcoming tasks. Enjoy your day!",
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
         ...displayTasks.map((task) {
-           return Padding(
-             padding: const EdgeInsets.only(bottom: 12.0),
-             child: _buildTaskItem(context, task),
-           );
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: _buildTaskItem(context, task),
+          );
         }),
       ],
     );
@@ -92,15 +95,24 @@ class UpNextTasksSection extends StatelessWidget {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final isOverdue = task.dueDate != null &&
-        DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day).isBefore(today) &&
+    final isOverdue =
+        task.dueDate != null &&
+        DateTime(
+          task.dueDate!.year,
+          task.dueDate!.month,
+          task.dueDate!.day,
+        ).isBefore(today) &&
         !task.isCompleted;
-    
+
     String timeStr;
     if (task.dueDate == null) {
       timeStr = 'No due date';
     } else {
-      final tDate = DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
+      final tDate = DateTime(
+        task.dueDate!.year,
+        task.dueDate!.month,
+        task.dueDate!.day,
+      );
       if (isOverdue) {
         timeStr = 'Overdue, ${DateFormat('MMM d').format(task.dueDate!)}';
       } else if (tDate.isAtSameMomentAs(today)) {
@@ -136,10 +148,14 @@ class UpNextTasksSection extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: task.isCompleted ? AppColors.primary : AppColors.textSecondary.withAlpha(100),
+                  color: task.isCompleted
+                      ? AppColors.primary
+                      : AppColors.textSecondary.withAlpha(100),
                   width: 2,
                 ),
-                color: task.isCompleted ? AppColors.primary : Colors.transparent,
+                color: task.isCompleted
+                    ? AppColors.primary
+                    : Colors.transparent,
               ),
               child: task.isCompleted
                   ? const Icon(Icons.check, size: 16, color: Colors.white)
@@ -156,25 +172,37 @@ class UpNextTasksSection extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: task.isCompleted ? AppColors.textSecondary : AppColors.textPrimary,
-                    decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                    color: task.isCompleted
+                        ? AppColors.textSecondary
+                        : AppColors.textPrimary,
+                    decoration: task.isCompleted
+                        ? TextDecoration.lineThrough
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(
-                      task.dueDate == null ? Icons.calendar_today_outlined : Icons.schedule,
+                      task.dueDate == null
+                          ? Icons.calendar_today_outlined
+                          : Icons.schedule,
                       size: 14,
-                      color: isOverdue ? Colors.redAccent : AppColors.textSecondary,
+                      color: isOverdue
+                          ? Colors.redAccent
+                          : AppColors.textSecondary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       timeStr,
                       style: TextStyle(
                         fontSize: 13,
-                        color: isOverdue ? Colors.redAccent : AppColors.textSecondary,
-                        fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal,
+                        color: isOverdue
+                            ? Colors.redAccent
+                            : AppColors.textSecondary,
+                        fontWeight: isOverdue
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                   ],

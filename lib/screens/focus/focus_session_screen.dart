@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 
 class FocusSessionScreen extends StatelessWidget {
   final String taskId;
-  
-  const FocusSessionScreen({super.key, required this.taskId});
+  final int focusMinutes;
+  final int breakMinutes;
+  final int sessions;
+
+  const FocusSessionScreen({
+    super.key,
+    required this.taskId,
+    this.focusMinutes = 25,
+    this.breakMinutes = 5,
+    this.sessions = 1,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +30,7 @@ class FocusSessionScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Task ID: $taskId\n(Coming soon)',
+              'Task ID: $taskId\nFocus: $focusMinutes min | Break: $breakMinutes min | Sessions: $sessions\n(Coming soon)',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),

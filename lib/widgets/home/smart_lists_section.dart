@@ -39,12 +39,48 @@ class SmartListsSection extends StatelessWidget {
               crossAxisSpacing: 12,
               childAspectRatio: 2.5,
               children: [
-                _buildListFilter(context, Icons.wb_sunny_outlined, 'Today', taskProvider.getCountForFilter('Today').toString(), AppColors.accentPink),
-                _buildListFilter(context, Icons.event_outlined, 'Tomorrow', taskProvider.getCountForFilter('Tomorrow').toString(), AppColors.primary),
-                _buildListFilter(context, Icons.date_range, 'This Week', taskProvider.getCountForFilter('This Week').toString(), AppColors.accentYellow),
-                _buildListFilter(context, Icons.schedule, 'Scheduled', taskProvider.getCountForFilter('Scheduled').toString(), AppColors.primaryDark),
-                _buildListFilter(context, Icons.event_busy_outlined, 'Unscheduled', taskProvider.getCountForFilter('Unscheduled').toString(), AppColors.border),
-                _buildListFilter(context, Icons.star_outline, 'Important', taskProvider.getCountForFilter('Important').toString(), AppColors.accentPeach),
+                _buildListFilter(
+                  context,
+                  Icons.wb_sunny_outlined,
+                  'Today',
+                  taskProvider.getCountForFilter('Today').toString(),
+                  AppColors.accentPink,
+                ),
+                _buildListFilter(
+                  context,
+                  Icons.event_outlined,
+                  'Tomorrow',
+                  taskProvider.getCountForFilter('Tomorrow').toString(),
+                  AppColors.primary,
+                ),
+                _buildListFilter(
+                  context,
+                  Icons.date_range,
+                  'This Week',
+                  taskProvider.getCountForFilter('This Week').toString(),
+                  AppColors.accentYellow,
+                ),
+                _buildListFilter(
+                  context,
+                  Icons.schedule,
+                  'Scheduled',
+                  taskProvider.getCountForFilter('Scheduled').toString(),
+                  AppColors.primaryDark,
+                ),
+                _buildListFilter(
+                  context,
+                  Icons.event_busy_outlined,
+                  'Unscheduled',
+                  taskProvider.getCountForFilter('Unscheduled').toString(),
+                  AppColors.border,
+                ),
+                _buildListFilter(
+                  context,
+                  Icons.star_outline,
+                  'Important',
+                  taskProvider.getCountForFilter('Important').toString(),
+                  AppColors.accentPeach,
+                ),
               ],
             );
           },
@@ -53,7 +89,13 @@ class SmartListsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildListFilter(BuildContext context, IconData icon, String title, String count, Color iconColor) {
+  Widget _buildListFilter(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String count,
+    Color iconColor,
+  ) {
     return InkWell(
       onTap: () {
         context.read<TaskProvider>().setActiveFilter(title);
