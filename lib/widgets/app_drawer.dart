@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../providers/drawer_provider.dart';
 
 class AppDrawer extends StatelessWidget {
   final bool isPermanent;
   final String activeRoute;
+  final ValueChanged<String>? onNavigate;
 
   const AppDrawer({
     super.key,
     this.isPermanent = false,
     this.activeRoute = '/home',
+    this.onNavigate,
   });
 
   @override
@@ -23,28 +27,33 @@ class AppDrawer extends StatelessWidget {
       greeting = 'Good evening,';
     }
 
-    return Drawer(
-      backgroundColor: AppColors.surface,
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.only(
-              top: 60,
-              bottom: 24,
-              left: 24,
-              right: 24,
-            ),
-            decoration: const BoxDecoration(color: AppColors.primaryLight),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 30,
-                  backgroundColor: AppColors.primary,
-                  child: Icon(Icons.person, color: Colors.white, size: 36),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
+    final isDesktopCollapsed =
+        isPermanent ? context.watch<DrawerProvider>().isDesktopCollapsed : false;
+    final width = isDesktopCollapsed ? 88.0 : 280.0;
+
+    final drawerContent = Column(
+      children: [
+        // Header
+        Container(
+          padding: const EdgeInsets.only(
+            top: 60,
+            bottom: 24,
+            left: 24,
+            right: 24,
+          ),
+          decoration: const BoxDecoration(color: AppColors.primaryLight),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 20,
+                backgroundColor: AppColors.primary,
+                child: Icon(Icons.person, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: isDesktopCollapsed ? 0.0 : 1.0,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -66,95 +75,174 @@ class AppDrawer extends StatelessWidget {
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
 
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
 
-          // Menu Items
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _buildMenuItem(
-                  context,
-                  icon: Icons.home_rounded,
-                  title: 'Home',
-                  isActive: activeRoute == '/home',
-                  onTap: () {
-                    if (!isPermanent) {
-                      Navigator.pop(context); // Close drawer
+        // Menu Items
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              _buildMenuItem(
+                context,
+                icon: Icons.home_rounded,
+                title: 'Home',
+                isActive: activeRoute == '/home',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context); // Close drawer
+                  }
+                  if (activeRoute != '/home') {
+                    if (onNavigate != null) {
+                      onNavigate!('/home');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/home',
+                            (route) => false,
+                          );
+                        }
+                      });
                     }
-                    if (activeRoute != '/home') {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/home',
-                        (route) => false,
-                      );
+                  }
+                },
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.task_alt,
+                title: 'Tasks',
+                isActive: activeRoute == '/task-list',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context);
+                  }
+                  if (activeRoute != '/task-list') {
+                    if (onNavigate != null) {
+                      onNavigate!('/task-list');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamed(context, '/task-list');
+                        }
+                      });
                     }
-                  },
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.task_alt,
-                  title: 'Tasks',
-                  isActive: activeRoute == '/task-list',
-                  onTap: () {
-                    if (!isPermanent) {
-                      Navigator.pop(context);
+                  }
+                },
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.calendar_month,
+                title: 'Calendar',
+                isActive: activeRoute == '/calendar',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context);
+                  }
+                  if (activeRoute != '/calendar') {
+                    if (onNavigate != null) {
+                      onNavigate!('/calendar');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamed(context, '/calendar');
+                        }
+                      });
                     }
-                    if (activeRoute != '/task-list') {
-                      Navigator.pushNamed(context, '/task-list');
+                  }
+                },
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.folder_open,
+                title: 'Projects',
+                isActive: activeRoute == '/projects',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context);
+                  }
+                  if (activeRoute != '/projects') {
+                    if (onNavigate != null) {
+                      onNavigate!('/projects');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamed(context, '/projects');
+                        }
+                      });
                     }
-                  },
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.calendar_month,
-                  title: 'Calendar',
-                  isActive: activeRoute == '/calendar',
-                  onTap: () => _showComingSoon(context),
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.folder_open,
-                  title: 'Projects',
-                  isActive: activeRoute == '/projects',
-                  onTap: () => _showComingSoon(context),
-                ),
-                const Divider(height: 32, color: AppColors.border),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.timer,
-                  title: 'Focus',
-                  isActive: activeRoute == '/focus',
-                  onTap: () => _showComingSoon(context),
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.bar_chart,
-                  title: 'Statistics',
-                  onTap: () => _showComingSoon(context),
-                ),
-                const Divider(height: 32, color: AppColors.border),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.notifications_outlined,
-                  title: 'Notifications',
-                  onTap: () => _showComingSoon(context),
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.settings_outlined,
-                  title: 'Settings',
-                  onTap: () => _showComingSoon(context),
-                ),
-              ],
-            ),
+                  }
+                },
+              ),
+              const Divider(height: 32, color: AppColors.border),
+              _buildMenuItem(
+                context,
+                icon: Icons.timer,
+                title: 'Focus',
+                isActive: activeRoute == '/focus',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () => _showComingSoon(context),
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.bar_chart,
+                title: 'Statistics',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () => _showComingSoon(context),
+              ),
+              const Divider(height: 32, color: AppColors.border),
+              _buildMenuItem(
+                context,
+                icon: Icons.notifications_outlined,
+                title: 'Notifications',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () => _showComingSoon(context),
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.settings_outlined,
+                title: 'Settings',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () => _showComingSoon(context),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+
+    if (isPermanent) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: width,
+        clipBehavior: Clip.hardEdge,
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(right: BorderSide(color: AppColors.border, width: 1)),
+        ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          child: SizedBox(
+            width: 280,
+            child: drawerContent,
+          ),
+        ),
+      );
+    }
+
+    return Drawer(
+      backgroundColor: AppColors.surface,
+      child: drawerContent,
     );
   }
 
@@ -163,6 +251,7 @@ class AppDrawer extends StatelessWidget {
     required IconData icon,
     required String title,
     bool isActive = false,
+    bool isCollapsed = false,
     required VoidCallback onTap,
   }) {
     final color = isActive ? AppColors.primaryDark : AppColors.textSecondary;
@@ -171,19 +260,41 @@ class AppDrawer extends StatelessWidget {
         : Colors.transparent;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: ListTile(
-        leading: Icon(icon, color: color),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isActive ? AppColors.primaryDark : AppColors.textPrimary,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 56, // Centers the icon perfectly in 88px - 16*2(padding) = 56px
+                  child: Icon(icon, color: color),
+                ),
+                Expanded(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isCollapsed ? 0.0 : 1.0,
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: isActive ? AppColors.primaryDark : AppColors.textPrimary,
+                        fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        tileColor: bgColor,
-        onTap: onTap,
       ),
     );
   }
@@ -201,3 +312,4 @@ class AppDrawer extends StatelessWidget {
     );
   }
 }
+
