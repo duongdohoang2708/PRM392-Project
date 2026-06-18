@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
+import '../../providers/drawer_provider.dart';
 import '../../widgets/home/greeting_section.dart';
 import '../../widgets/home/overview_section.dart';
 import '../../widgets/home/active_focus_section.dart';
@@ -18,13 +20,14 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 768;
+        final bool isDesktop = MediaQuery.of(context).size.width >= 768;
 
         Widget mainContent = Stack(
           children: [
             const BackgroundPattern(),
             SafeArea(
-              child: Center(
+              child: Align(
+                alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
                   child: SingleChildScrollView(
@@ -58,29 +61,20 @@ class HomeScreen extends StatelessWidget {
           ],
         );
 
-        if (isDesktop) {
-          return Scaffold(
-            backgroundColor: AppColors.background,
-            body: Row(
-              children: [
-                const AppDrawer(isPermanent: true),
-                Expanded(
-                  child: Scaffold(
-                    backgroundColor: AppColors.background,
-                    appBar: _buildAppBar(context, showMenuIcon: false),
-                    body: mainContent,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
         return Scaffold(
           backgroundColor: AppColors.background,
-          drawer: const AppDrawer(isPermanent: false),
-          appBar: _buildAppBar(context, showMenuIcon: true),
-          body: mainContent,
+          drawer: isDesktop ? null : const AppDrawer(isPermanent: false),
+          appBar: _buildAppBar(context, showMenuIcon: !isDesktop),
+          body: isDesktop ? mainContent : Builder(
+            builder: (context) => GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+                  Scaffold.of(context).openDrawer();
+                }
+              },
+              child: mainContent,
+            ),
+          ),
         );
       },
     );
@@ -94,7 +88,20 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       elevation: 0,
       iconTheme: const IconThemeData(color: AppColors.textPrimary),
-      automaticallyImplyLeading: showMenuIcon,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            if (showMenuIcon) {
+              // Mobile: Open overlay drawer
+              Scaffold.of(context).openDrawer();
+            } else {
+              // Desktop: Toggle collapsed state
+              context.read<DrawerProvider>().toggleDesktopCollapse();
+            }
+          },
+        ),
+      ),
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_outlined),

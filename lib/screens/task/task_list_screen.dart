@@ -7,6 +7,7 @@ import '../../widgets/task/task_filter_chips.dart';
 import '../../widgets/task/task_sort_dropdowns.dart';
 import '../../widgets/task/task_list_item.dart';
 import '../../providers/task_provider.dart';
+import '../../providers/drawer_provider.dart';
 import '../../models/task_model.dart';
 import '../../widgets/task/task_group_list.dart';
 import '../../widgets/background_pattern.dart';
@@ -115,13 +116,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 768;
+        final isDesktop = MediaQuery.of(context).size.width >= 768;
 
         Widget mainContent = Stack(
           children: [
             const BackgroundPattern(),
             SafeArea(
-              child: Center(
+              child: Align(
+                alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
                   child: CustomScrollView(
@@ -191,6 +193,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                       tasks: group.value
                                           .map(
                                             (task) => TaskListItem(
+                                              hideActions: false,
                                               key: ValueKey(task.id),
                                               task: task,
                                             ),
@@ -209,6 +212,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                   itemBuilder: (context, index) {
                                     final task = uncompletedTasks[index];
                                     return TaskListItem(
+                                      hideActions: false,
                                       key: ValueKey(task.id),
                                       task: task,
                                     );
@@ -275,6 +279,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                     itemBuilder: (context, index) {
                                       final task = completedTasks[index];
                                       return TaskListItem(
+                                        hideActions: false,
                                         key: ValueKey(task.id),
                                         task: task,
                                       );
@@ -298,32 +303,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
         Widget fab = FloatingActionButton(
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Create task coming soon!')),
-            );
+            Navigator.pushNamed(context, '/create-task');
           },
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add, size: 32),
+          child: const Icon(Icons.add),
         );
 
         if (isDesktop) {
           return Scaffold(
             backgroundColor: AppColors.background,
-            body: Row(
-              children: [
-                const AppDrawer(isPermanent: true, activeRoute: '/task-list'),
-                Expanded(
-                  child: Scaffold(
-                    backgroundColor: AppColors.background,
-                    appBar: _buildAppBar(context, showMenuIcon: false),
-                    body: mainContent,
-                    floatingActionButton: fab,
-                  ),
-                ),
-              ],
-            ),
+            appBar: _buildAppBar(context, showMenuIcon: false),
+            body: mainContent,
+            floatingActionButton: fab,
           );
         }
 
@@ -334,7 +324,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
             activeRoute: '/task-list',
           ),
           appBar: _buildAppBar(context, showMenuIcon: true),
-          body: mainContent,
+          body: Builder(
+            builder: (context) => GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+                  Scaffold.of(context).openDrawer();
+                }
+              },
+              child: mainContent,
+            ),
+          ),
           floatingActionButton: fab,
         );
       },
@@ -349,7 +348,20 @@ class _TaskListScreenState extends State<TaskListScreen> {
       backgroundColor: AppColors.background,
       elevation: 0,
       iconTheme: const IconThemeData(color: AppColors.textPrimary),
-      automaticallyImplyLeading: showMenuIcon,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            if (showMenuIcon) {
+              // Mobile: Open overlay drawer
+              Scaffold.of(context).openDrawer();
+            } else {
+              // Desktop: Toggle collapsed state
+              context.read<DrawerProvider>().toggleDesktopCollapse();
+            }
+          },
+        ),
+      ),
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_outlined),

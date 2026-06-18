@@ -9,11 +9,12 @@ class BackgroundPattern extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return SizedBox(
-          width: double.infinity,
-          height: double.infinity,
-          child: Stack(
-            children: [
+        return RepaintBoundary(
+          child: SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: Stack(
+              children: [
               // Top Left Cluster
               _buildPatternIcon(
                 constraints,
@@ -289,6 +290,7 @@ class BackgroundPattern extends StatelessWidget {
               ),
             ],
           ),
+        ),
         );
       },
     );

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
+import '../../providers/drawer_provider.dart';
 import '../../theme/app_colors.dart';
 import '../focus/focus_session_screen.dart';
 import '../../widgets/app_drawer.dart';
@@ -263,7 +264,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 768;
+        final bool isDesktop = MediaQuery.of(context).size.width >= 768;
         final bool useTwoColumns = constraints.maxWidth >= 1024;
 
         // Main Columns
@@ -309,7 +310,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           children: [
             const BackgroundPattern(),
             SafeArea(
-              child: Center(
+              child: Align(
+                alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
                   child: SingleChildScrollView(
@@ -354,32 +356,23 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ],
         );
 
-        if (isDesktop) {
-          return Scaffold(
-            backgroundColor: AppColors.background,
-            body: Row(
-              children: [
-                const AppDrawer(isPermanent: true, activeRoute: '/task-list'),
-                Expanded(
-                  child: Scaffold(
-                    backgroundColor: AppColors.background,
-                    appBar: _buildAppBar(context, isDesktop: true),
-                    body: mainContent,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
         return Scaffold(
           backgroundColor: AppColors.background,
-          drawer: const AppDrawer(
+          drawer: isDesktop ? null : const AppDrawer(
             isPermanent: false,
             activeRoute: '/task-list',
           ),
-          appBar: _buildAppBar(context, isDesktop: false),
-          body: mainContent,
+          appBar: _buildAppBar(context, isDesktop: isDesktop),
+          body: isDesktop ? mainContent : Builder(
+            builder: (context) => GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+                  Scaffold.of(context).openDrawer();
+                }
+              },
+              child: mainContent,
+            ),
+          ),
         );
       },
     );
@@ -392,35 +385,32 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,
-      leadingWidth: isDesktop ? 56 : 96,
-      leading: isDesktop
-          ? IconButton(
-              icon: const Icon(
-                Icons.chevron_left,
-                size: 28,
-                color: AppColors.textPrimary,
-              ),
-              onPressed: () => Navigator.pop(context),
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.chevron_left,
-                    size: 28,
-                    color: AppColors.textPrimary,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                Builder(
-                  builder: (context) => IconButton(
-                    icon: const Icon(Icons.menu, color: AppColors.textPrimary),
-                    onPressed: () => Scaffold.of(context).openDrawer(),
-                  ),
-                ),
-              ],
+      leadingWidth: 96,
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+              onPressed: () {
+                if (isDesktop) {
+                  context.read<DrawerProvider>().toggleDesktopCollapse();
+                } else {
+                  Scaffold.of(context).openDrawer();
+                }
+              },
             ),
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.chevron_left,
+              size: 28,
+              color: AppColors.textPrimary,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
       actions: [
         IconButton(
           icon: const Icon(
@@ -1240,7 +1230,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   color: AppColors.textPrimary,
                 ),
                 decoration: const InputDecoration(
-                  hintText: 'Jot down your thoughts here...',
+                  hintText: 'Note down your thoughts here...',
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -1266,22 +1256,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             minimumSize: const Size(double.infinity, 52),
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: _deleteTask,
-          icon: const Icon(Icons.delete, color: Colors.redAccent),
-          label: const Text(
-            'Delete Task',
-            style: TextStyle(color: Colors.redAccent),
-          ),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 52),
-            side: const BorderSide(color: Colors.redAccent),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(100),
-            ),
           ),
         ),
       ],

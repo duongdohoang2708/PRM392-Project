@@ -5,7 +5,7 @@ import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
-import '../home/home_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,9 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
         });
         // Navigate to Home Dashboard
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        Navigator.of(context).pushReplacementNamed('/main');
       }
     });
   }

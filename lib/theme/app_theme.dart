@@ -62,6 +62,13 @@ class AppTheme {
         ),
       ),
 
+      // Floating Action Button Theme
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 4,
+      ),
+
       // Input Decoration (Text Fields)
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -83,6 +90,43 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         hintStyle: const TextStyle(color: AppColors.textSecondary),
+      ),
+
+      // Page Transitions Theme
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.iOS: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.macOS: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.windows: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.linux: PredictiveBackPageTransitionsBuilder(),
+        },
+      ),
+    );
+  }
+}
+
+class BouncyPageTransitionsBuilder extends PageTransitionsBuilder {
+  const BouncyPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final scaleTween = Tween<double>(begin: 0.8, end: 1.0)
+        .chain(CurveTween(curve: Curves.easeOutBack));
+    final fadeTween = Tween<double>(begin: 0.0, end: 1.0)
+        .chain(CurveTween(curve: Curves.easeOut));
+
+    return ScaleTransition(
+      scale: animation.drive(scaleTween),
+      child: FadeTransition(
+        opacity: animation.drive(fadeTween),
+        child: child,
       ),
     );
   }

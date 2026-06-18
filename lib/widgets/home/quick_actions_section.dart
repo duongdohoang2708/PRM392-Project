@@ -74,9 +74,15 @@ class QuickActionsSection extends StatelessWidget {
   }) {
     return InkWell(
       onTap: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$title coming soon!')));
+        if (title == 'Create Task') {
+          Navigator.pushNamed(context, '/create-task');
+        } else if (title == 'Calendar') {
+          Navigator.pushNamed(context, '/calendar');
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('$title coming soon!')));
+        }
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
