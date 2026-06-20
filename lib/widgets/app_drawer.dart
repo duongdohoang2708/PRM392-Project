@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../providers/drawer_provider.dart';
+import 'custom_snackbar.dart';
 
 class AppDrawer extends StatelessWidget {
   final bool isPermanent;
@@ -118,7 +119,7 @@ class AppDrawer extends StatelessWidget {
                 context,
                 icon: Icons.task_alt,
                 title: 'Tasks',
-                isActive: activeRoute == '/task-list',
+                isActive: activeRoute == '/task-list' || activeRoute == '/create-task',
                 isCollapsed: isDesktopCollapsed,
                 onTap: () {
                   if (!isPermanent) {
@@ -164,7 +165,9 @@ class AppDrawer extends StatelessWidget {
                 context,
                 icon: Icons.folder_open,
                 title: 'Projects',
-                isActive: activeRoute == '/projects',
+                isActive: activeRoute == '/projects' ||
+                    activeRoute == '/project-detail' ||
+                    activeRoute == '/edit-project',
                 isCollapsed: isDesktopCollapsed,
                 onTap: () {
                   if (!isPermanent) {
@@ -303,13 +306,7 @@ class AppDrawer extends StatelessWidget {
     if (!isPermanent) {
       Navigator.pop(context); // close drawer first
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Feature coming soon!'),
-        backgroundColor: AppColors.primaryDark,
-        duration: Duration(seconds: 1),
-      ),
-    );
+    AppNotification.showInfo(context, 'Feature coming soon!');
   }
 }
 

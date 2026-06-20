@@ -5,6 +5,9 @@ import 'task/task_list_screen.dart';
 import 'task/create_task_screen.dart';
 import 'calendar/calendar_screen.dart';
 import 'project/projects_screen.dart';
+import 'project/create_project_screen.dart';
+import 'project/project_detail_screen.dart';
+import 'project/edit_project_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -62,13 +65,28 @@ class _MainShellState extends State<MainShell> {
                   page = const TaskListScreen();
                   break;
                 case '/create-task':
-                  page = const CreateTaskScreen();
+                  final args = settings.arguments as Map<String, dynamic>?;
+                  final initialProject = args?['projectName'] as String?;
+                  page = CreateTaskScreen(initialProjectName: initialProject);
                   break;
                 case '/calendar':
                   page = const CalendarScreen();
                   break;
                 case '/projects':
                   page = const ProjectsScreen();
+                  break;
+                case '/create-project':
+                  page = const CreateProjectScreen();
+                  break;
+                case '/project-detail':
+                  final args = settings.arguments as Map<String, dynamic>?;
+                  final projectId = args?['projectId'] as String? ?? '';
+                  page = ProjectDetailScreen(projectId: projectId);
+                  break;
+                case '/edit-project':
+                  final args = settings.arguments as Map<String, dynamic>?;
+                  final projectId = args?['projectId'] as String? ?? '';
+                  page = EditProjectScreen(projectId: projectId);
                   break;
                 default:
                   page = const HomeScreen();

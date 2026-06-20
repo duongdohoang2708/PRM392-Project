@@ -22,7 +22,11 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => DrawerProvider()),
-        ChangeNotifierProvider(create: (_) => ProjectProvider()),
+        ChangeNotifierProxyProvider<TaskProvider, ProjectProvider>(
+          create: (_) => ProjectProvider(),
+          update: (_, taskProvider, projectProvider) =>
+              projectProvider!..update(taskProvider),
+        ),
       ],
       child: SlidableAutoCloseBehavior(
         child: MaterialApp(

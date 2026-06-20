@@ -1,8 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 class BackgroundPattern extends StatelessWidget {
+  static const Color _patternPink = Color(0xFFF4C8D3);
+  static const Color _patternYellow = Color(0xFFF6E6A8);
+  static const Color _patternPeach = Color(0xFFF6CDBB);
+  static const Color _patternPrimary = Color(0xFFA8CFA3);
+  static const Color _patternPrimaryDark = Color(0xFF6F9E6E);
+
   const BackgroundPattern({super.key});
 
   @override
@@ -19,7 +24,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.favorite,
-                AppColors.accentPink,
+                _patternPink,
                 0.7,
                 48,
                 0.05,
@@ -29,7 +34,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.menu_book,
-                AppColors.primaryDark,
+                _patternPrimaryDark,
                 0.6,
                 36,
                 0.18,
@@ -39,7 +44,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.star_rounded,
-                AppColors.accentYellow,
+                _patternYellow,
                 0.8,
                 30,
                 0.08,
@@ -49,7 +54,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.schedule,
-                AppColors.primary,
+                _patternPrimary,
                 0.6,
                 44,
                 0.22,
@@ -59,7 +64,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.lightbulb,
-                AppColors.accentPeach,
+                _patternPeach,
                 0.7,
                 28,
                 0.32,
@@ -71,7 +76,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.local_florist,
-                AppColors.accentPeach,
+                _patternPeach,
                 0.7,
                 48,
                 0.08,
@@ -82,7 +87,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.cloud,
-                AppColors.primaryDark,
+                _patternPrimaryDark,
                 0.5,
                 40,
                 0.22,
@@ -93,7 +98,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.auto_awesome,
-                AppColors.accentYellow,
+                _patternYellow,
                 0.8,
                 32,
                 0.06,
@@ -104,7 +109,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.filter_vintage,
-                AppColors.accentPink,
+                _patternPink,
                 0.6,
                 36,
                 0.30,
@@ -115,7 +120,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.wb_sunny,
-                AppColors.accentYellow,
+                _patternYellow,
                 0.6,
                 26,
                 0.15,
@@ -128,7 +133,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.eco,
-                AppColors.primaryDark,
+                _patternPrimaryDark,
                 0.6,
                 48,
                 null,
@@ -139,7 +144,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.edit,
-                AppColors.accentPink,
+                _patternPink,
                 0.6,
                 38,
                 null,
@@ -150,7 +155,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.note,
-                AppColors.accentPeach,
+                _patternPeach,
                 0.7,
                 44,
                 null,
@@ -161,7 +166,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.emoji_objects,
-                AppColors.accentYellow,
+                _patternYellow,
                 0.7,
                 30,
                 null,
@@ -172,7 +177,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.flag,
-                AppColors.primary,
+                _patternPrimary,
                 0.5,
                 34,
                 null,
@@ -185,7 +190,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.local_cafe,
-                AppColors.primary,
+                _patternPrimary,
                 0.7,
                 48,
                 null,
@@ -197,7 +202,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.sentiment_satisfied_alt,
-                AppColors.accentYellow,
+                _patternYellow,
                 0.7,
                 38,
                 null,
@@ -209,7 +214,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.check_circle,
-                AppColors.primaryDark,
+                _patternPrimaryDark,
                 0.6,
                 44,
                 null,
@@ -221,7 +226,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.headset,
-                AppColors.accentPink,
+                _patternPink,
                 0.6,
                 32,
                 null,
@@ -233,7 +238,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.directions_run,
-                AppColors.accentPeach,
+                _patternPeach,
                 0.6,
                 40,
                 null,
@@ -247,7 +252,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.calendar_month,
-                AppColors.accentPeach,
+                _patternPeach,
                 0.6,
                 32,
                 0.38,
@@ -257,7 +262,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.favorite,
-                AppColors.accentPink,
+                _patternPink,
                 0.6,
                 40,
                 null,
@@ -269,7 +274,7 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.bolt,
-                AppColors.accentYellow,
+                _patternYellow,
                 0.7,
                 36,
                 0.45,
@@ -280,13 +285,115 @@ class BackgroundPattern extends StatelessWidget {
               _buildPatternIcon(
                 constraints,
                 Icons.push_pin,
-                AppColors.primaryDark,
+                _patternPrimaryDark,
                 0.5,
                 30,
                 null,
                 0.35,
                 -20,
                 bottom: 0.35,
+              ),
+
+              // Extra Inner Cluster (Denser distribution)
+              _buildPatternIcon(
+                constraints,
+                Icons.work_outline,
+                _patternPrimary,
+                0.6,
+                34,
+                0.15,
+                0.40,
+                -10,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.code,
+                _patternYellow,
+                0.5,
+                42,
+                0.25,
+                0.60,
+                20,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.brush,
+                _patternPink,
+                0.7,
+                30,
+                0.35,
+                0.45,
+                -25,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.rocket_launch,
+                _patternPeach,
+                0.6,
+                38,
+                0.55,
+                0.25,
+                15,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.extension,
+                _patternPrimaryDark,
+                0.5,
+                36,
+                0.65,
+                0.75,
+                -30,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.mic,
+                _patternPrimary,
+                0.6,
+                28,
+                0.80,
+                0.50,
+                10,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.music_note,
+                _patternYellow,
+                0.7,
+                34,
+                0.75,
+                0.30,
+                -15,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.coffee,
+                _patternPeach,
+                0.6,
+                40,
+                0.10,
+                0.70,
+                25,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.spa,
+                _patternPink,
+                0.7,
+                32,
+                0.45,
+                0.80,
+                -10,
+              ),
+              _buildPatternIcon(
+                constraints,
+                Icons.sports_esports,
+                _patternPrimaryDark,
+                0.6,
+                38,
+                0.85,
+                0.80,
+                35,
               ),
             ],
           ),

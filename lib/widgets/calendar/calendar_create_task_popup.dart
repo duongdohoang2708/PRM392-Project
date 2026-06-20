@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
+import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
 
 class CalendarCreateTaskPopup extends StatefulWidget {
   final DateTime selectedDate;
+  final String? initialProjectName;
 
-  const CalendarCreateTaskPopup({super.key, required this.selectedDate});
+  const CalendarCreateTaskPopup({
+    super.key,
+    required this.selectedDate,
+    this.initialProjectName,
+  });
 
   @override
   State<CalendarCreateTaskPopup> createState() =>
@@ -25,12 +32,16 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   late List<SubTask> _subTasks;
   late String _reminder;
 
+  String? _localErrorMessage;
+  bool _showLocalError = false;
+  Timer? _errorTimer;
+
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
     _notesController = TextEditingController();
-    _project = 'None';
+    _project = widget.initialProjectName ?? 'None';
     _priority = 'Low';
     _isImportant = false;
     _subTasks = [];
@@ -41,7 +52,23 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   void dispose() {
     _titleController.dispose();
     _notesController.dispose();
+    _errorTimer?.cancel();
     super.dispose();
+  }
+
+  void _showSnackBar(String message) {
+    _errorTimer?.cancel();
+    setState(() {
+      _localErrorMessage = message;
+      _showLocalError = true;
+    });
+    _errorTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showLocalError = false;
+        });
+      }
+    });
   }
 
   Future<void> _selectTime() async {
@@ -128,12 +155,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   void _createTask() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task title cannot be empty'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      _showSnackBar('Task title cannot be empty');
       return;
     }
 
@@ -160,12 +182,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
 
     final now = DateTime.now();
     if (finalDueDate.isBefore(now) && _selectedTime != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task time cannot be earlier than current time'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      _showSnackBar('Task time cannot be earlier than current time');
       return;
     }
 
@@ -186,12 +203,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
 
     taskProvider.addTask(newTask);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Task created successfully'),
-        backgroundColor: AppColors.primaryDark,
-      ),
-    );
+    AppNotification.showSuccess(context, 'Task created successfully');
 
     Navigator.pop(context);
   }
@@ -231,61 +243,111 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 24,
-                  right: 16,
-                  top: 16,
-                  bottom: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Task for ${DateFormat('MMM d').format(widget.selectedDate)}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 24,
+                        right: 16,
+                        top: 16,
+                        bottom: 8,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Task for ${DateFormat('MMM d').format(widget.selectedDate)}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppColors.textSecondary,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        color: AppColors.textSecondary,
+                    const Divider(color: AppColors.border, height: 1),
+
+                    // Scrollable Content
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildTitleCard(),
+                            const SizedBox(height: 16),
+                            _buildInfoCard(projects),
+                            const SizedBox(height: 16),
+                            _buildSubtasksCard(),
+                            const SizedBox(height: 16),
+                            _buildNotesCard(),
+                            const SizedBox(height: 24),
+                            _buildActionButtons(),
+                          ],
+                        ),
                       ),
-                      onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
-              ),
-              const Divider(color: AppColors.border, height: 1),
-
-              // Scrollable Content
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTitleCard(),
-                      const SizedBox(height: 16),
-                      _buildInfoCard(projects),
-                      const SizedBox(height: 16),
-                      _buildSubtasksCard(),
-                      const SizedBox(height: 16),
-                      _buildNotesCard(),
-                      const SizedBox(height: 24),
-                      _buildActionButtons(),
-                    ],
+                // Custom SnackBar floating at the bottom of the popup
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: IgnorePointer(
+                    ignoring: !_showLocalError,
+                    child: AnimatedSlide(
+                      offset: _showLocalError ? Offset.zero : const Offset(0, 1.5),
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.fastOutSlowIn,
+                      child: AnimatedOpacity(
+                        opacity: _showLocalError ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 150),
+                        child: Material(
+                          elevation: 6,
+                          shadowColor: Colors.black.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          color: const Color(0xFFE57373),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _localErrorMessage ?? '',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -425,10 +487,11 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                 ),
               ],
               onChanged: (val) {
-                if (val == '__add_new__')
+                if (val == '__add_new__') {
                   _addNewProject();
-                else if (val != null)
+                } else if (val != null) {
                   setState(() => _project = val);
+                }
               },
             ),
           ),
