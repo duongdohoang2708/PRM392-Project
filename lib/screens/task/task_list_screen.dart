@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
-import '../../widgets/task/task_search_bar.dart';
+import '../../widgets/custom_search_bar.dart';
 import '../../widgets/task/task_filter_chips.dart';
 import '../../widgets/task/task_sort_dropdowns.dart';
 import '../../widgets/task/task_list_item.dart';
@@ -11,6 +11,8 @@ import '../../providers/drawer_provider.dart';
 import '../../models/task_model.dart';
 import '../../widgets/task/task_group_list.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/custom_snackbar.dart';
+import '../../widgets/staggered_list_entry.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -20,7 +22,11 @@ class TaskListScreen extends StatefulWidget {
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
-  bool _showCompleted = false;
+  bool _showCompleted = true;
+  Set<String> _knownActiveIds = {};
+  Set<String> _knownCompletedIds = {};
+  bool _isFirstBuild = true;
+  String _lastFilterState = '';
 
   List<MapEntry<String, List<Task>>> _groupScheduledTasks(List<Task> tasks) {
     final Map<String, List<Task>> grouped = {};
@@ -106,6 +112,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
+    final currentFilterState = '${taskProvider.activeFilter}_${taskProvider.filterStatus}_${taskProvider.searchQuery}_${taskProvider.sortBy}';
+    final bool filterChanged = currentFilterState != _lastFilterState;
+    _lastFilterState = currentFilterState;
+
     final isStatusFilterCompleted = taskProvider.filterStatus == 'Completed';
     final uncompletedTasks = isStatusFilterCompleted
         ? taskProvider.filteredTasks
@@ -113,6 +123,25 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final completedTasks = isStatusFilterCompleted
         ? <Task>[]
         : taskProvider.filteredTasks.where((t) => t.isCompleted).toList();
+
+    // Xác định task nào vừa mới xuất hiện trong section
+    final currentActiveIds = uncompletedTasks.map((t) => t.id).toSet();
+    final currentCompletedIds = completedTasks.map((t) => t.id).toSet();
+    
+    final Set<String> newActiveIds;
+    final Set<String> newCompletedIds;
+    if (_isFirstBuild || filterChanged) {
+      newActiveIds = {};
+      newCompletedIds = {};
+      _isFirstBuild = false;
+    } else {
+      newActiveIds = currentActiveIds.difference(_knownActiveIds);
+      newCompletedIds = currentCompletedIds.difference(_knownCompletedIds);
+    }
+
+    // Cập nhật set đã biết
+    _knownActiveIds = currentActiveIds;
+    _knownCompletedIds = currentCompletedIds;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -150,7 +179,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                     ),
                               ),
                               const SizedBox(height: 24),
-                              const TaskSearchBar(),
+                              CustomSearchBar(
+                                hintText: 'Search tasks...',
+                                onChanged: (value) => taskProvider.setSearchQuery(value),
+                              ),
                             ],
                           ),
                         ),
@@ -179,10 +211,49 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               const TaskSortDropdowns(),
                               const SizedBox(height: 32),
 
-                              if (taskProvider.activeFilter == 'Scheduled')
-                                ..._groupScheduledTasks(uncompletedTasks).map((
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 350),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                  );
+                                },
+                                layoutBuilder: (currentChild, previousChildren) {
+                                  return Stack(
+                                    alignment: Alignment.topCenter,
+                                    children: [
+                                      ...previousChildren,
+                                      // ignore: use_null_aware_elements
+                                      if (currentChild != null) currentChild,
+                                    ],
+                                  );
+                                },
+                                child: Column(
+                                  key: ValueKey('task_list_${taskProvider.activeFilter}'),
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (taskProvider.activeFilter == 'Scheduled')
+                                      ..._groupScheduledTasks(uncompletedTasks).map((
                                   group,
                                 ) {
+                                  final List<Widget> taskWidgets = [];
+                                  for (int i = 0; i < group.value.length; i++) {
+                                    final task = group.value[i];
+                                    final isNew = newActiveIds.contains(task.id);
+                                    final item = TaskListItem(
+                                      hideActions: false,
+                                      task: task,
+                                    );
+                                    taskWidgets.add(StaggeredListEntry(
+                                      key: ValueKey('task_wrapper_${taskProvider.activeFilter}_${task.id}'),
+                                      index: i,
+                                      isNewAddition: isNew,
+                                      child: item,
+                                    ));
+                                  }
                                   return Padding(
                                     padding: const EdgeInsets.only(
                                       bottom: 24.0,
@@ -190,33 +261,28 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                     child: TaskGroupList(
                                       title: group.key,
                                       count: group.value.length,
-                                      tasks: group.value
-                                          .map(
-                                            (task) => TaskListItem(
-                                              hideActions: false,
-                                              key: ValueKey(task.id),
-                                              task: task,
-                                            ),
-                                          )
-                                          .toList(),
+                                      tasks: taskWidgets,
                                     ),
                                   );
                                 })
                               else
-                                ListView.separated(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: uncompletedTasks.length,
-                                  separatorBuilder: (context, index) =>
-                                      const SizedBox(height: 12),
-                                  itemBuilder: (context, index) {
-                                    final task = uncompletedTasks[index];
-                                    return TaskListItem(
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: uncompletedTasks.asMap().entries.map((entry) {
+                                    final index = entry.key;
+                                    final task = entry.value;
+                                    final isNew = newActiveIds.contains(task.id);
+                                    final item = TaskListItem(
                                       hideActions: false,
-                                      key: ValueKey(task.id),
                                       task: task,
                                     );
-                                  },
+                                    return StaggeredListEntry(
+                                      key: ValueKey('task_wrapper_${taskProvider.activeFilter}_${task.id}'),
+                                      index: index,
+                                      isNewAddition: isNew,
+                                      child: item,
+                                    );
+                                  }).toList(),
                                 ),
 
                               if (uncompletedTasks.isEmpty &&
@@ -229,64 +295,52 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               if (completedTasks.isNotEmpty) ...[
                                 const SizedBox(height: 24),
                                 InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _showCompleted = !_showCompleted;
-                                    });
-                                  },
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                      horizontal: 8,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          _showCompleted
-                                              ? 'Hide Completed'
-                                              : 'Show Completed',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelLarge
-                                              ?.copyWith(
-                                                color: AppColors.textSecondary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Icon(
-                                          _showCompleted
-                                              ? Icons.expand_less
-                                              : Icons.expand_more,
+                                  onTap: () => setState(() => _showCompleted = !_showCompleted),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Completed Tasks (${completedTasks.length})',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
                                           color: AppColors.textSecondary,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      Icon(
+                                        _showCompleted
+                                            ? Icons.keyboard_arrow_up
+                                            : Icons.keyboard_arrow_down,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 if (_showCompleted) ...[
                                   const SizedBox(height: 16),
-                                  ListView.separated(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: completedTasks.length,
-                                    separatorBuilder: (context, index) =>
-                                        const SizedBox(height: 12),
-                                    itemBuilder: (context, index) {
-                                      final task = completedTasks[index];
-                                      return TaskListItem(
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: completedTasks.asMap().entries.map((entry) {
+                                      final index = entry.key;
+                                      final task = entry.value;
+                                      final isNew = newCompletedIds.contains(task.id);
+                                      final item = TaskListItem(
                                         hideActions: false,
-                                        key: ValueKey(task.id),
                                         task: task,
                                       );
-                                    },
+                                      return StaggeredListEntry(
+                                        key: ValueKey('task_wrapper_completed_${taskProvider.activeFilter}_${task.id}'),
+                                        index: index,
+                                        isNewAddition: isNew,
+                                        child: item,
+                                      );
+                                    }).toList(),
                                   ),
                                 ],
-                              ],
+                                    ],
+                                  ],
+                                ),
+                              ),
 
                               const SizedBox(height: 100), // Padding for FAB
                             ],
@@ -366,9 +420,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notifications coming soon!')),
-            );
+            AppNotification.showInfo(context, 'Notifications coming soon!');
           },
         ),
         const SizedBox(width: 8),
