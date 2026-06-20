@@ -6,7 +6,7 @@ class Project {
   final String description;
   final int colorValue; 
   final IconData icon;
-  final String status; // 'Active', 'Completed', 'Archived'
+  final String status; // 'In Progress', 'Completed'
 
   Project({
     required this.id,
@@ -14,7 +14,7 @@ class Project {
     required this.description,
     required this.colorValue,
     this.icon = Icons.folder_open,
-    this.status = 'Active',
+    this.status = 'In Progress',
   });
 
   Project copyWith({
