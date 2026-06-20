@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../custom_snackbar.dart';
 
 class ActiveFocusSection extends StatelessWidget {
   const ActiveFocusSection({super.key});
@@ -83,9 +84,7 @@ class ActiveFocusSection extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Pause timer coming soon!')),
-                  );
+                  AppNotification.showInfo(context, 'Pause timer coming soon!');
                 },
                 icon: const Icon(
                   Icons.pause_circle_filled,

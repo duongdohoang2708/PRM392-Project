@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import '../../models/task_model.dart';
+import '../../models/project_model.dart';
 import 'package:provider/provider.dart';
 import '../../providers/task_provider.dart';
+import '../../providers/project_provider.dart';
 import '../../screens/task/task_detail_screen.dart';
 import '../../screens/focus/focus_session_screen.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import '../custom_snackbar.dart';
 
 class TaskListItem extends StatefulWidget {
   final Task task;
-  final bool disableDismissAnimation;
+  final bool disableCompleteAnimation;
   final bool hideTime;
   final bool hideActions;
   final Widget Function(BuildContext context, Widget child)? wrapper;
@@ -18,7 +21,7 @@ class TaskListItem extends StatefulWidget {
   const TaskListItem({
     super.key,
     required this.task,
-    this.disableDismissAnimation = false,
+    this.disableCompleteAnimation = false,
     this.hideTime = false,
     this.hideActions = true,
     this.wrapper,
@@ -29,12 +32,17 @@ class TaskListItem extends StatefulWidget {
 }
 
 class _TaskListItemState extends State<TaskListItem>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late bool _isCompletedLocal;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _sizeAnimation;
   bool _isAnimating = false;
+  bool _deleteTriggered = false; // Prevents fallback from running after .then() already ran
+
+  // Dedicated controller for the strikethrough line
+  AnimationController? _strikeController;
+  Animation<double>? _strikeAnimation;
 
   @override
   void initState() {
@@ -42,21 +50,32 @@ class _TaskListItemState extends State<TaskListItem>
     _isCompletedLocal = widget.task.isCompleted;
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 650),
+      duration: const Duration(milliseconds: 500),
     );
 
     _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: const Interval(0.4, 0.7, curve: Curves.easeOut),
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
       ),
     );
 
     _sizeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: const Interval(0.6, 1.0, curve: Curves.easeInOut),
+        curve: Curves.easeInCubic,
       ),
+    );
+
+    // Strikethrough controller — starts at the current completed state
+    _strikeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+      value: widget.task.isCompleted ? 1.0 : 0.0,
+    );
+    _strikeAnimation = CurvedAnimation(
+      parent: _strikeController!,
+      curve: Curves.easeOut,
     );
   }
 
@@ -69,28 +88,45 @@ class _TaskListItemState extends State<TaskListItem>
         _isAnimating = false;
       });
       _animationController.reset();
+      // Snap strikethrough to the new task's state without animation
+      _strikeController?.value = widget.task.isCompleted ? 1.0 : 0.0;
     } else if (widget.task.isCompleted != oldWidget.task.isCompleted &&
         !_isAnimating) {
       setState(() {
         _isCompletedLocal = widget.task.isCompleted;
       });
       _animationController.reset();
+      // External change (e.g. from detail screen) — animate to new state
+      if (widget.task.isCompleted) {
+        _strikeController?.forward();
+      } else {
+        _strikeController?.reverse();
+      }
     }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _strikeController?.dispose();
     super.dispose();
   }
 
   void _handleToggle() {
+    final newCompleted = !_isCompletedLocal;
     setState(() {
-      _isCompletedLocal = !_isCompletedLocal;
+      _isCompletedLocal = newCompleted;
       _isAnimating = true;
     });
 
-    if (widget.disableDismissAnimation) {
+    // Drive the strikethrough animation immediately, regardless of dismiss mode
+    if (newCompleted) {
+      _strikeController?.forward();
+    } else {
+      _strikeController?.reverse();
+    }
+
+    if (widget.disableCompleteAnimation) {
       context.read<TaskProvider>().toggleTaskCompletion(widget.task.id);
       if (mounted) {
         setState(() {
@@ -115,13 +151,7 @@ class _TaskListItemState extends State<TaskListItem>
   }
 
   void _showDeleteSnackbar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Task deleted'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
+    AppNotification.showError(context, 'Task deleted');
   }
 
   void _handleDelete(BuildContext context) {
@@ -151,7 +181,7 @@ class _TaskListItemState extends State<TaskListItem>
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop(); // Close dialog
-              _executeDelete();
+              _executeDelete(slidable);
             },
             child: const Text(
               'Delete',
@@ -163,27 +193,28 @@ class _TaskListItemState extends State<TaskListItem>
     );
   }
 
-  void _executeDelete() {
-    if (widget.disableDismissAnimation) {
-      context.read<TaskProvider>().deleteTask(widget.task.id);
-      _showDeleteSnackbar(context);
-      return;
-    }
+  void _executeDelete([SlidableController? slidable]) {
+    slidable?.close(); // MUST close before destroying to prevent GlobalKey crashes
 
+    _deleteTriggered = false;
     setState(() {
       _isAnimating = true;
     });
 
     _animationController.forward().then((_) {
-      if (mounted) {
+      if (mounted && !_deleteTriggered) {
+        _deleteTriggered = true;
         context.read<TaskProvider>().deleteTask(widget.task.id);
         _showDeleteSnackbar(context);
+        // Do NOT call setState here — widget is about to be unmounted
+        // by the parent ListView rebuild triggered by deleteTask().
       }
     });
 
-    // Fallback in case animation gets stuck
-    Future.delayed(const Duration(milliseconds: 650), () {
-      if (mounted && _isAnimating) {
+    // Fallback in case animation gets stuck (e.g. headless browser)
+    Future.delayed(const Duration(milliseconds: 550), () {
+      if (mounted && _isAnimating && !_deleteTriggered) {
+        _deleteTriggered = true;
         context.read<TaskProvider>().deleteTask(widget.task.id);
         _showDeleteSnackbar(context);
         _animationController.reset();
@@ -243,17 +274,31 @@ class _TaskListItemState extends State<TaskListItem>
 
     final timeString = _formatDate(widget.task.dueDate, isOverdue);
 
+    final projectProvider = Provider.of<ProjectProvider>(context);
+    final project = projectProvider.projects.firstWhere(
+      (p) => p.name == widget.task.project,
+      orElse: () => Project(
+        id: '',
+        name: '',
+        description: '',
+        colorValue: AppColors.primary.value,
+      ),
+    );
+    final Color projectColor = Color(project.colorValue);
+
     final mainContent = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _isCompletedLocal ? AppColors.background : AppColors.surface,
+        color: _isCompletedLocal
+            ? AppColors.background
+            : Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: _isCompletedLocal
             ? null
             : [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.04),
+                  color: projectColor.withValues(alpha: 0.04),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -272,12 +317,12 @@ class _TaskListItemState extends State<TaskListItem>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _isCompletedLocal
-                    ? AppColors.primaryDark
+                    ? projectColor
                     : Colors.transparent,
                 border: Border.all(
                   color: _isCompletedLocal
-                      ? AppColors.primaryDark
-                      : AppColors.textSecondary.withValues(alpha: 0.5),
+                      ? projectColor
+                      : projectColor.withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
@@ -318,25 +363,33 @@ class _TaskListItemState extends State<TaskListItem>
                               : AppColors.textPrimary,
                         ),
                       ),
-                      if (_isCompletedLocal || _isAnimating)
-                        Positioned.fill(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: TweenAnimationBuilder<double>(
-                              tween: Tween<double>(
-                                begin: widget.task.isCompleted ? 1.0 : 0.0,
-                                end: _isCompletedLocal ? 1.0 : 0.0,
-                              ),
-                              duration: const Duration(milliseconds: 300),
-                              builder: (context, value, child) {
-                                return FractionallySizedBox(
+                      if (_strikeAnimation != null)
+                        AnimatedBuilder(
+                          animation: _strikeAnimation!,
+                          builder: (context, child) {
+                            final value = _strikeAnimation!.value;
+                            if (value == 0) return const SizedBox.shrink();
+                            return Positioned.fill(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: FractionallySizedBox(
                                   widthFactor: value,
                                   child: Container(
                                     height: 1.5,
                                     color: AppColors.textSecondary,
                                   ),
-                                );
-                              },
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      else if (_isCompletedLocal)
+                        Positioned.fill(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              height: 1.5,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -350,17 +403,18 @@ class _TaskListItemState extends State<TaskListItem>
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.folder_outlined,
                             size: 14,
-                            color: AppColors.textSecondary,
+                            color: projectColor,
                           ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               widget.task.project,
                               style: theme.textTheme.labelMedium?.copyWith(
-                                color: AppColors.textSecondary,
+                                color: projectColor,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -392,25 +446,25 @@ class _TaskListItemState extends State<TaskListItem>
                               children: [
                                 Icon(
                                   _isCompletedLocal
-                                      ? Icons.calendar_today
+                                      ? Icons.check_circle_outline
                                       : Icons.schedule,
                                   size: 14,
                                   color: _isCompletedLocal
-                                      ? AppColors.textSecondary
+                                      ? AppColors.primaryDark
                                       : (isOverdue
                                             ? const Color(0xFFE57373)
-                                            : AppColors.primaryDark),
+                                            : AppColors.textPrimary),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   timeString,
                                   style: theme.textTheme.labelMedium?.copyWith(
                                     color: _isCompletedLocal
-                                        ? AppColors.textSecondary
+                                        ? AppColors.primaryDark
                                         : (isOverdue
                                               ? const Color(0xFFE57373)
-                                              : AppColors.primaryDark),
-                                    fontWeight: isOverdue
+                                              : AppColors.textPrimary),
+                                    fontWeight: isOverdue || _isCompletedLocal
                                         ? FontWeight.bold
                                         : FontWeight.w600,
                                   ),
@@ -458,7 +512,7 @@ class _TaskListItemState extends State<TaskListItem>
                 size: 28,
                 color: _isCompletedLocal
                     ? AppColors.textSecondary.withValues(alpha: 0.5)
-                    : AppColors.primary,
+                    : projectColor,
               ),
             ),
           ],
@@ -505,15 +559,20 @@ class _TaskListItemState extends State<TaskListItem>
           ),
         );
 
-        Widget finalContent = dismissibleContent;
+        Widget finalContent = Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: dismissibleContent,
+        );
+        
         if (widget.wrapper != null) {
-          finalContent = widget.wrapper!(context, dismissibleContent);
+          finalContent = widget.wrapper!(context, finalContent);
         }
 
-        if (widget.disableDismissAnimation) {
-          return finalContent;
-        }
 
+        // Always wrap in SizeTransition/FadeTransition so the dismiss
+        // animation can play smoothly without a layout jump.
+        // At rest (controller value=0), sizeFactor=1.0 and opacity=1.0
+        // so there is no visual difference from a plain container.
         return SizeTransition(
           sizeFactor: _sizeAnimation,
           axis: Axis.vertical,
@@ -524,3 +583,4 @@ class _TaskListItemState extends State<TaskListItem>
     );
   }
 }
+

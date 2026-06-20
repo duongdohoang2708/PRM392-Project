@@ -7,9 +7,12 @@ import '../../providers/drawer_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/custom_snackbar.dart';
 
 class CreateTaskScreen extends StatefulWidget {
-  const CreateTaskScreen({super.key});
+  final String? initialProjectName;
+
+  const CreateTaskScreen({super.key, this.initialProjectName});
 
   @override
   State<CreateTaskScreen> createState() => _CreateTaskScreenState();
@@ -30,7 +33,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     super.initState();
     _titleController = TextEditingController();
     _notesController = TextEditingController();
-    _project = 'None';
+    _project = widget.initialProjectName ?? 'None';
     _priority = 'Low';
     _dueDate = null;
     _isImportant = false;
@@ -139,23 +142,13 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   void _createTask() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task title cannot be empty'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      AppNotification.showError(context, 'Task title cannot be empty');
       return;
     }
 
     final now = DateTime.now();
     if (_dueDate != null && _dueDate!.isBefore(now)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task deadline cannot be earlier than current time'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      AppNotification.showError(context, 'Task deadline cannot be earlier than current time');
       return;
     }
 
@@ -176,12 +169,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
     taskProvider.addTask(newTask);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Task created successfully'),
-        backgroundColor: AppColors.primaryDark,
-      ),
-    );
+    AppNotification.showSuccess(context, 'Task created successfully');
 
     Navigator.pop(context);
   }
@@ -359,9 +347,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             color: AppColors.textPrimary,
           ),
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notifications coming soon!')),
-            );
+            AppNotification.showInfo(context, 'Notifications coming soon!');
           },
         ),
         const SizedBox(width: 8),

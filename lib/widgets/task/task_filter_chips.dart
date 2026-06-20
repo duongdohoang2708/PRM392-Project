@@ -6,43 +6,23 @@ import '../../providers/task_provider.dart';
 class TaskFilterChips extends StatelessWidget {
   const TaskFilterChips({super.key});
 
-  final List<Map<String, dynamic>> _filters = const [
-    {
-      'label': 'Today',
-      'activeColor': AppColors.accentPink,
-      'activeTextColor': AppColors.textPrimary,
-      'inactiveBg': Colors.transparent,
-    },
-    {
-      'label': 'Tomorrow',
-      'activeColor': AppColors.border,
-      'activeTextColor': AppColors.textPrimary,
-      'inactiveBg': Colors.transparent,
-    },
-    {
-      'label': 'This Week',
-      'activeColor': AppColors.accentYellow,
-      'activeTextColor': AppColors.textPrimary,
-      'inactiveBg': Colors.transparent,
-    },
-    {
-      'label': 'Scheduled',
-      'activeColor': AppColors.primaryLight,
-      'activeTextColor': AppColors.textPrimary,
-      'inactiveBg': Colors.transparent,
-    },
-    {
-      'label': 'Unscheduled',
-      'activeColor': AppColors.border,
-      'activeTextColor': AppColors.textPrimary,
-      'inactiveBg': Colors.transparent,
-    },
-    {
-      'label': 'Important',
-      'activeColor': AppColors.accentPeach,
-      'activeTextColor': AppColors.textPrimary,
-      'inactiveBg': Colors.transparent,
-    },
+  final List<String> _filters = const [
+    'Today',
+    'Tomorrow',
+    'This Week',
+    'Scheduled',
+    'Unscheduled',
+    'Important',
+  ];
+
+  static const List<Color> _rainbowColors = [
+    Color(0xFFFF6B6B), // Red
+    Color(0xFFFF9F43), // Orange
+    Color(0xFFFFD166), // Yellow
+    Color(0xFF06D6A0), // Green
+    Color(0xFF4D96FF), // Blue
+    Color(0xFF5D5FEF), // Indigo
+    Color(0xFFB556EB), // Violet
   ];
 
   @override
@@ -54,17 +34,18 @@ class TaskFilterChips extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: List.generate(_filters.length, (index) {
-          final filter = _filters[index];
-          final isSelected = activeFilter == filter['label'];
+          final filterLabel = _filters[index];
+          final isSelected = activeFilter == filterLabel;
+          final activeColor = _rainbowColors[index % _rainbowColors.length];
 
           Color bgColor = isSelected
-              ? filter['activeColor']
+              ? activeColor
               : Colors.transparent;
           Color borderColor = isSelected
               ? Colors.transparent
               : AppColors.border;
           Color textColor = isSelected
-              ? filter['activeTextColor']
+              ? Colors.white
               : AppColors.textSecondary;
 
           return Padding(
@@ -72,10 +53,10 @@ class TaskFilterChips extends StatelessWidget {
             child: InkWell(
               onTap: () {
                 final provider = context.read<TaskProvider>();
-                if (provider.activeFilter == filter['label']) {
+                if (provider.activeFilter == filterLabel) {
                   provider.setActiveFilter(''); // Deselect
                 } else {
-                  provider.setActiveFilter(filter['label']);
+                  provider.setActiveFilter(filterLabel);
                 }
               },
               borderRadius: BorderRadius.circular(24),
@@ -96,7 +77,7 @@ class TaskFilterChips extends StatelessWidget {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: filter['activeColor'].withValues(alpha: 0.4),
+                            color: activeColor.withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -104,7 +85,7 @@ class TaskFilterChips extends StatelessWidget {
                       : null,
                 ),
                 child: Text(
-                  filter['label'],
+                  filterLabel,
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: textColor,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,

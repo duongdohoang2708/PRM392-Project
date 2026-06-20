@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/task_provider.dart';
+import '../../providers/project_provider.dart';
 
 class ProjectsSection extends StatelessWidget {
   const ProjectsSection({super.key});
@@ -9,6 +10,8 @@ class ProjectsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
+    final projectProvider = context.watch<ProjectProvider>();
+    final projects = projectProvider.projects.take(6).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,11 +29,7 @@ class ProjectsSection extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('View all projects coming soon'),
-                  ),
-                );
+                Navigator.pushNamed(context, '/projects');
               },
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primaryDark,
@@ -45,37 +44,33 @@ class ProjectsSection extends StatelessWidget {
         const SizedBox(height: 16),
         SizedBox(
           height: 140,
-          child: ListView(
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
-            children: [
-              _buildProjectCard(
-                title: 'PRM392 Mobile App',
-                taskCount:
-                    '${taskProvider.getProjectTaskCount('PRM392 Mobile App')} tasks',
-                progress: taskProvider.getProjectProgress('PRM392 Mobile App'),
-                color: AppColors.primaryDark,
-                bgColor: AppColors.primaryLight.withAlpha(50),
-              ),
-              const SizedBox(width: 16),
-              _buildProjectCard(
-                title: 'Learn Flutter',
-                taskCount:
-                    '${taskProvider.getProjectTaskCount('Learn Flutter')} tasks',
-                progress: taskProvider.getProjectProgress('Learn Flutter'),
-                color: AppColors.accentPeach,
-                bgColor: AppColors.accentPeach.withAlpha(50),
-              ),
-              const SizedBox(width: 16),
-              _buildProjectCard(
-                title: 'Personal Goals',
-                taskCount:
-                    '${taskProvider.getProjectTaskCount('Personal Goals')} tasks',
-                progress: taskProvider.getProjectProgress('Personal Goals'),
-                color: AppColors.accentYellow,
-                bgColor: AppColors.accentYellow.withAlpha(50),
-              ),
-            ],
+            itemCount: projects.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              final project = projects[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/project-detail',
+                    arguments: {'projectId': project.id},
+                  );
+                },
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: _buildProjectCard(
+                    title: project.name,
+                    taskCount: '${taskProvider.getProjectTaskCount(project.name)} tasks',
+                    progress: taskProvider.getProjectProgress(project.name),
+                    color: Color(project.colorValue),
+                    bgColor: Color(project.colorValue).withValues(alpha: 0.15),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -98,7 +93,7 @@ class ProjectsSection extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimary.withAlpha((255 * 0.03).round()),
+            color: AppColors.textPrimary.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

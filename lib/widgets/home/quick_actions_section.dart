@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../custom_snackbar.dart';
 
 class QuickActionsSection extends StatelessWidget {
   const QuickActionsSection({super.key});
@@ -78,10 +79,10 @@ class QuickActionsSection extends StatelessWidget {
           Navigator.pushNamed(context, '/create-task');
         } else if (title == 'Calendar') {
           Navigator.pushNamed(context, '/calendar');
+        } else if (title == 'New Project') {
+          Navigator.pushNamed(context, '/create-project');
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('$title coming soon!')));
+          AppNotification.showInfo(context, '$title coming soon!');
         }
       },
       borderRadius: BorderRadius.circular(16),

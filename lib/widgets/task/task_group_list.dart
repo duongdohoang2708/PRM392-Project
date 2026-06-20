@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'task_list_item.dart';
 
 class TaskGroupList extends StatelessWidget {
   final String title;
   final int count;
-  final List<TaskListItem> tasks;
+  final List<Widget> tasks;
 
   const TaskGroupList({
     super.key,
@@ -46,14 +45,9 @@ class TaskGroupList extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: tasks.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            return tasks[index];
-          },
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: tasks,
         ),
       ],
     );
