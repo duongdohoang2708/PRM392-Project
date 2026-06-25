@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
+import '../utils/validation/task_deadline_rules.dart';
 
 class TaskProvider with ChangeNotifier {
   final List<Task> _tasks = [];
@@ -65,7 +66,8 @@ class TaskProvider with ChangeNotifier {
         title: 'Write project report',
         project: 'PRM392 Mobile App',
         priority: 'High',
-        dueDate: today.add(const Duration(days: 3, hours: 9)),
+        dueDate: today.add(const Duration(days: 3)),
+        isAllDay: true,
       ),
       Task(
         id: '7',
@@ -91,7 +93,8 @@ class TaskProvider with ChangeNotifier {
         title: 'Review PRs',
         project: 'PRM392 Mobile App',
         priority: 'High',
-        dueDate: today.add(const Duration(hours: 11)),
+        dueDate: today,
+        isAllDay: true,
       ),
       Task(
         id: '11',
@@ -166,7 +169,7 @@ class TaskProvider with ChangeNotifier {
         dueDate: today.add(const Duration(days: 1, hours: 16)),
       ),
       Task(
-        id: '16',
+        id: '21',
         title: 'Read 20 pages of new book',
         project: 'Personal Goals',
         priority: 'Low',
@@ -174,6 +177,89 @@ class TaskProvider with ChangeNotifier {
         isCompleted: true,
       ),
     ]);
+
+    _applyMockTaskTimestamps(today);
+  }
+
+  void _applyMockTaskTimestamps(DateTime today) {
+    final now = DateTime.now();
+
+    for (int index = 0; index < _tasks.length; index++) {
+      final task = _tasks[index];
+      final dueDate = task.dueDate;
+
+      final createdAt = dueDate != null
+          ? DateTime(
+              dueDate.year,
+              dueDate.month,
+              dueDate.day,
+            ).subtract(Duration(days: 2 + (index % 5))).add(
+              Duration(hours: 8 + (index % 5)),
+            )
+          : today
+                .subtract(Duration(days: (index % 12) + 1))
+                .add(Duration(hours: 9 + (index % 4)));
+
+      DateTime? completedAt;
+      if (task.isCompleted) {
+        if (dueDate != null) {
+          final suggestedCompletedAt = dueDate.subtract(
+            Duration(hours: 1 + (index % 3)),
+          );
+          completedAt = suggestedCompletedAt.isAfter(now)
+              ? now.subtract(Duration(hours: 2 + index))
+              : suggestedCompletedAt;
+        } else {
+          final suggestedCompletedAt = createdAt.add(
+            Duration(hours: 4 + (index % 3)),
+          );
+          completedAt = suggestedCompletedAt.isAfter(now)
+              ? now.subtract(Duration(hours: 2 + index))
+              : suggestedCompletedAt;
+        }
+      }
+
+      _tasks[index] = task.copyWith(
+        createdAt: createdAt,
+        completedAt: completedAt,
+      );
+    }
+
+    // Keep recent mock data aligned with streak-goal rules:
+    // last 6 days each have >= 2 completed tasks.
+    final completionPlan = <String, int>{
+      '1': 0,
+      '10': 0,
+      '4': 1,
+      '5': 1,
+      '6': 2,
+      '7': 2,
+      '8': 3,
+      '9': 3,
+      '11': 4,
+      '12': 4,
+      '13': 5,
+      '15': 5,
+    };
+
+    completionPlan.forEach((taskId, dayOffset) {
+      final index = _tasks.indexWhere((task) => task.id == taskId);
+      if (index == -1) return;
+
+      final task = _tasks[index];
+      final completionDay = DateTime(today.year, today.month, today.day)
+          .subtract(Duration(days: dayOffset));
+      final completedAt = completionDay.add(Duration(hours: 9 + (index % 6)));
+      final safeCreatedAt = task.createdAt.isAfter(completedAt)
+          ? completedAt.subtract(const Duration(days: 1))
+          : task.createdAt;
+
+      _tasks[index] = task.copyWith(
+        createdAt: safeCreatedAt,
+        isCompleted: true,
+        completedAt: completedAt,
+      );
+    });
   }
 
   String _activeFilter = '';
@@ -332,15 +418,34 @@ class TaskProvider with ChangeNotifier {
         if (a.dueDate == null && b.dueDate == null) return 0;
         if (a.dueDate == null) return 1;
         if (b.dueDate == null) return -1;
+
+        final aDate = DateTime(a.dueDate!.year, a.dueDate!.month, a.dueDate!.day);
+        final bDate = DateTime(b.dueDate!.year, b.dueDate!.month, b.dueDate!.day);
+        
+        if (aDate.isAtSameMomentAs(bDate)) {
+          if (a.isAllDay && !b.isAllDay) return -1;
+          if (!a.isAllDay && b.isAllDay) return 1;
+        }
+
         return a.dueDate!.compareTo(b.dueDate!);
       } else if (_sortBy == 'Priority') {
         final Map<String, int> priorityMap = {'High': 0, 'Medium': 1, 'Low': 2};
         final pA = priorityMap[a.priority] ?? 3;
         final pB = priorityMap[b.priority] ?? 3;
         if (pA != pB) return pA.compareTo(pB);
+
         if (a.dueDate == null && b.dueDate == null) return 0;
         if (a.dueDate == null) return 1;
         if (b.dueDate == null) return -1;
+
+        final aDate = DateTime(a.dueDate!.year, a.dueDate!.month, a.dueDate!.day);
+        final bDate = DateTime(b.dueDate!.year, b.dueDate!.month, b.dueDate!.day);
+        
+        if (aDate.isAtSameMomentAs(bDate)) {
+          if (a.isAllDay && !b.isAllDay) return -1;
+          if (!a.isAllDay && b.isAllDay) return 1;
+        }
+
         return a.dueDate!.compareTo(b.dueDate!); // secondary sort
       } else if (_sortBy == 'Name') {
         return a.title.compareTo(b.title);
@@ -531,10 +636,41 @@ class TaskProvider with ChangeNotifier {
   void toggleTaskCompletion(String id) {
     final index = _tasks.indexWhere((t) => t.id == id);
     if (index != -1) {
+      final willBeCompleted = !_tasks[index].isCompleted;
+      
+      // Update subtasks as well
+      final updatedSubTasks = _tasks[index].subTasks.map(
+        (st) => st.copyWith(isCompleted: willBeCompleted)
+      ).toList();
+
       _tasks[index] = _tasks[index].copyWith(
-        isCompleted: !_tasks[index].isCompleted,
+        isCompleted: willBeCompleted,
+        completedAt: willBeCompleted ? DateTime.now() : null,
+        subTasks: updatedSubTasks,
       );
       notifyListeners();
+    }
+  }
+
+  void toggleSubTaskCompletion(String taskId, String subTaskId, {bool autoCompleteParent = true}) {
+    final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex != -1) {
+      final task = _tasks[taskIndex];
+      final subTaskIndex = task.subTasks.indexWhere((st) => st.id == subTaskId);
+      if (subTaskIndex != -1) {
+        final subTasks = List<SubTask>.from(task.subTasks);
+        final willBeCompleted = !subTasks[subTaskIndex].isCompleted;
+        subTasks[subTaskIndex] = subTasks[subTaskIndex].copyWith(isCompleted: willBeCompleted);
+        
+        final allCompleted = subTasks.isNotEmpty && subTasks.every((st) => st.isCompleted);
+        
+        _tasks[taskIndex] = task.copyWith(
+          subTasks: subTasks,
+          isCompleted: autoCompleteParent ? allCompleted : task.isCompleted,
+          completedAt: (autoCompleteParent && allCompleted && !task.isCompleted) ? DateTime.now() : (allCompleted ? task.completedAt : null),
+        );
+        notifyListeners();
+      }
     }
   }
 
@@ -548,15 +684,25 @@ class TaskProvider with ChangeNotifier {
     }
   }
 
-  void addTask(Task task) {
-    _tasks.add(task);
+  bool addTask(Task task) {
+    if (!TaskDeadlineRules.isValidForCreate(task.dueDate)) {
+      return false;
+    }
+    final normalizedTask = task.isCompleted && task.completedAt == null
+        ? task.copyWith(completedAt: DateTime.now())
+        : task;
+    _tasks.add(normalizedTask);
     notifyListeners();
+    return true;
   }
 
   void updateTask(Task updatedTask) {
     final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
     if (index != -1) {
-      _tasks[index] = updatedTask;
+      final normalizedTask = updatedTask.isCompleted && updatedTask.completedAt == null
+          ? updatedTask.copyWith(completedAt: DateTime.now())
+          : updatedTask;
+      _tasks[index] = normalizedTask;
       notifyListeners();
     }
   }
