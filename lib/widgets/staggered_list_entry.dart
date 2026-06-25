@@ -16,8 +16,8 @@ class StaggeredListEntry extends StatefulWidget {
     super.key,
     required this.child,
     required this.index,
-    this.baseDelay = const Duration(milliseconds: 50),
-    this.animationDuration = const Duration(milliseconds: 350),
+    this.baseDelay = const Duration(milliseconds: 65),
+    this.animationDuration = const Duration(milliseconds: 400),
     this.isNewAddition = false,
     this.disableEntranceAnimation = false,
   });
@@ -32,47 +32,65 @@ class _StaggeredListEntryState extends State<StaggeredListEntry>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _sizeAnimation;
+  bool? _isNewAddition;
 
   @override
   void initState() {
     super.initState();
+    _isNewAddition = widget.isNewAddition;
     _controller = AnimationController(
       vsync: this,
       duration: widget.animationDuration,
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
+    if (widget.isNewAddition) {
+      // Reverse of fade-out: size expands first, opacity fades in later
+      _sizeAnimation = CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      );
+      _fadeAnimation = CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+      );
+    } else {
+      // Initial entrance animation
+      _sizeAnimation = CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+      );
+      _fadeAnimation = CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      );
+    }
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
+      begin: const Offset(0, -0.4),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    ));
-
-    _sizeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     if (widget.isNewAddition) {
       // If it's a new addition, play the expansion animation immediately
+      _controller.duration = const Duration(milliseconds: 500); // Match TaskListItem duration
       if (mounted) _controller.forward();
     } else if (widget.disableEntranceAnimation) {
       // Skip the entrance animation entirely
       if (mounted) _controller.value = 1.0;
     } else {
-      // Delay tăng dần theo index, tối đa 500ms delay
+      // Delay tăng dần theo index
       final delay = Duration(
-        milliseconds: (widget.index * widget.baseDelay.inMilliseconds).clamp(0, 500),
+        milliseconds: (widget.index * widget.baseDelay.inMilliseconds).clamp(
+          0,
+          800,
+        ),
       );
 
-      Future.delayed(delay, () {
-        if (mounted) _controller.forward();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Future.delayed(delay, () {
+          if (mounted) _controller.forward();
+        });
       });
     }
   }
@@ -85,23 +103,20 @@ class _StaggeredListEntryState extends State<StaggeredListEntry>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isNewAddition) {
+    final isNew = _isNewAddition ?? widget.isNewAddition;
+    _isNewAddition = isNew; // Save it in case it was null (hot reload)
+    
+    if (isNew) {
       return SizeTransition(
         sizeFactor: _sizeAnimation,
         axis: Axis.vertical,
         axisAlignment: -1.0,
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: widget.child,
-        ),
+        child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
       );
     } else {
       return FadeTransition(
         opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: widget.child,
-        ),
+        child: SlideTransition(position: _slideAnimation, child: widget.child),
       );
     }
   }

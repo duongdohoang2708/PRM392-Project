@@ -46,7 +46,20 @@ class AppNotification {
       _currentEntry = null;
     }
 
-    final overlayState = Overlay.of(context);
+    final overlayState = Overlay.maybeOf(context);
+    if (overlayState == null) {
+      // Fallback for navigator keys
+      final navigator = Navigator.maybeOf(context);
+      if (navigator?.overlay != null) {
+        _insertOverlay(navigator!.overlay!, message, backgroundColor, icon);
+      }
+      return;
+    }
+    
+    _insertOverlay(overlayState, message, backgroundColor, icon);
+  }
+
+  static void _insertOverlay(OverlayState overlayState, String message, Color backgroundColor, IconData icon) {
     late OverlayEntry entry;
 
     entry = OverlayEntry(
