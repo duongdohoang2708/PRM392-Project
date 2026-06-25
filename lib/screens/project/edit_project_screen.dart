@@ -35,14 +35,14 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
     final project = projectProvider.projects.firstWhere(
       (p) => p.id == widget.projectId,
-      orElse: () => Project(id: '', name: '', description: '', colorValue: Colors.grey.value),
+      orElse: () => Project(id: '', name: '', description: '', colorValue: Colors.grey.toARGB32()),
     );
 
     _nameController = TextEditingController(text: project.name);
     _descriptionController = TextEditingController(text: project.description);
 
     _selectedColorIndex = CreateProjectScreen.projectColors
-        .indexWhere((c) => c.value == project.colorValue);
+        .indexWhere((c) => c.toARGB32() == project.colorValue);
     if (_selectedColorIndex == -1) _selectedColorIndex = 0;
 
     _selectedIconIndex = CreateProjectScreen.projectIcons
@@ -83,7 +83,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     final updatedProject = originalProject.copyWith(
       name: name,
       description: _descriptionController.text.trim(),
-      colorValue: CreateProjectScreen.projectColors[_selectedColorIndex].value,
+      colorValue: CreateProjectScreen.projectColors[_selectedColorIndex].toARGB32(),
       icon: CreateProjectScreen.projectIcons[_selectedIconIndex],
     );
 

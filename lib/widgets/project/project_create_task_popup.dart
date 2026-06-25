@@ -5,6 +5,8 @@ import '../../models/task_model.dart';
 import '../../models/project_model.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/project_provider.dart';
+import '../../utils/validation/task_deadline_rules.dart';
+import '../../utils/formatters/app_date_time_format.dart';
 import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
 
@@ -27,9 +29,11 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
   late TextEditingController _notesController;
   late String _priority;
   TimeOfDay? _selectedTime;
+  bool _isAllDay = false;
   late bool _isImportant;
   late List<SubTask> _subTasks;
   late String _reminder;
+  DateTime? _selectedDate;
 
   String? _localErrorMessage;
   bool _showLocalError = false;
@@ -44,6 +48,10 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     _isImportant = false;
     _subTasks = [];
     _reminder = 'None';
+    _selectedDate = widget.selectedDate;
+    if (_selectedDate != null) {
+      _selectedTime = TaskDeadlineRules.defaultTimeOnDatePick();
+    }
   }
 
   @override
@@ -69,7 +77,14 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     });
   }
 
+  DateTime _todayDate() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
   Future<void> _selectTime() async {
+    if (_isAllDay) return;
+    
     final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
     final project = projectProvider.projects.firstWhere(
       (p) => p.name == widget.projectName,
@@ -77,7 +92,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
         id: '',
         name: '',
         description: '',
-        colorValue: AppColors.primary.value,
+        colorValue: AppColors.primary.toARGB32(),
       ),
     );
     final Color projectColor = Color(project.colorValue);
@@ -103,7 +118,50 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
 
     if (pickedTime != null) {
       setState(() {
+        _selectedDate ??= _todayDate();
         _selectedTime = pickedTime;
+      });
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
+    final project = projectProvider.projects.firstWhere(
+      (p) => p.name == widget.projectName,
+      orElse: () => Project(
+        id: '',
+        name: '',
+        description: '',
+        colorValue: AppColors.primary.toARGB32(),
+      ),
+    );
+    final Color projectColor = Color(project.colorValue);
+
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: TaskDeadlineRules.minSelectableDateForCreate(),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: projectColor,
+              onPrimary: ThemeData.estimateBrightnessForColor(projectColor) == Brightness.dark
+                  ? Colors.white
+                  : AppColors.textPrimary,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day);
+        _selectedTime ??= TaskDeadlineRules.defaultTimeOnDatePick();
       });
     }
   }
@@ -122,7 +180,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
       return;
     }
 
-    final date = widget.selectedDate ?? DateTime.now();
+    final date = _selectedDate ?? DateTime.now();
     DateTime? finalDueDate;
     if (_selectedTime != null) {
       finalDueDate = DateTime(
@@ -133,19 +191,18 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
         _selectedTime!.minute,
       );
     } else {
-      // default to 12:00 PM for the date
+      final defaultTime = TaskDeadlineRules.defaultTimeOnDatePick();
       finalDueDate = DateTime(
         date.year,
         date.month,
         date.day,
-        12,
-        0,
+        defaultTime.hour,
+        defaultTime.minute,
       );
     }
 
-    final now = DateTime.now();
-    if (finalDueDate.isBefore(now) && _selectedTime != null) {
-      _showSnackBar('Task time cannot be earlier than current time');
+    if (!TaskDeadlineRules.isValidForCreate(finalDueDate)) {
+      AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
       return;
     }
 
@@ -160,11 +217,15 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
       dueDate: finalDueDate,
       isCompleted: false,
       isImportant: _isImportant,
+      isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
     );
 
-    taskProvider.addTask(newTask);
+    if (!taskProvider.addTask(newTask)) {
+      AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
+      return;
+    }
 
     AppNotification.showSuccess(context, 'Task created successfully');
 
@@ -182,7 +243,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
         id: '',
         name: '',
         description: '',
-        colorValue: AppColors.primary.value,
+        colorValue: AppColors.primary.toARGB32(),
       ),
     );
     final Color projectColor = Color(project.colorValue);
@@ -398,6 +459,29 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
       child: Column(
         children: [
           _buildInfoRow(
+            icon: Icons.calendar_today,
+            label: 'Date',
+            projectColor: projectColor,
+            child: InkWell(
+              onTap: _selectDate,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: Text(
+                  _selectedDate == null
+                      ? 'Set date'
+                      : AppDateTimeFormat.date(_selectedDate!),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Divider(color: AppColors.border, height: 24),
+          _buildInfoRow(
             icon: Icons.access_time,
             label: 'Time',
             projectColor: projectColor,
@@ -407,16 +491,34 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: Text(
-                  _selectedTime == null
-                      ? 'Set time'
-                      : _selectedTime!.format(context),
-                  style: const TextStyle(
+                  _isAllDay
+                      ? 'All Day'
+                      : (_selectedTime == null
+                          ? 'Set time'
+                          : AppDateTimeFormat.timeOfDay(_selectedTime!)),
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textPrimary,
+                    color: _isAllDay ? AppColors.textSecondary : AppColors.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
+            ),
+          ),
+          const Divider(color: AppColors.border, height: 24),
+          _buildInfoRow(
+            icon: Icons.all_inclusive,
+            label: 'All Day',
+            projectColor: projectColor,
+            child: Switch(
+              value: _isAllDay,
+              activeTrackColor: projectColor.withValues(alpha: 0.5),
+              activeThumbColor: projectColor,
+              onChanged: (val) {
+                setState(() {
+                  _isAllDay = val;
+                });
+              },
             ),
           ),
           const Divider(color: AppColors.border, height: 24),

@@ -126,7 +126,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         id: '',
         name: 'Not Found',
         description: '',
-        colorValue: Colors.grey.value,
+        colorValue: Colors.grey.toARGB32(),
       ),
     );
 

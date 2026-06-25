@@ -12,26 +12,26 @@ class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
 
   static const List<Color> projectColors = [
-    Color(0xFF5E8F5D),       // Deep matcha green
-    Color(0xFF4A90D9),       // Sky blue
-    Color(0xFFE3B82B),       // Mustard yellow
-    Color(0xFFDF7E52),       // Warm orange
-    Color(0xFFD65D7F),       // Rose pink
-    Color(0xFF7C6FAF),       // Muted purple
-    Color(0xFF4DADA5),       // Teal
-    Color(0xFFCC5B5B),       // Brick red
-    Color(0xFF8B7355),       // Warm brown
-    Color(0xFF3D7A8A),       // Ocean blue
-    Color(0xFFA67EB7),       // Lavender
-    Color(0xFFD4805A),       // Terracotta
-    Color(0xFF6B8E23),       // Olive green
-    Color(0xFF9B5963),       // Mauve
-    Color(0xFF2E8B84),       // Dark teal
-    Color(0xFFB8860B),       // Dark goldenrod
-    Color(0xFF6959A3),       // Indigo
-    Color(0xFF96C490),       // Pastel matcha
-    Color(0xFFCD853F),       // Peru tan
-    Color(0xFF708090),       // Slate gray
+    Color(0xFF2E7D32),       // Forest green
+    Color(0xFF00A676),       // Emerald
+    Color(0xFF0097A7),       // Cyan
+    Color(0xFF0277BD),       // Deep blue
+    Color(0xFF3949AB),       // Indigo
+    Color(0xFF7B1FA2),       // Purple
+    Color(0xFFC2185B),       // Magenta
+    Color(0xFFD32F2F),       // Red
+    Color(0xFFE64A19),       // Burnt orange
+    Color(0xFFF9A825),       // Golden yellow
+    Color(0xFF6D4C41),       // Brown
+    Color(0xFF455A64),       // Blue gray
+    Color(0xFF8BC34A),       // Lime green
+    Color(0xFF26C6DA),       // Bright aqua
+    Color(0xFF42A5F5),       // Light blue
+    Color(0xFF5E35B1),       // Deep violet
+    Color(0xFFEC407A),       // Pink
+    Color(0xFFFF7043),       // Coral
+    Color(0xFFFFCA28),       // Amber
+    Color(0xFF78909C),       // Slate
   ];
 
   static const List<IconData> projectIcons = [
@@ -96,7 +96,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       id: 'p${DateTime.now().millisecondsSinceEpoch}',
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
-      colorValue: CreateProjectScreen.projectColors[_selectedColorIndex].value,
+      colorValue: CreateProjectScreen.projectColors[_selectedColorIndex].toARGB32(),
       icon: CreateProjectScreen.projectIcons[_selectedIconIndex],
       status: 'In Progress',
     );
