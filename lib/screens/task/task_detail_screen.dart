@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../models/task_model.dart';
 import '../../models/project_model.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/project_provider.dart';
 import '../../providers/drawer_provider.dart';
+import '../../providers/focus_provider.dart';
 import '../../theme/app_colors.dart';
-import '../focus/focus_session_screen.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
+import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/custom_snackbar.dart';
 
 class TaskDetailScreen extends StatefulWidget {
@@ -29,11 +29,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   late DateTime? _dueDate;
   late bool _isCompleted;
   late bool _isImportant;
+  late bool _isAllDay;
   late List<SubTask> _subTasks;
   late String _reminder;
   int _focusMinutes = 25;
   int _breakMinutes = 5;
+  int _longBreakMinutes = 15;
   int _sessions = 1;
+  int _longBreakInterval = 4;
 
   @override
   void initState() {
@@ -56,8 +59,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     _dueDate = task.dueDate;
     _isCompleted = task.isCompleted;
     _isImportant = task.isImportant;
+    _isAllDay = task.isAllDay;
     _subTasks = List.from(task.subTasks);
     _reminder = '1 hour before'; // default mock value
+
+    final focusProvider = Provider.of<FocusProvider>(context, listen: false);
+    _focusMinutes = focusProvider.focusMinutes;
+    _breakMinutes = focusProvider.shortBreakMinutes;
+    _longBreakMinutes = focusProvider.longBreakMinutes;
+    _sessions = focusProvider.rounds;
+    _longBreakInterval = focusProvider.longBreakInterval;
   }
 
   @override
@@ -85,11 +96,21 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       dueDate: _dueDate,
       isCompleted: _isCompleted,
       isImportant: _isImportant,
+      isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
     );
 
     taskProvider.updateTask(updatedTask);
+
+    final focusProvider = context.read<FocusProvider>();
+    focusProvider.updateSettings(
+      focus: _focusMinutes,
+      shortBreak: _breakMinutes,
+      longBreak: _longBreakMinutes,
+      rounds: _sessions,
+      interval: _longBreakInterval,
+    );
 
     AppNotification.showSuccess(context, 'Changes saved successfully');
 
@@ -138,7 +159,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  Future<void> _selectDueDate() async {
+  Future<void> _selectDate() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _dueDate ?? DateTime.now(),
@@ -159,23 +180,41 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
 
     if (pickedDate != null) {
-      if (!mounted) return;
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_dueDate ?? DateTime.now()),
-      );
+      setState(() {
+        if (_dueDate == null) {
+          _dueDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, 12, 0);
+        } else {
+          _dueDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, _dueDate!.hour, _dueDate!.minute);
+        }
+      });
+    }
+  }
 
-      if (pickedTime != null) {
-        setState(() {
-          _dueDate = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-        });
-      }
+  Future<void> _selectTime() async {
+    if (_isAllDay) return;
+
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_dueDate ?? DateTime.now()),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryDark,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime != null) {
+      setState(() {
+        final date = _dueDate ?? DateTime.now();
+        _dueDate = DateTime(date.year, date.month, date.day, pickedTime.hour, pickedTime.minute);
+      });
     }
   }
 
@@ -240,7 +279,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         id: '',
         name: '',
         description: '',
-        colorValue: AppColors.primary.value,
+        colorValue: AppColors.primary.toARGB32(),
       ),
     );
     final Color projectColor = Color(projectObj.colorValue);
@@ -284,9 +323,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildPomodoroCard(projectColor),
           const SizedBox(height: 16),
 
-          // Subtasks card
-          _buildSubtasksCard(projectColor),
-          const SizedBox(height: 16),
+          // Subtasks card for Mobile/Tablet only
+          if (!useTwoColumns) ...[
+            _buildSubtasksCard(projectColor),
+            const SizedBox(height: 16),
+          ],
 
           // Notes card
           _buildNotesCard(projectColor),
@@ -302,6 +343,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           // Task details info for Desktop only
           if (useTwoColumns) ...[
             _buildInfoCard(projects, projectColor),
+            const SizedBox(height: 16),
+            _buildSubtasksCard(projectColor),
             const SizedBox(height: 16),
             _buildActionButtons(projectColor),
           ],
@@ -595,20 +638,20 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       ),
       child: Column(
         children: [
-          // Due Date Row
+          // Date Row
           _buildInfoRow(
-            icon: Icons.event,
-            label: 'Due Date',
+            icon: Icons.calendar_today,
+            label: 'Date',
             projectColor: projectColor,
             child: InkWell(
-              onTap: _selectDueDate,
+              onTap: _selectDate,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: Text(
                   _dueDate == null
-                      ? 'Set due date'
-                      : DateFormat('MMM d, yyyy  h:mm a').format(_dueDate!),
+                      ? 'Set date'
+                      : AppDateTimeFormat.date(_dueDate!),
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.textPrimary,
@@ -616,6 +659,51 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   ),
                 ),
               ),
+            ),
+          ),
+          const Divider(color: AppColors.border, height: 24),
+
+          // Time Row
+          _buildInfoRow(
+            icon: Icons.access_time,
+            label: 'Time',
+            projectColor: projectColor,
+            child: InkWell(
+              onTap: _selectTime,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: Text(
+                  _isAllDay
+                      ? 'All Day'
+                      : (_dueDate == null
+                          ? 'Set time'
+                          : AppDateTimeFormat.time(_dueDate!)),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _isAllDay ? AppColors.textSecondary : AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Divider(color: AppColors.border, height: 24),
+
+          // All Day Row
+          _buildInfoRow(
+            icon: Icons.all_inclusive,
+            label: 'All Day',
+            projectColor: projectColor,
+            child: Switch(
+              value: _isAllDay,
+              activeTrackColor: projectColor.withValues(alpha: 0.5),
+              activeThumbColor: projectColor,
+              onChanged: (val) {
+                setState(() {
+                  _isAllDay = val;
+                });
+              },
             ),
           ),
           const Divider(color: AppColors.border, height: 24),
@@ -853,6 +941,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildPomodoroCard(Color projectColor) {
+    final focusProvider = context.watch<FocusProvider>();
+    final isCurrentTaskActive = focusProvider.selectedTask?.id == widget.taskId && 
+        (focusProvider.timerState == TimerState.running || focusProvider.timerState == TimerState.paused);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -922,7 +1014,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildAdjuster(
-                  'Break (m)',
+                  'Short Break',
                   _breakMinutes,
                   (val) => setState(() => _breakMinutes = val),
                   min: 1,
@@ -934,9 +1026,37 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildAdjuster(
+                  'Long Break',
+                  _longBreakMinutes,
+                  (val) => setState(() => _longBreakMinutes = val),
+                  min: 5,
+                  max: 60,
+                  step: 5,
+                  projectColor: projectColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAdjuster(
                   'Sessions',
                   _sessions,
                   (val) => setState(() => _sessions = val),
+                  min: 1,
+                  max: 10,
+                  step: 1,
+                  projectColor: projectColor,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildAdjuster(
+                  'Long Break Interval',
+                  _longBreakInterval,
+                  (val) => setState(() => _longBreakInterval = val),
                   min: 1,
                   max: 10,
                   step: 1,
@@ -947,32 +1067,85 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FocusSessionScreen(
-                    taskId: widget.taskId,
-                    focusMinutes: _focusMinutes,
-                    breakMinutes: _breakMinutes,
-                    sessions: _sessions,
+            onPressed: _isCompleted ? null : () {
+              final focusProvider = context.read<FocusProvider>();
+              bool settingsChanged = focusProvider.focusMinutes != _focusMinutes ||
+                  focusProvider.shortBreakMinutes != _breakMinutes ||
+                  focusProvider.longBreakMinutes != _longBreakMinutes ||
+                  focusProvider.rounds != _sessions ||
+                  focusProvider.longBreakInterval != _longBreakInterval;
+              
+              if ((focusProvider.timerState == TimerState.running || focusProvider.timerState == TimerState.paused) && 
+                  (focusProvider.selectedTask?.id != widget.taskId || settingsChanged)) {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: AppColors.surface,
+                    title: const Text('Timer is running', style: TextStyle(color: AppColors.textPrimary)),
+                    content: const Text(
+                      'You currently have an active focus session. Starting this will reset the current timer. Do you want to proceed?',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          focusProvider.resetEntireCycle();
+                          Navigator.pushNamed(
+                            context,
+                            '/focus',
+                            arguments: {
+                              'taskId': widget.taskId,
+                              'focusMinutes': _focusMinutes,
+                              'breakMinutes': _breakMinutes,
+                              'longBreakMinutes': _longBreakMinutes,
+                              'sessions': _sessions,
+                              'longBreakInterval': _longBreakInterval,
+                              'autoStart': true,
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentPeach),
+                        child: const Text('Reset & Proceed', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
                   ),
-                ),
-              );
+                );
+              } else {
+                Navigator.pushNamed(
+                  context,
+                  '/focus',
+                  arguments: {
+                    'taskId': widget.taskId,
+                    'focusMinutes': _focusMinutes,
+                    'breakMinutes': _breakMinutes,
+                    'longBreakMinutes': _longBreakMinutes,
+                    'sessions': _sessions,
+                    'longBreakInterval': _longBreakInterval,
+                    'autoStart': true,
+                  },
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),
-              backgroundColor: projectColor,
-              foregroundColor: ThemeData.estimateBrightnessForColor(projectColor) == Brightness.dark
-                  ? Colors.white
-                  : AppColors.textPrimary,
+              backgroundColor: isCurrentTaskActive ? AppColors.accentYellow : projectColor,
+              foregroundColor: isCurrentTaskActive 
+                  ? AppColors.textPrimary 
+                  : (ThemeData.estimateBrightnessForColor(projectColor) == Brightness.dark
+                      ? Colors.white
+                      : AppColors.textPrimary),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.play_arrow),
-                SizedBox(width: 8),
-                Text('Start Pomodoro'),
+                Icon(isCurrentTaskActive ? Icons.play_arrow : Icons.play_arrow),
+                const SizedBox(width: 8),
+                Text(isCurrentTaskActive ? 'Continue Pomodoro' : 'Start Pomodoro'),
               ],
             ),
           ),

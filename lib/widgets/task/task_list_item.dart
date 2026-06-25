@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import 'package:intl/intl.dart';
+import '../../utils/formatters/app_date_time_format.dart';
 import '../../models/task_model.dart';
 import '../../models/project_model.dart';
 import 'package:provider/provider.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/project_provider.dart';
+import '../../providers/focus_provider.dart';
 import '../../screens/task/task_detail_screen.dart';
-import '../../screens/focus/focus_session_screen.dart';
+// Removed focus_session_screen import
 import 'package:flutter_slidable/flutter_slidable.dart';
 import '../custom_snackbar.dart';
+import 'subtask_item.dart';
 
 class TaskListItem extends StatefulWidget {
   final Task task;
@@ -39,6 +41,8 @@ class _TaskListItemState extends State<TaskListItem>
   late Animation<double> _sizeAnimation;
   bool _isAnimating = false;
   bool _deleteTriggered = false; // Prevents fallback from running after .then() already ran
+  bool _isExpanded = false; // Tracks if subtasks are expanded
+  bool? _overrideSubTasksCompleted;
 
   // Dedicated controller for the strikethrough line
   AnimationController? _strikeController;
@@ -86,6 +90,7 @@ class _TaskListItemState extends State<TaskListItem>
       setState(() {
         _isCompletedLocal = widget.task.isCompleted;
         _isAnimating = false;
+        _overrideSubTasksCompleted = null;
       });
       _animationController.reset();
       // Snap strikethrough to the new task's state without animation
@@ -94,6 +99,7 @@ class _TaskListItemState extends State<TaskListItem>
         !_isAnimating) {
       setState(() {
         _isCompletedLocal = widget.task.isCompleted;
+        _overrideSubTasksCompleted = null;
       });
       _animationController.reset();
       // External change (e.g. from detail screen) — animate to new state
@@ -113,13 +119,15 @@ class _TaskListItemState extends State<TaskListItem>
   }
 
   void _handleToggle() {
+    if (_isAnimating) return;
+
     final newCompleted = !_isCompletedLocal;
     setState(() {
       _isCompletedLocal = newCompleted;
-      _isAnimating = true;
+      _overrideSubTasksCompleted = newCompleted;
     });
 
-    // Drive the strikethrough animation immediately, regardless of dismiss mode
+    // Drive the strikethrough animation immediately
     if (newCompleted) {
       _strikeController?.forward();
     } else {
@@ -128,25 +136,101 @@ class _TaskListItemState extends State<TaskListItem>
 
     if (widget.disableCompleteAnimation) {
       context.read<TaskProvider>().toggleTaskCompletion(widget.task.id);
-      if (mounted) {
-        setState(() {
-          _isAnimating = false;
-        });
-      }
     } else {
-      _animationController.forward();
+      // Delay fade out by 300ms so user can see the strikethrough of parent AND subtasks
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        
+        setState(() {
+          _isAnimating = true;
+        });
+        _animationController.forward();
 
-      // Use Future.delayed as a robust fallback to guarantee completion
-      // even if Tickers are suspended or throttled by headless browsers
-      Future.delayed(const Duration(milliseconds: 650), () {
-        if (mounted) {
-          context.read<TaskProvider>().toggleTaskCompletion(widget.task.id);
-          _animationController.reset();
+        Future.delayed(const Duration(milliseconds: 650), () {
+          if (mounted) {
+            context.read<TaskProvider>().toggleTaskCompletion(widget.task.id);
+          }
+        });
+      });
+    }
+  }
+
+  void _handleSubTaskToggle(String subTaskId, bool willBeCompleted) {
+    final provider = context.read<TaskProvider>();
+    final otherSubTasks = widget.task.subTasks.where((st) => st.id != subTaskId);
+    final allOthersCompleted = otherSubTasks.isEmpty || otherSubTasks.every((st) => st.isCompleted);
+
+    if (willBeCompleted && allOthersCompleted) {
+      // 1. Update subtask locally in provider but keep parent incomplete for now
+      provider.toggleSubTaskCompletion(widget.task.id, subTaskId, autoCompleteParent: false);
+
+      // 2. Animate parent checkbox & strikethrough instantly
+      setState(() {
+        _isCompletedLocal = true;
+        _overrideSubTasksCompleted = null;
+      });
+      _strikeController?.forward();
+
+      // 3. Short wait for user to see the strikethrough
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        
+        if (widget.disableCompleteAnimation) {
+          provider.toggleTaskCompletion(widget.task.id);
+        } else {
+          // 4. Trigger fade-out animation
           setState(() {
-            _isAnimating = false;
+            _isAnimating = true;
+          });
+          _animationController.forward();
+
+          // 5. Finally, complete the task in the provider so it leaves the list
+          Future.delayed(const Duration(milliseconds: 650), () {
+            if (mounted) {
+              provider.toggleTaskCompletion(widget.task.id);
+            }
           });
         }
       });
+    } else if (!willBeCompleted && widget.task.isCompleted) {
+      // Unchecking a subtask when the parent is Completed!
+      provider.toggleSubTaskCompletion(widget.task.id, subTaskId, autoCompleteParent: false);
+
+      setState(() {
+        _isCompletedLocal = false;
+        _overrideSubTasksCompleted = null;
+      });
+      _strikeController?.reverse();
+
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+
+        if (widget.disableCompleteAnimation) {
+          final taskIndex = provider.tasks.indexWhere((t) => t.id == widget.task.id);
+          if (taskIndex != -1) {
+            final task = provider.tasks[taskIndex];
+            provider.updateTask(task.copyWith(isCompleted: false, completedAt: null));
+          }
+        } else {
+          setState(() {
+            _isAnimating = true;
+          });
+          _animationController.forward();
+
+          Future.delayed(const Duration(milliseconds: 650), () {
+            if (mounted) {
+              final taskIndex = provider.tasks.indexWhere((t) => t.id == widget.task.id);
+              if (taskIndex != -1) {
+                final task = provider.tasks[taskIndex];
+                provider.updateTask(task.copyWith(isCompleted: false, completedAt: null));
+              }
+            }
+          });
+        }
+      });
+    } else {
+      // Normal subtask toggle
+      provider.toggleSubTaskCompletion(widget.task.id, subTaskId);
     }
   }
 
@@ -238,21 +322,48 @@ class _TaskListItemState extends State<TaskListItem>
     }
   }
 
-  String _formatDate(DateTime? date, bool isOverdue) {
-    if (date == null) return '';
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final tDate = DateTime(date.year, date.month, date.day);
+  bool _hasAssignedProject(String projectName, Project resolvedProject) {
+    final name = projectName.trim();
+    if (name.isEmpty || name == 'None') return false;
+    return resolvedProject.id.isNotEmpty;
+  }
 
-    if (isOverdue) {
-      return 'Overdue, ${DateFormat('MMM d').format(date)}';
-    } else if (tDate.isAtSameMomentAs(today)) {
-      return 'Today, ${DateFormat('HH:mm').format(date)}';
-    } else if (tDate.isAtSameMomentAs(tomorrow)) {
-      return 'Tomorrow, ${DateFormat('HH:mm').format(date)}';
+  String _formatDate(DateTime? date, bool isOverdue, bool isAllDay) {
+    if (date == null) return '';
+    return AppDateTimeFormat.taskDueLabel(date, isOverdue: isOverdue, isAllDay: isAllDay);
+  }
+
+  void _handleStartFocus(BuildContext context) {
+    final focusProvider = context.read<FocusProvider>();
+    if ((focusProvider.timerState == TimerState.running || focusProvider.timerState == TimerState.paused) && focusProvider.selectedTask?.id != widget.task.id) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text('Timer is running', style: TextStyle(color: AppColors.textPrimary)),
+          content: const Text(
+            'You currently have an active focus session. Starting this task will reset the current timer. Do you want to proceed?',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                focusProvider.resetEntireCycle();
+                Navigator.pushNamed(context, '/focus', arguments: {'taskId': widget.task.id, 'autoStart': true});
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentPeach),
+              child: const Text('Reset & Proceed', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
     } else {
-      return DateFormat('MMM d, HH:mm').format(date);
+      Navigator.pushNamed(context, '/focus', arguments: {'taskId': widget.task.id, 'autoStart': true});
     }
   }
 
@@ -272,7 +383,7 @@ class _TaskListItemState extends State<TaskListItem>
         ).isBefore(today) &&
         !widget.task.isCompleted;
 
-    final timeString = _formatDate(widget.task.dueDate, isOverdue);
+    final timeString = _formatDate(widget.task.dueDate, isOverdue, widget.task.isAllDay);
 
     final projectProvider = Provider.of<ProjectProvider>(context);
     final project = projectProvider.projects.firstWhere(
@@ -281,10 +392,11 @@ class _TaskListItemState extends State<TaskListItem>
         id: '',
         name: '',
         description: '',
-        colorValue: AppColors.primary.value,
+        colorValue: AppColors.primary.toARGB32(),
       ),
     );
     final Color projectColor = Color(project.colorValue);
+    final showProject = _hasAssignedProject(widget.task.project, project);
 
     final mainContent = Container(
       padding: const EdgeInsets.all(16),
@@ -304,218 +416,218 @@ class _TaskListItemState extends State<TaskListItem>
                 ),
               ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Checkbox
-          GestureDetector(
-            onTap: _handleToggle,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isCompletedLocal
-                    ? projectColor
-                    : Colors.transparent,
-                border: Border.all(
-                  color: _isCompletedLocal
-                      ? projectColor
-                      : projectColor.withValues(alpha: 0.5),
-                  width: 2,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Checkbox
+              GestureDetector(
+                onTap: _handleToggle,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _isCompletedLocal
+                        ? projectColor
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: _isCompletedLocal
+                          ? projectColor
+                          : projectColor.withValues(alpha: 0.5),
+                      width: 2,
+                    ),
+                  ),
+                  child: AnimatedScale(
+                    scale: _isCompletedLocal ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.elasticOut,
+                    child: const Icon(Icons.check, size: 16, color: Colors.white),
+                  ),
                 ),
               ),
-              child: AnimatedScale(
-                scale: _isCompletedLocal ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.elasticOut,
-                child: const Icon(Icons.check, size: 16, color: Colors.white),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Content
-          Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        TaskDetailScreen(taskId: widget.task.id),
-                  ),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
-                    alignment: Alignment.centerLeft,
-                    children: [
-                      Text(
-                        widget.task.title,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: _isCompletedLocal
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
-                        ),
+              const SizedBox(width: 16),
+              // Content
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TaskDetailScreen(taskId: widget.task.id),
                       ),
-                      if (_strikeAnimation != null)
-                        AnimatedBuilder(
-                          animation: _strikeAnimation!,
-                          builder: (context, child) {
-                            final value = _strikeAnimation!.value;
-                            if (value == 0) return const SizedBox.shrink();
-                            return Positioned.fill(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: FractionallySizedBox(
-                                  widthFactor: value,
-                                  child: Container(
-                                    height: 1.5,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      else if (_isCompletedLocal)
-                        Positioned.fill(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              height: 1.5,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Column(
+                    );
+                  },
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Project
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.folder_outlined,
-                            size: 14,
-                            color: projectColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              widget.task.project,
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: projectColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildTitleText(theme),
                       const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 4,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Priority
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.flag, size: 14, color: priorityColor),
-                              const SizedBox(width: 4),
-                              Text(
-                                widget.task.priority,
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: priorityColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (widget.task.dueDate != null && !widget.hideTime)
+                          if (showProject) ...[
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  _isCompletedLocal
-                                      ? Icons.check_circle_outline
-                                      : Icons.schedule,
+                                  Icons.folder_outlined,
                                   size: 14,
-                                  color: _isCompletedLocal
-                                      ? AppColors.primaryDark
-                                      : (isOverdue
-                                            ? const Color(0xFFE57373)
-                                            : AppColors.textPrimary),
+                                  color: projectColor,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  timeString,
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: _isCompletedLocal
-                                        ? AppColors.primaryDark
-                                        : (isOverdue
-                                              ? const Color(0xFFE57373)
-                                              : AppColors.textPrimary),
-                                    fontWeight: isOverdue || _isCompletedLocal
-                                        ? FontWeight.bold
-                                        : FontWeight.w600,
+                                Flexible(
+                                  child: Text(
+                                    widget.task.project,
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: projectColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 4),
+                          ],
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 4,
+                            children: [
+                              // Priority
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.flag, size: 14, color: priorityColor),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    widget.task.priority,
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: priorityColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (widget.task.dueDate != null && !widget.hideTime)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _isCompletedLocal
+                                          ? Icons.check_circle_outline
+                                          : Icons.schedule,
+                                      size: 14,
+                                      color: _isCompletedLocal
+                                          ? AppColors.primaryDark
+                                          : (isOverdue
+                                                ? const Color(0xFFE57373)
+                                                : AppColors.textPrimary),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      timeString,
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        color: _isCompletedLocal
+                                            ? AppColors.primaryDark
+                                            : (isOverdue
+                                                  ? const Color(0xFFE57373)
+                                                  : AppColors.textPrimary),
+                                        fontWeight: isOverdue || _isCompletedLocal
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
                         ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
+              if (!widget.hideActions) ...[
+                const SizedBox(width: 16),
+                // Star Action
+                GestureDetector(
+                  onTap: () {
+                    context.read<TaskProvider>().toggleTaskImportance(
+                      widget.task.id,
+                    );
+                  },
+                  child: Icon(
+                    widget.task.isImportant ? Icons.star : Icons.star_border,
+                    color: widget.task.isImportant
+                        ? AppColors.accentYellow
+                        : AppColors.textSecondary.withValues(alpha: 0.5),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Play Action
+                GestureDetector(
+                  onTap: _isCompletedLocal ? null : () => _handleStartFocus(context),
+                  child: Icon(
+                    Icons.play_circle_fill,
+                    size: 28,
+                    color: _isCompletedLocal
+                        ? AppColors.textSecondary.withValues(alpha: 0.5)
+                        : projectColor,
+                  ),
+                ),
+              ],
+              if (widget.task.subTasks.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  },
+                  child: Icon(
+                    _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: double.infinity,
+              child: _isExpanded && widget.task.subTasks.isNotEmpty
+                  ? Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        const Divider(color: AppColors.border, height: 1),
+                        const SizedBox(height: 12),
+                        Column(
+                          children: widget.task.subTasks.map((subTask) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0, left: 8.0, right: 8.0),
+                              child: SubTaskItem(
+                                subTask: subTask,
+                                taskId: widget.task.id,
+                                projectColor: projectColor,
+                                onToggle: _handleSubTaskToggle,
+                                overrideCompleted: _overrideSubTasksCompleted,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    )
+                  : const SizedBox(height: 0),
             ),
           ),
-          if (!widget.hideActions) ...[
-            const SizedBox(width: 16),
-            // Star Action
-            GestureDetector(
-              onTap: () {
-                context.read<TaskProvider>().toggleTaskImportance(
-                  widget.task.id,
-                );
-              },
-              child: Icon(
-                widget.task.isImportant ? Icons.star : Icons.star_border,
-                color: widget.task.isImportant
-                    ? AppColors.accentYellow
-                    : AppColors.textSecondary.withValues(alpha: 0.5),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Play Action
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        FocusSessionScreen(taskId: widget.task.id),
-                  ),
-                );
-              },
-              child: Icon(
-                Icons.play_circle_fill,
-                size: 28,
-                color: _isCompletedLocal
-                    ? AppColors.textSecondary.withValues(alpha: 0.5)
-                    : projectColor,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -581,6 +693,120 @@ class _TaskListItemState extends State<TaskListItem>
         );
       },
     );
+  }
+
+  Widget _buildTitleText(ThemeData theme) {
+    final style = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: _isCompletedLocal
+          ? AppColors.textSecondary
+          : AppColors.textPrimary,
+    );
+
+    if (_strikeAnimation == null) {
+      return Text(
+        widget.task.title,
+        style: style?.copyWith(
+          decoration:
+              _isCompletedLocal ? TextDecoration.lineThrough : TextDecoration.none,
+          decorationColor: AppColors.textSecondary,
+        ),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _strikeAnimation!,
+      builder: (context, _) {
+        return _MultiLineStrikethroughText(
+          text: widget.task.title,
+          style: style!,
+          progress: _strikeAnimation!.value,
+          lineColor: AppColors.textSecondary,
+        );
+      },
+    );
+  }
+}
+
+class _MultiLineStrikethroughText extends StatelessWidget {
+  final String text;
+  final TextStyle style;
+  final double progress;
+  final Color lineColor;
+
+  const _MultiLineStrikethroughText({
+    required this.text,
+    required this.style,
+    required this.progress,
+    required this.lineColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      foregroundPainter: _MultiLineStrikethroughPainter(
+        text: text,
+        style: style,
+        progress: progress,
+        lineColor: lineColor,
+      ),
+      child: Text(text, style: style),
+    );
+  }
+}
+
+class _MultiLineStrikethroughPainter extends CustomPainter {
+  final String text;
+  final TextStyle style;
+  final double progress;
+  final Color lineColor;
+
+  _MultiLineStrikethroughPainter({
+    required this.text,
+    required this.style,
+    required this.progress,
+    required this.lineColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: null,
+    )..layout(maxWidth: size.width);
+
+    final lines = textPainter.computeLineMetrics();
+    if (lines.isEmpty) return;
+
+    final totalWidth = lines.fold<double>(0, (sum, line) => sum + line.width);
+    var remaining = progress * totalWidth;
+
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1.5;
+
+    for (final line in lines) {
+      if (remaining <= 0) break;
+      final strikeWidth = remaining < line.width ? remaining : line.width;
+      final y = line.baseline - line.ascent + line.height / 2;
+      canvas.drawLine(
+        Offset(line.left, y),
+        Offset(line.left + strikeWidth, y),
+        paint,
+      );
+      remaining -= line.width;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MultiLineStrikethroughPainter oldDelegate) {
+    return oldDelegate.text != text ||
+        oldDelegate.style != style ||
+        oldDelegate.progress != progress ||
+        oldDelegate.lineColor != lineColor;
   }
 }
 

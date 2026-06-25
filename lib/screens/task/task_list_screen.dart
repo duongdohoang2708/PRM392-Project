@@ -112,7 +112,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
-    final currentFilterState = '${taskProvider.activeFilter}_${taskProvider.filterStatus}_${taskProvider.searchQuery}_${taskProvider.sortBy}';
+    final currentFilterState = '${taskProvider.activeFilter}_${taskProvider.filterStatus}_${taskProvider.searchQuery}_${taskProvider.sortBy}_${taskProvider.filterProject}_${taskProvider.filterPriority}';
     final bool filterChanged = currentFilterState != _lastFilterState;
     _lastFilterState = currentFilterState;
 
@@ -211,29 +211,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               const TaskSortDropdowns(),
                               const SizedBox(height: 32),
 
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 350),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                transitionBuilder: (child, animation) {
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: child,
-                                  );
-                                },
-                                layoutBuilder: (currentChild, previousChildren) {
-                                  return Stack(
-                                    alignment: Alignment.topCenter,
-                                    children: [
-                                      ...previousChildren,
-                                      // ignore: use_null_aware_elements
-                                      if (currentChild != null) currentChild,
-                                    ],
-                                  );
-                                },
-                                child: Column(
-                                  key: ValueKey('task_list_${taskProvider.activeFilter}'),
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                              Column(
+                                key: ValueKey('task_list_$currentFilterState'),
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
                                     if (taskProvider.activeFilter == 'Scheduled')
                                       ..._groupScheduledTasks(uncompletedTasks).map((
@@ -248,7 +228,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                       task: task,
                                     );
                                     taskWidgets.add(StaggeredListEntry(
-                                      key: ValueKey('task_wrapper_${taskProvider.activeFilter}_${task.id}'),
+                                      key: ValueKey('task_wrapper_${currentFilterState}_${task.id}'),
                                       index: i,
                                       isNewAddition: isNew,
                                       child: item,
@@ -277,7 +257,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                       task: task,
                                     );
                                     return StaggeredListEntry(
-                                      key: ValueKey('task_wrapper_${taskProvider.activeFilter}_${task.id}'),
+                                      key: ValueKey('task_wrapper_${currentFilterState}_${task.id}'),
                                       index: index,
                                       isNewAddition: isNew,
                                       child: item,
@@ -329,7 +309,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                         task: task,
                                       );
                                       return StaggeredListEntry(
-                                        key: ValueKey('task_wrapper_completed_${taskProvider.activeFilter}_${task.id}'),
+                                        key: ValueKey('task_wrapper_completed_${currentFilterState}_${task.id}'),
                                         index: index,
                                         isNewAddition: isNew,
                                         child: item,
@@ -337,13 +317,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                     }).toList(),
                                   ),
                                 ],
-                                    ],
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(height: 100), // Padding for FAB
-                            ],
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 100), // Padding for FAB
+                          ],
                           ),
                         ),
                       ),

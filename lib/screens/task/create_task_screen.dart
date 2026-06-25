@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/drawer_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
+import '../../utils/validation/task_deadline_rules.dart';
+import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/custom_snackbar.dart';
 
 class CreateTaskScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   late bool _isImportant;
   late List<SubTask> _subTasks;
   late String _reminder;
+  bool _isAllDay = false;
 
   @override
   void initState() {
@@ -48,11 +50,16 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDueDate() async {
+  DateTime _todayDate() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  Future<void> _selectDate() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _dueDate ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(minutes: 1)),
+      firstDate: TaskDeadlineRules.minSelectableDateForCreate(),
       lastDate: DateTime(2030),
       builder: (context, child) {
         return Theme(
@@ -69,23 +76,60 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
 
     if (pickedDate != null) {
-      if (!mounted) return;
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_dueDate ?? DateTime.now()),
-      );
-
-      if (pickedTime != null) {
-        setState(() {
+      setState(() {
+        if (_dueDate == null) {
+          final defaultTime = TaskDeadlineRules.defaultTimeOnDatePick();
           _dueDate = DateTime(
             pickedDate.year,
             pickedDate.month,
             pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
+            defaultTime.hour,
+            defaultTime.minute,
           );
-        });
-      }
+        } else {
+          _dueDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            _dueDate!.hour,
+            _dueDate!.minute,
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _selectTime() async {
+    if (_isAllDay) return;
+
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_dueDate ?? DateTime.now()),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryDark,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime != null) {
+      setState(() {
+        final date = _dueDate ?? _todayDate();
+        _dueDate = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+      });
     }
   }
 
@@ -146,9 +190,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       return;
     }
 
-    final now = DateTime.now();
-    if (_dueDate != null && _dueDate!.isBefore(now)) {
-      AppNotification.showError(context, 'Task deadline cannot be earlier than current time');
+    if (!TaskDeadlineRules.isValidForCreate(_dueDate)) {
+      AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
       return;
     }
 
@@ -163,11 +206,15 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       dueDate: _dueDate,
       isCompleted: false,
       isImportant: _isImportant,
+      isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
     );
 
-    taskProvider.addTask(newTask);
+    if (!taskProvider.addTask(newTask)) {
+      AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
+      return;
+    }
 
     AppNotification.showSuccess(context, 'Task created successfully');
 
@@ -515,19 +562,19 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       ),
       child: Column(
         children: [
-          // Due Date Row
+          // Date Row
           _buildInfoRow(
-            icon: Icons.event,
-            label: 'Due Date',
+            icon: Icons.calendar_today,
+            label: 'Date',
             child: InkWell(
-              onTap: _selectDueDate,
+              onTap: _selectDate,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: Text(
                   _dueDate == null
-                      ? 'Set due date'
-                      : DateFormat('MMM d, yyyy  h:mm a').format(_dueDate!),
+                      ? 'Set date'
+                      : AppDateTimeFormat.date(_dueDate!),
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.textPrimary,
@@ -535,6 +582,49 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   ),
                 ),
               ),
+            ),
+          ),
+          const Divider(color: AppColors.border, height: 24),
+
+          // Time Row
+          _buildInfoRow(
+            icon: Icons.access_time,
+            label: 'Time',
+            child: InkWell(
+              onTap: _selectTime,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: Text(
+                  _isAllDay
+                      ? 'All Day'
+                      : (_dueDate == null
+                          ? 'Set time'
+                          : AppDateTimeFormat.time(_dueDate!)),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _isAllDay ? AppColors.textSecondary : AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Divider(color: AppColors.border, height: 24),
+
+          // All Day Toggle
+          _buildInfoRow(
+            icon: Icons.all_inclusive,
+            label: 'All Day',
+            child: Switch(
+              value: _isAllDay,
+              activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
+              activeThumbColor: AppColors.primaryDark,
+              onChanged: (val) {
+                setState(() {
+                  _isAllDay = val;
+                });
+              },
             ),
           ),
           const Divider(color: AppColors.border, height: 24),
