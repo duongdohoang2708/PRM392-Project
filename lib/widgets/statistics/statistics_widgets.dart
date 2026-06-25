@@ -23,6 +23,8 @@ class StatPanel extends StatelessWidget {
   final Widget? trailing;
   final Widget child;
   final EdgeInsetsGeometry padding;
+  final double? height;
+  final AlignmentGeometry? alignment;
 
   const StatPanel({
     super.key,
@@ -30,6 +32,8 @@ class StatPanel extends StatelessWidget {
     this.trailing,
     required this.child,
     this.padding = const EdgeInsets.all(16),
+    this.height,
+    this.alignment,
   });
 
   @override
@@ -55,7 +59,9 @@ class StatPanel extends StatelessWidget {
 
     return Container(
       width: double.infinity,
+      height: height,
       padding: padding,
+      alignment: alignment,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),

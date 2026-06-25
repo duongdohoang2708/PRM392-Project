@@ -5,6 +5,7 @@ import '../../widgets/app_drawer.dart';
 import '../../providers/drawer_provider.dart';
 import '../../widgets/home/greeting_section.dart';
 import '../../widgets/home/overview_section.dart';
+import '../../widgets/home/streak_overview_section.dart';
 import '../../widgets/home/active_focus_section.dart';
 import '../../widgets/home/up_next_tasks_section.dart';
 import '../../widgets/home/smart_lists_section.dart';
@@ -42,6 +43,8 @@ class HomeScreen extends StatelessWidget {
                         const GreetingSection(),
                         const SizedBox(height: 32),
                         const OverviewSection(),
+                        const SizedBox(height: 32),
+                        const StreakOverviewSection(),
                         const SizedBox(height: 32),
                         if (showTwoColumns) ...[
                           Row(

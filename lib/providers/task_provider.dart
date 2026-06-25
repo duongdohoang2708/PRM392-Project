@@ -778,6 +778,24 @@ class TaskProvider with ChangeNotifier {
     }).length;
   }
 
+  int get remainingTodayCount => tasksTodayCount;
+
+  int get completedTodayCount {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return _tasks.where((t) {
+      if (t.completedAt == null) return false;
+      final completedDay = DateTime(
+        t.completedAt!.year,
+        t.completedAt!.month,
+        t.completedAt!.day,
+      );
+      return completedDay.isAtSameMomentAs(today);
+    }).length;
+  }
+
+  int get overdueCount => getCountForFilter('Overdue');
+
   int get completedCount => _tasks.where((t) => t.isCompleted).length;
 
   int get productivityScore {
