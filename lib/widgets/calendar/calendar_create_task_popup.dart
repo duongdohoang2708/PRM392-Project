@@ -7,7 +7,7 @@ import '../../utils/validation/task_deadline_rules.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
-import '../../screens/project/create_project_screen.dart';
+import '../../widgets/project/create_project_popup.dart';
 
 class CalendarCreateTaskPopup extends StatefulWidget {
   final DateTime selectedDate;
@@ -100,12 +100,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   }
 
   void _addNewProject() async {
-    final newProjectName = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const CreateProjectScreen(),
-      ),
-    );
+    final newProjectName = await showCreateProjectPopup(context);
 
     if (newProjectName != null && newProjectName.isNotEmpty) {
       setState(() {

@@ -2,24 +2,63 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/project_model.dart';
 import '../../providers/project_provider.dart';
-import '../../providers/drawer_provider.dart';
-import '../../providers/task_provider.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/app_drawer.dart';
-import '../../widgets/background_pattern.dart';
-import '../../widgets/custom_snackbar.dart';
-import 'create_project_screen.dart';
+import '../custom_snackbar.dart';
 
-class EditProjectScreen extends StatefulWidget {
-  final String projectId;
+class CreateProjectPopup extends StatefulWidget {
+  const CreateProjectPopup({super.key});
 
-  const EditProjectScreen({super.key, required this.projectId});
+  static const List<Color> projectColors = [
+    Color(0xFF2E7D32),
+    Color(0xFF00A676),
+    Color(0xFF0097A7),
+    Color(0xFF0277BD),
+    Color(0xFF3949AB),
+    Color(0xFF7B1FA2),
+    Color(0xFFC2185B),
+    Color(0xFFD32F2F),
+    Color(0xFFE64A19),
+    Color(0xFFF9A825),
+    Color(0xFF6D4C41),
+    Color(0xFF455A64),
+    Color(0xFF8BC34A),
+    Color(0xFF26C6DA),
+    Color(0xFF42A5F5),
+    Color(0xFF5E35B1),
+    Color(0xFFEC407A),
+    Color(0xFFFF7043),
+    Color(0xFFFFCA28),
+    Color(0xFF78909C),
+  ];
+
+  static const List<IconData> projectIcons = [
+    Icons.folder_outlined,
+    Icons.work_outline,
+    Icons.school_outlined,
+    Icons.home_outlined,
+    Icons.favorite_outline,
+    Icons.fitness_center,
+    Icons.code,
+    Icons.brush_outlined,
+    Icons.book_outlined,
+    Icons.flight_outlined,
+    Icons.restaurant_outlined,
+    Icons.music_note_outlined,
+    Icons.shopping_bag_outlined,
+    Icons.people_outline,
+    Icons.star_outline,
+    Icons.rocket_launch_outlined,
+    Icons.lightbulb_outline,
+    Icons.camera_alt_outlined,
+    Icons.sports_esports_outlined,
+    Icons.pets_outlined,
+  ];
 
   @override
-  State<EditProjectScreen> createState() => _EditProjectScreenState();
+  State<CreateProjectPopup> createState() => _CreateProjectPopupState();
 }
 
-class _EditProjectScreenState extends State<EditProjectScreen> {
+class _CreateProjectPopupState extends State<CreateProjectPopup> {
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   int _selectedColorIndex = 0;
@@ -29,27 +68,13 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
 
   static const int _collapsedCount = 10;
 
-  Color get _accentColor => CreateProjectScreen.projectColors[_selectedColorIndex];
+  Color get _accentColor => CreateProjectPopup.projectColors[_selectedColorIndex];
 
   @override
   void initState() {
     super.initState();
-    final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
-    final project = projectProvider.projects.firstWhere(
-      (p) => p.id == widget.projectId,
-      orElse: () => Project(id: '', name: '', description: '', colorValue: Colors.grey.toARGB32()),
-    );
-
-    _nameController = TextEditingController(text: project.name);
-    _descriptionController = TextEditingController(text: project.description);
-
-    _selectedColorIndex = CreateProjectScreen.projectColors
-        .indexWhere((c) => c.toARGB32() == project.colorValue);
-    if (_selectedColorIndex == -1) _selectedColorIndex = 0;
-
-    _selectedIconIndex = CreateProjectScreen.projectIcons
-        .indexWhere((icon) => icon.codePoint == project.icon.codePoint);
-    if (_selectedIconIndex == -1) _selectedIconIndex = 0;
+    _nameController = TextEditingController();
+    _descriptionController = TextEditingController();
   }
 
   @override
@@ -59,204 +84,114 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     super.dispose();
   }
 
-  void _saveChanges() {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
+  void _createProject() {
+    if (_nameController.text.trim().isEmpty) {
       AppNotification.showError(context, 'Please enter a project name');
       return;
     }
 
-    final projectProvider = context.read<ProjectProvider>();
-    final originalProject = projectProvider.projects.firstWhere(
-      (p) => p.id == widget.projectId,
-    );
-
-    // Update tasks project name if project name changed
-    final taskProvider = context.read<TaskProvider>();
-    if (originalProject.name != name) {
-      final tasksToRename = taskProvider.tasks
-          .where((t) => t.project == originalProject.name)
-          .toList();
-      for (var t in tasksToRename) {
-        taskProvider.updateTask(t.copyWith(project: name));
-      }
-    }
-
-    final updatedProject = originalProject.copyWith(
-      name: name,
+    final provider = context.read<ProjectProvider>();
+    final newProject = Project(
+      id: 'p${DateTime.now().millisecondsSinceEpoch}',
+      name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
-      colorValue: CreateProjectScreen.projectColors[_selectedColorIndex].toARGB32(),
-      icon: CreateProjectScreen.projectIcons[_selectedIconIndex],
+      colorValue: CreateProjectPopup.projectColors[_selectedColorIndex].toARGB32(),
+      icon: CreateProjectPopup.projectIcons[_selectedIconIndex],
+      status: 'In Progress',
     );
 
-    projectProvider.updateProject(updatedProject);
+    provider.addProject(newProject);
 
-    AppNotification.showSuccess(context, 'Project "${updatedProject.name}" updated!');
+    AppNotification.showSuccess(context, 'Project "${newProject.name}" created!');
 
-    Navigator.pop(context);
+    Navigator.pop(context, newProject.name);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final useTwoColumns = constraints.maxWidth >= 768;
-
-        final titleWidget = Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 24, top: 8),
-          child: Text(
-            'Edit Project',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: isMobile
+          ? const EdgeInsets.all(16)
+          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          width: isMobile ? double.infinity : 400,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
           ),
-        );
-
-        // Left column: Name + Description
-        final leftColumnWidgets = [
-          _buildNameCard(),
-          const SizedBox(height: 16),
-          _buildDescriptionCard(),
-          if (!useTwoColumns) ...[
-            const SizedBox(height: 16),
-            _buildIconPicker(isCompact: true),
-            const SizedBox(height: 16),
-            _buildColorPicker(isCompact: true),
-          ],
-          const SizedBox(height: 24),
-          _buildActionButtons(),
-        ];
-
-        // Right column: Icon + Color picker (desktop only)
-        final rightColumnWidgets = [
-          _buildIconPicker(isCompact: false),
-          const SizedBox(height: 16),
-          _buildColorPicker(isCompact: false),
-        ];
-
-        Widget bodyContent;
-        if (useTwoColumns) {
-          bodyContent = Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: leftColumnWidgets,
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: rightColumnWidgets,
-                ),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
-          );
-        } else {
-          bodyContent = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: leftColumnWidgets,
-          );
-        }
-
-        Widget mainContent = Stack(
-          children: [
-            const BackgroundPattern(),
-            SafeArea(
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 24,
+                    right: 16,
+                    top: 16,
+                    bottom: 8,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Create Project',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(color: AppColors.border, height: 1),
+                Flexible(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        titleWidget,
-                        bodyContent,
-                        const SizedBox(height: 80),
+                        _buildNameCard(),
+                        const SizedBox(height: 16),
+                        _buildDescriptionCard(),
+                        const SizedBox(height: 16),
+                        _buildIconPicker(),
+                        const SizedBox(height: 16),
+                        _buildColorPicker(),
+                        const SizedBox(height: 24),
+                        _buildActionButtons(),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
-        );
-
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          drawer: isDesktop
-              ? null
-              : const AppDrawer(
-                  isPermanent: false,
-                  activeRoute: '/projects',
-                ),
-          appBar: _buildAppBar(context, showMenuIcon: !isDesktop),
-          body: isDesktop
-              ? mainContent
-              : Builder(
-                  builder: (context) => GestureDetector(
-                    onHorizontalDragEnd: (details) {
-                      if (details.primaryVelocity != null &&
-                          details.primaryVelocity! > 300) {
-                        Scaffold.of(context).openDrawer();
-                      }
-                    },
-                    child: mainContent,
-                  ),
-                ),
-        );
-      },
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(
-    BuildContext context, {
-    required bool showMenuIcon,
-  }) {
-    return AppBar(
-      backgroundColor: AppColors.background,
-      elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
-      leadingWidth: 96,
-      leading: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                if (showMenuIcon) {
-                  Scaffold.of(context).openDrawer();
-                } else {
-                  context.read<DrawerProvider>().toggleDesktopCollapse();
-                }
-              },
+              ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
         ),
-        const SizedBox(width: 8),
-      ],
+      ),
     );
   }
 
@@ -284,7 +219,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
               const Text(
                 'Project Name',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
@@ -330,7 +265,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
               const Text(
                 'Description',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
@@ -362,10 +297,10 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     );
   }
 
-  Widget _buildIconPicker({required bool isCompact}) {
-    final visibleCount = isCompact && !_showAllIcons
+  Widget _buildIconPicker() {
+    final visibleCount = !_showAllIcons
         ? _collapsedCount
-        : CreateProjectScreen.projectIcons.length;
+        : CreateProjectPopup.projectIcons.length;
 
     return _buildCard(
       child: Column(
@@ -378,7 +313,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
               const Text(
                 'Project Icon',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
@@ -413,7 +348,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                   ),
                   child: Center(
                     child: Icon(
-                      CreateProjectScreen.projectIcons[index],
+                      CreateProjectPopup.projectIcons[index],
                       color: isSelected ? _accentColor : AppColors.textSecondary,
                       size: 22,
                     ),
@@ -422,7 +357,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
               );
             },
           ),
-          if (isCompact && CreateProjectScreen.projectIcons.length > _collapsedCount)
+          if (CreateProjectPopup.projectIcons.length > _collapsedCount)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Center(
@@ -449,10 +384,10 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     );
   }
 
-  Widget _buildColorPicker({required bool isCompact}) {
-    final visibleCount = isCompact && !_showAllColors
+  Widget _buildColorPicker() {
+    final visibleCount = !_showAllColors
         ? _collapsedCount
-        : CreateProjectScreen.projectColors.length;
+        : CreateProjectPopup.projectColors.length;
 
     return _buildCard(
       child: Column(
@@ -465,7 +400,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
               const Text(
                 'Project Color',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
@@ -484,7 +419,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedColorIndex == index;
-              final color = CreateProjectScreen.projectColors[index];
+              final color = CreateProjectPopup.projectColors[index];
               return GestureDetector(
                 onTap: () => setState(() => _selectedColorIndex = index),
                 child: AnimatedContainer(
@@ -515,7 +450,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
               );
             },
           ),
-          if (isCompact && CreateProjectScreen.projectColors.length > _collapsedCount)
+          if (CreateProjectPopup.projectColors.length > _collapsedCount)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Center(
@@ -544,9 +479,9 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
 
   Widget _buildActionButtons() {
     return ElevatedButton(
-      onPressed: _saveChanges,
+      onPressed: _createProject,
       style: ElevatedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 52),
+        minimumSize: const Size(double.infinity, 48),
         backgroundColor: _accentColor,
         foregroundColor:
             ThemeData.estimateBrightnessForColor(_accentColor) == Brightness.dark
@@ -557,9 +492,33 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         ),
       ),
       child: const Text(
-        'Save Changes',
+        'Create Project',
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
     );
   }
+}
+
+Future<String?> showCreateProjectPopup(BuildContext context) {
+  return showGeneralDialog<String>(
+    context: context,
+    useRootNavigator: true,
+    barrierDismissible: true,
+    barrierLabel: 'Dismiss',
+    barrierColor: Colors.black.withValues(alpha: 0.5),
+    transitionDuration: const Duration(milliseconds: 300),
+    pageBuilder: (dialogContext, animation, secondaryAnimation) {
+      return const SafeArea(child: CreateProjectPopup());
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curve = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutBack,
+      );
+      return ScaleTransition(
+        scale: Tween<double>(begin: 0.8, end: 1.0).animate(curve),
+        child: FadeTransition(opacity: animation, child: child),
+      );
+    },
+  );
 }

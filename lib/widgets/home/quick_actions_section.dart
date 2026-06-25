@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../project/create_project_popup.dart';
 import '../custom_snackbar.dart';
 
 class QuickActionsSection extends StatelessWidget {
@@ -80,7 +81,7 @@ class QuickActionsSection extends StatelessWidget {
         } else if (title == 'Calendar') {
           Navigator.pushNamed(context, '/calendar');
         } else if (title == 'New Project') {
-          Navigator.pushNamed(context, '/create-project');
+          showCreateProjectPopup(context);
         } else if (title == 'Start Focus') {
           Navigator.pushNamed(context, '/focus');
         } else {

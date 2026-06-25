@@ -7,55 +7,13 @@ import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_snackbar.dart';
+import '../../widgets/project/create_project_popup.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
 
-  static const List<Color> projectColors = [
-    Color(0xFF2E7D32),       // Forest green
-    Color(0xFF00A676),       // Emerald
-    Color(0xFF0097A7),       // Cyan
-    Color(0xFF0277BD),       // Deep blue
-    Color(0xFF3949AB),       // Indigo
-    Color(0xFF7B1FA2),       // Purple
-    Color(0xFFC2185B),       // Magenta
-    Color(0xFFD32F2F),       // Red
-    Color(0xFFE64A19),       // Burnt orange
-    Color(0xFFF9A825),       // Golden yellow
-    Color(0xFF6D4C41),       // Brown
-    Color(0xFF455A64),       // Blue gray
-    Color(0xFF8BC34A),       // Lime green
-    Color(0xFF26C6DA),       // Bright aqua
-    Color(0xFF42A5F5),       // Light blue
-    Color(0xFF5E35B1),       // Deep violet
-    Color(0xFFEC407A),       // Pink
-    Color(0xFFFF7043),       // Coral
-    Color(0xFFFFCA28),       // Amber
-    Color(0xFF78909C),       // Slate
-  ];
-
-  static const List<IconData> projectIcons = [
-    Icons.folder_outlined,
-    Icons.work_outline,
-    Icons.school_outlined,
-    Icons.home_outlined,
-    Icons.favorite_outline,
-    Icons.fitness_center,
-    Icons.code,
-    Icons.brush_outlined,
-    Icons.book_outlined,
-    Icons.flight_outlined,
-    Icons.restaurant_outlined,
-    Icons.music_note_outlined,
-    Icons.shopping_bag_outlined,
-    Icons.people_outline,
-    Icons.star_outline,
-    Icons.rocket_launch_outlined,
-    Icons.lightbulb_outline,
-    Icons.camera_alt_outlined,
-    Icons.sports_esports_outlined,
-    Icons.pets_outlined,
-  ];
+  static const List<Color> projectColors = CreateProjectPopup.projectColors;
+  static const List<IconData> projectIcons = CreateProjectPopup.projectIcons;
 
   @override
   State<CreateProjectScreen> createState() => _CreateProjectScreenState();
@@ -70,6 +28,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   bool _showAllColors = false;
 
   static const int _collapsedCount = 10;
+
+  Color get _accentColor => CreateProjectScreen.projectColors[_selectedColorIndex];
 
   @override
   void initState() {
@@ -127,7 +87,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
           ),
         );
 
-        // Left column: Name + Description
         final leftColumnWidgets = [
           _buildNameCard(),
           const SizedBox(height: 16),
@@ -142,7 +101,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
           _buildActionButtons(),
         ];
 
-        // Right column: Icon + Color picker (desktop only)
         final rightColumnWidgets = [
           _buildIconPicker(isCompact: false),
           const SizedBox(height: 16),
@@ -272,29 +230,28 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     );
   }
 
-  Widget _buildNameCard() {
+  Widget _buildCard({required Widget child}) {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Color.alphaBlend(_accentColor.withValues(alpha: 0.08), AppColors.surface),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: _accentColor.withValues(alpha: 0.5), width: 1.5),
       ),
-      padding: const EdgeInsets.all(20),
+      child: child,
+    );
+  }
+
+  Widget _buildNameCard() {
+    return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.edit_outlined, color: AppColors.primaryDark),
-              SizedBox(width: 8),
-              Text(
+              Icon(Icons.edit_outlined, color: _accentColor, size: 20),
+              const SizedBox(width: 8),
+              const Text(
                 'Project Name',
                 style: TextStyle(
                   fontSize: 16,
@@ -304,20 +261,26 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           TextField(
             controller: _nameController,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+            decoration: const InputDecoration(
               hintText: 'Enter project name...',
-              hintStyle: const TextStyle(color: AppColors.textSecondary),
-              filled: true,
-              fillColor: AppColors.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+              hintStyle: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.normal,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              fillColor: Colors.transparent,
+              contentPadding: EdgeInsets.zero,
             ),
           ),
         ],
@@ -326,28 +289,15 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   }
 
   Widget _buildDescriptionCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
+    return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.description_outlined, color: AppColors.primaryDark),
-              SizedBox(width: 8),
-              Text(
+              Icon(Icons.description_outlined, color: _accentColor, size: 20),
+              const SizedBox(width: 8),
+              const Text(
                 'Description',
                 style: TextStyle(
                   fontSize: 16,
@@ -357,21 +307,24 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           TextField(
             controller: _descriptionController,
             onChanged: (_) => setState(() {}),
             maxLines: 3,
-            decoration: InputDecoration(
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: AppColors.textPrimary,
+            ),
+            decoration: const InputDecoration(
               hintText: 'Describe your project...',
-              hintStyle: const TextStyle(color: AppColors.textSecondary),
-              filled: true,
-              fillColor: AppColors.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              hintStyle: TextStyle(color: AppColors.textSecondary),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              fillColor: Colors.transparent,
+              contentPadding: EdgeInsets.zero,
             ),
           ),
         ],
@@ -384,28 +337,15 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
         ? _collapsedCount
         : CreateProjectScreen.projectIcons.length;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
+    return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.emoji_emotions_outlined, color: AppColors.primaryDark),
-              SizedBox(width: 8),
-              Text(
+              Icon(Icons.emoji_emotions_outlined, color: _accentColor, size: 20),
+              const SizedBox(width: 8),
+              const Text(
                 'Project Icon',
                 style: TextStyle(
                   fontSize: 16,
@@ -415,7 +355,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -433,22 +373,18 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? CreateProjectScreen.projectColors[_selectedColorIndex].withValues(alpha: 0.2)
+                        ? _accentColor.withValues(alpha: 0.2)
                         : AppColors.background,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isSelected
-                          ? CreateProjectScreen.projectColors[_selectedColorIndex]
-                          : AppColors.border,
+                      color: isSelected ? _accentColor : AppColors.border,
                       width: isSelected ? 2 : 1,
                     ),
                   ),
                   child: Center(
                     child: Icon(
                       CreateProjectScreen.projectIcons[index],
-                      color: isSelected
-                          ? CreateProjectScreen.projectColors[_selectedColorIndex]
-                          : AppColors.textSecondary,
+                      color: isSelected ? _accentColor : AppColors.textSecondary,
                       size: 22,
                     ),
                   ),
@@ -464,13 +400,13 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   onPressed: () => setState(() => _showAllIcons = !_showAllIcons),
                   icon: Icon(
                     _showAllIcons ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.primaryDark,
+                    color: _accentColor,
                     size: 20,
                   ),
                   label: Text(
                     _showAllIcons ? 'Show Less' : 'Show More',
-                    style: const TextStyle(
-                      color: AppColors.primaryDark,
+                    style: TextStyle(
+                      color: _accentColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -488,28 +424,15 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
         ? _collapsedCount
         : CreateProjectScreen.projectColors.length;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
+    return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.palette_outlined, color: AppColors.primaryDark),
-              SizedBox(width: 8),
-              Text(
+              Icon(Icons.palette_outlined, color: _accentColor, size: 20),
+              const SizedBox(width: 8),
+              const Text(
                 'Project Color',
                 style: TextStyle(
                   fontSize: 16,
@@ -519,7 +442,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -531,12 +454,13 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedColorIndex == index;
+              final color = CreateProjectScreen.projectColors[index];
               return GestureDetector(
                 onTap: () => setState(() => _selectedColorIndex = index),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: CreateProjectScreen.projectColors[index].withValues(alpha: isSelected ? 1.0 : 0.6),
+                    color: color.withValues(alpha: isSelected ? 1.0 : 0.6),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isSelected ? AppColors.textPrimary : Colors.transparent,
@@ -545,7 +469,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: CreateProjectScreen.projectColors[index].withValues(alpha: 0.4),
+                              color: color.withValues(alpha: 0.4),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -569,13 +493,13 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   onPressed: () => setState(() => _showAllColors = !_showAllColors),
                   icon: Icon(
                     _showAllColors ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.primaryDark,
+                    color: _accentColor,
                     size: 20,
                   ),
                   label: Text(
                     _showAllColors ? 'Show Less' : 'Show More',
-                    style: const TextStyle(
-                      color: AppColors.primaryDark,
+                    style: TextStyle(
+                      color: _accentColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -589,19 +513,23 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   }
 
   Widget _buildActionButtons() {
-    return Column(
-      children: [
-        ElevatedButton.icon(
-          onPressed: _createProject,
-          icon: const Icon(Icons.check),
-          label: const Text('Create Project'),
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 52),
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.textPrimary,
-          ),
+    return ElevatedButton(
+      onPressed: _createProject,
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 52),
+        backgroundColor: _accentColor,
+        foregroundColor:
+            ThemeData.estimateBrightnessForColor(_accentColor) == Brightness.dark
+            ? Colors.white
+            : AppColors.textPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(100),
         ),
-      ],
+      ),
+      child: const Text(
+        'Create Project',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

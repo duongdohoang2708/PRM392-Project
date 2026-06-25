@@ -11,7 +11,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/custom_snackbar.dart';
-import '../project/create_project_screen.dart';
+import '../../widgets/project/create_project_popup.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final String taskId;
@@ -220,12 +220,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   void _addNewProject() async {
-    final newProjectName = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const CreateProjectScreen(),
-      ),
-    );
+    final newProjectName = await showCreateProjectPopup(context);
 
     if (newProjectName != null && newProjectName.isNotEmpty) {
       setState(() {
