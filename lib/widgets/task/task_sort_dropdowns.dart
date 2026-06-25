@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/task_provider.dart';
+import '../common/app_dropdown.dart';
 
 class TaskSortDropdowns extends StatelessWidget {
   const TaskSortDropdowns({super.key});
@@ -65,31 +66,29 @@ class TaskSortDropdowns extends StatelessWidget {
                     color: AppColors.textSecondary,
                   ),
                 ),
-                DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: provider.sortBy,
-                    icon: const Icon(
-                      Icons.expand_more,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: AppColors.primaryDark,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    isDense: true,
-                    onChanged: (val) {
-                      if (val != null) {
-                        provider.setSortBy(val);
-                      }
-                    },
-                    items: ['Due Date', 'Priority', 'Name'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
+                AppDropdown<String>(
+                  value: provider.sortBy,
+                  isDense: true,
+                  icon: const Icon(
+                    Icons.expand_more,
+                    size: 16,
+                    color: AppColors.textSecondary,
                   ),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  onChanged: (val) {
+                    if (val != null) {
+                      provider.setSortBy(val);
+                    }
+                  },
+                  items: ['Due Date', 'Priority', 'Name'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
@@ -122,34 +121,33 @@ class TaskSortDropdowns extends StatelessWidget {
           ),
         ],
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          icon: const Icon(
-            Icons.expand_more,
-            size: 16,
-            color: AppColors.textSecondary,
-          ),
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: AppColors.textPrimary,
-          ),
-          isDense: true,
-          onChanged: onChanged,
-          items: items.map((String val) {
-            return DropdownMenuItem<String>(
-              value: val,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (val == value)
-                    Icon(icon, size: 14, color: AppColors.primary),
-                  if (val == value) const SizedBox(width: 4),
-                  Text(val.startsWith('All') ? label : val),
-                ],
-              ),
-            );
-          }).toList(),
+      child: AppDropdown<String>(
+        value: value,
+        isDense: true,
+        icon: const Icon(
+          Icons.expand_more,
+          size: 16,
+          color: AppColors.textSecondary,
         ),
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: AppColors.textPrimary,
+        ),
+        onChanged: onChanged,
+        items: items.map((String val) {
+          return DropdownMenuItem<String>(
+            value: val,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (val == value) ...[
+                  Icon(icon, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                ],
+                Text(val.startsWith('All') ? label : val),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

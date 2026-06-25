@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'common/animations/app_bottom_slide_fade.dart';
 import 'dart:async';
 import '../theme/app_colors.dart';
 
@@ -149,48 +151,39 @@ class _NotificationToastState extends State<_NotificationToast> {
       left: 16,
       right: 16,
       child: SafeArea(
-        child: IgnorePointer(
-          ignoring: !_isVisible,
-          child: AnimatedSlide(
-            offset: _isVisible ? Offset.zero : const Offset(0, 1.5),
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.fastOutSlowIn,
-            child: AnimatedOpacity(
-              opacity: _isVisible ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 150),
-              child: Material(
-                type: MaterialType.transparency,
-                child: Container(
-                  width: double.infinity, // Stretch horizontally to fit the screen
-                  decoration: BoxDecoration(
-                    color: widget.backgroundColor,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+        child: AppBottomSlideFade(
+          visible: _isVisible,
+          child: Material(
+            type: MaterialType.transparency,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: widget.backgroundColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Row(
-                    children: [
-                      Icon(widget.icon, color: Colors.white, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          widget.message,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Icon(widget.icon, color: Colors.white, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
