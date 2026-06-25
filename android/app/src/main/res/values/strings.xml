@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_pause">Pause or resume timer</string>
+    <string name="notification_stop">Stop timer</string>
+    <string name="pomodoro_channel_name">Pomodoro Timer</string>
+    <string name="pomodoro_channel_description">Shows ongoing Pomodoro timer with controls</string>
+</resources>
