@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../common/app_popup_transition.dart';
 
 class PomodoroSettingsPopup extends StatefulWidget {
   final int initialFocusMinutes;
@@ -91,19 +92,10 @@ class _PomodoroSettingsPopupState extends State<PomodoroSettingsPopup> {
   Widget build(BuildContext context) {
     final bool isMobile = MediaQuery.of(context).size.width < 600;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: isMobile
-          ? const EdgeInsets.all(16)
-          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Align(
-        alignment: isMobile ? Alignment.center : Alignment.centerRight,
-        child: Container(
-          width: isMobile ? double.infinity : 400,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          decoration: BoxDecoration(
+    return AppPopupShell(
+      alignment: isMobile ? Alignment.center : Alignment.centerRight,
+      child: Container(
+        decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -281,7 +273,6 @@ class _PomodoroSettingsPopupState extends State<PomodoroSettingsPopup> {
             ),
           ),
         ),
-      ),
     );
   }
 

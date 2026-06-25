@@ -5,6 +5,7 @@ import '../../providers/task_provider.dart';
 import '../../providers/focus_provider.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../theme/app_colors.dart';
+import '../common/app_dropdown.dart';
 
 class TaskSelectorSheet extends StatefulWidget {
   const TaskSelectorSheet({super.key});
@@ -217,35 +218,31 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: safeValue,
-          icon: const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-          isDense: true,
-          dropdownColor: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
-          ),
-          items: items.map((item) {
-            return DropdownMenuItem(
-              value: item,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (item == safeValue) ...[
-                    Icon(icon, size: 14, color: AppColors.primary),
-                    const SizedBox(width: 6),
-                  ],
-                  Text(item),
-                ],
-              ),
-            );
-          }).toList(),
-          onChanged: onChanged,
+      child: AppDropdown<String>(
+        value: safeValue,
+        isDense: true,
+        icon: const Icon(Icons.expand_more, color: AppColors.textSecondary, size: 20),
+        style: const TextStyle(
+          fontSize: 13,
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w500,
         ),
+        items: items.map((item) {
+          return DropdownMenuItem(
+            value: item,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (item == safeValue) ...[
+                  Icon(icon, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                ],
+                Text(item),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: onChanged,
       ),
     );
   }

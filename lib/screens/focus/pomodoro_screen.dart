@@ -11,6 +11,8 @@ import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/focus/pomodoro_settings_popup.dart';
+import '../../widgets/common/app_popup_transition.dart';
+import '../../widgets/common/animations/app_scale_transition.dart';
 import '../../widgets/focus/task_selector_sheet.dart';
 
 class PomodoroScreen extends StatefulWidget {
@@ -38,6 +40,8 @@ class PomodoroScreen extends StatefulWidget {
 }
 
 class _PomodoroScreenState extends State<PomodoroScreen> {
+  final GlobalKey _settingsFabKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -106,43 +110,26 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
 
   void _showSettingsPopup() {
     final focusProvider = context.read<FocusProvider>();
-    showGeneralDialog(
+    final fabContext = _settingsFabKey.currentContext;
+    showAppPopup(
       context: context,
-      useRootNavigator: true,
-      barrierDismissible: true,
-      barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (dialogContext, animation, secondaryAnimation) {
-        return SafeArea(
-          child: PomodoroSettingsPopup(
-            initialFocusMinutes: focusProvider.focusMinutes,
-            initialShortBreakMinutes: focusProvider.shortBreakMinutes,
-            initialLongBreakMinutes: focusProvider.longBreakMinutes,
-            initialRounds: focusProvider.rounds,
-            initialLongBreakInterval: focusProvider.longBreakInterval,
-            onSave: (focus, shortBreak, longBreak, rounds, interval) {
-              focusProvider.updateSettings(
-                focus: focus,
-                shortBreak: shortBreak,
-                longBreak: longBreak,
-                rounds: rounds,
-                interval: interval,
-              );
-            },
-          ),
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final curve = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutBack,
-        );
-        return ScaleTransition(
-          scale: Tween<double>(begin: 0.8, end: 1.0).animate(curve),
-          child: FadeTransition(opacity: animation, child: child),
-        );
-      },
+      anchor: fabContext != null ? popupAnchorFromContext(fabContext) : null,
+      child: PomodoroSettingsPopup(
+        initialFocusMinutes: focusProvider.focusMinutes,
+        initialShortBreakMinutes: focusProvider.shortBreakMinutes,
+        initialLongBreakMinutes: focusProvider.longBreakMinutes,
+        initialRounds: focusProvider.rounds,
+        initialLongBreakInterval: focusProvider.longBreakInterval,
+        onSave: (focus, shortBreak, longBreak, rounds, interval) {
+          focusProvider.updateSettings(
+            focus: focus,
+            shortBreak: shortBreak,
+            longBreak: longBreak,
+            rounds: rounds,
+            interval: interval,
+          );
+        },
+      ),
     );
   }
 
@@ -270,6 +257,7 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                   ),
                 ),
           floatingActionButton: FloatingActionButton(
+            key: _settingsFabKey,
             onPressed: _showSettingsPopup,
             child: const Icon(Icons.settings),
           ),
@@ -829,15 +817,7 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                         scale: isActive ? 1.1 : 1.0,
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          transitionBuilder:
-                              (Widget child, Animation<double> animation) {
-                                return ScaleTransition(
-                                  scale: animation,
-                                  child: child,
-                                );
-                              },
+                        child: appScaleSwitcher(
                           child: Icon(
                             iconData,
                             key: ValueKey<IconData>(iconData),
