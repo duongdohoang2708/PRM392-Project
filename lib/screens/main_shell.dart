@@ -24,12 +24,22 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   String _activeRoute = '/home';
+  String _initialRoute = '/home';
+  bool _initialRouteResolved = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialRouteResolved) return;
+
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    _initialRoute = args?['initialRoute'] as String? ?? '/home';
+    _initialRouteResolved = true;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final initialRoute = args?['initialRoute'] as String? ?? '/home';
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -38,7 +48,6 @@ class _MainShellState extends State<MainShell> {
         if (nav != null && nav.canPop()) {
           nav.pop();
         } else {
-          // Exits app when back button is pressed on the root of nested navigator
           Navigator.of(context).pop();
         }
       },
@@ -46,102 +55,11 @@ class _MainShellState extends State<MainShell> {
         builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 768;
 
-          final navigator = Navigator(
-            key: _navigatorKey,
-            initialRoute: initialRoute,
-            observers: [
-              _ShellRouteObserver((route) {
-                if (route != null) {
-                  // Run in next frame to avoid build phase setState
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      setState(() {
-                        _activeRoute = route;
-                      });
-                    }
-                  });
-                }
-              }),
-            ],
-            onGenerateRoute: (settings) {
-              Widget page;
-              switch (settings.name) {
-                case '/home':
-                  page = const HomeScreen();
-                  break;
-                case '/task-list':
-                  page = const TaskListScreen();
-                  break;
-                case '/create-task':
-                  final args = settings.arguments as Map<String, dynamic>?;
-                  final initialProject = args?['projectName'] as String?;
-                  page = CreateTaskScreen(initialProjectName: initialProject);
-                  break;
-                case '/calendar':
-                  page = const CalendarScreen();
-                  break;
-                case '/projects':
-                  page = const ProjectsScreen();
-                  break;
-                case '/create-project':
-                  page = const CreateProjectScreen();
-                  break;
-                case '/project-detail':
-                  final args = settings.arguments as Map<String, dynamic>?;
-                  final projectId = args?['projectId'] as String? ?? '';
-                  page = ProjectDetailScreen(projectId: projectId);
-                  break;
-                case '/edit-project':
-                  final args = settings.arguments as Map<String, dynamic>?;
-                  final projectId = args?['projectId'] as String? ?? '';
-                  page = EditProjectScreen(projectId: projectId);
-                  break;
-                case '/focus':
-                  final args = settings.arguments as Map<String, dynamic>?;
-                  final taskId = args?['taskId'] as String?;
-                  final focusMinutes = args?['focusMinutes'] as int?;
-                  final breakMinutes = args?['breakMinutes'] as int?;
-                  final longBreakMinutes = args?['longBreakMinutes'] as int?;
-                  final sessions = args?['sessions'] as int?;
-                  final longBreakInterval = args?['longBreakInterval'] as int?;
-                  final autoStart = args?['autoStart'] as bool? ?? false;
-                  page = PomodoroScreen(
-                    taskId: taskId,
-                    focusMinutes: focusMinutes,
-                    breakMinutes: breakMinutes,
-                    longBreakMinutes: longBreakMinutes,
-                    sessions: sessions,
-                    longBreakInterval: longBreakInterval,
-                    autoStart: autoStart,
-                  );
-                  break;
-                case '/statistics':
-                  page = const StatisticsScreen();
-                  break;
-                case '/goals':
-                  page = const GoalsScreen();
-                  break;
-                case '/achievements':
-                  page = const AchievementsScreen();
-                  break;
-                case '/focus-history':
-                  page = const FocusHistoryScreen();
-                  break;
-                default:
-                  page = const HomeScreen();
-              }
-              return MaterialPageRoute(
-                builder: (context) => page,
-                settings: settings,
-              );
-            },
-          );
-
-          if (isDesktop) {
-            return Scaffold(
-              resizeToAvoidBottomInset: false,
-              body: Row(
-                children: [
+          return Scaffold(
+            resizeToAvoidBottomInset: false,
+            body: Row(
+              children: [
+                if (isDesktop)
                   AppDrawer(
                     isPermanent: true,
                     activeRoute: _activeRoute,
@@ -156,15 +74,104 @@ class _MainShellState extends State<MainShell> {
                       }
                     },
                   ),
-                  Expanded(child: navigator),
-                ],
-              ),
-            );
-          }
-
-          return navigator;
+                Expanded(
+                  child: Navigator(
+                    key: _navigatorKey,
+                    initialRoute: _initialRoute,
+                    observers: [
+                      _ShellRouteObserver((route) {
+                        if (route != null) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              setState(() {
+                                _activeRoute = route;
+                              });
+                            }
+                          });
+                        }
+                      }),
+                    ],
+                    onGenerateRoute: _onGenerateRoute,
+                  ),
+                ),
+              ],
+            ),
+          );
         },
       ),
+    );
+  }
+
+  Route<dynamic> _onGenerateRoute(RouteSettings settings) {
+    Widget page;
+    switch (settings.name) {
+      case '/home':
+        page = const HomeScreen();
+        break;
+      case '/task-list':
+        page = const TaskListScreen();
+        break;
+      case '/create-task':
+        final args = settings.arguments as Map<String, dynamic>?;
+        final initialProject = args?['projectName'] as String?;
+        page = CreateTaskScreen(initialProjectName: initialProject);
+        break;
+      case '/calendar':
+        page = const CalendarScreen();
+        break;
+      case '/projects':
+        page = const ProjectsScreen();
+        break;
+      case '/create-project':
+        page = const CreateProjectScreen();
+        break;
+      case '/project-detail':
+        final args = settings.arguments as Map<String, dynamic>?;
+        final projectId = args?['projectId'] as String? ?? '';
+        page = ProjectDetailScreen(projectId: projectId);
+        break;
+      case '/edit-project':
+        final args = settings.arguments as Map<String, dynamic>?;
+        final projectId = args?['projectId'] as String? ?? '';
+        page = EditProjectScreen(projectId: projectId);
+        break;
+      case '/focus':
+        final args = settings.arguments as Map<String, dynamic>?;
+        final taskId = args?['taskId'] as String?;
+        final focusMinutes = args?['focusMinutes'] as int?;
+        final breakMinutes = args?['breakMinutes'] as int?;
+        final longBreakMinutes = args?['longBreakMinutes'] as int?;
+        final sessions = args?['sessions'] as int?;
+        final longBreakInterval = args?['longBreakInterval'] as int?;
+        final autoStart = args?['autoStart'] as bool? ?? false;
+        page = PomodoroScreen(
+          taskId: taskId,
+          focusMinutes: focusMinutes,
+          breakMinutes: breakMinutes,
+          longBreakMinutes: longBreakMinutes,
+          sessions: sessions,
+          longBreakInterval: longBreakInterval,
+          autoStart: autoStart,
+        );
+        break;
+      case '/statistics':
+        page = const StatisticsScreen();
+        break;
+      case '/goals':
+        page = const GoalsScreen();
+        break;
+      case '/achievements':
+        page = const AchievementsScreen();
+        break;
+      case '/focus-history':
+        page = const FocusHistoryScreen();
+        break;
+      default:
+        page = const HomeScreen();
+    }
+    return MaterialPageRoute(
+      builder: (context) => page,
+      settings: settings,
     );
   }
 }
