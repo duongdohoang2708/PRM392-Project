@@ -21,6 +21,7 @@ class HomeScreen extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = MediaQuery.of(context).size.width >= 768;
+        final bool showTwoColumns = constraints.maxWidth >= 600;
 
         Widget mainContent = Stack(
           children: [
@@ -37,21 +38,58 @@ class HomeScreen extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        GreetingSection(),
-                        SizedBox(height: 32),
-                        OverviewSection(),
-                        SizedBox(height: 32),
-                        ActiveFocusSection(),
-                        SizedBox(height: 32),
-                        UpNextTasksSection(),
-                        SizedBox(height: 32),
-                        SmartListsSection(),
-                        SizedBox(height: 32),
-                        ProjectsSection(),
-                        SizedBox(height: 32),
-                        QuickActionsSection(),
-                        SizedBox(height: 32),
+                      children: [
+                        const GreetingSection(),
+                        const SizedBox(height: 32),
+                        const OverviewSection(),
+                        const SizedBox(height: 32),
+                        if (showTwoColumns) ...[
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    ActiveFocusSection(),
+                                    SizedBox(height: 32),
+                                    UpNextTasksSection(),
+                                    SizedBox(height: 32),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 32),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    SmartListsSection(),
+                                    SizedBox(height: 32),
+                                    QuickActionsSection(),
+                                    SizedBox(height: 32),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const ProjectsSection(),
+                          const SizedBox(height: 32),
+                        ] else
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              ActiveFocusSection(),
+                              SizedBox(height: 32),
+                              UpNextTasksSection(),
+                              SizedBox(height: 32),
+                              SmartListsSection(),
+                              SizedBox(height: 32),
+                              ProjectsSection(),
+                              SizedBox(height: 32),
+                              QuickActionsSection(),
+                              SizedBox(height: 32),
+                            ],
+                          ),
                       ],
                     ),
                   ),

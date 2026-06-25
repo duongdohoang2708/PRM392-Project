@@ -81,6 +81,8 @@ class QuickActionsSection extends StatelessWidget {
           Navigator.pushNamed(context, '/calendar');
         } else if (title == 'New Project') {
           Navigator.pushNamed(context, '/create-project');
+        } else if (title == 'Start Focus') {
+          Navigator.pushNamed(context, '/focus');
         } else {
           AppNotification.showInfo(context, '$title coming soon!');
         }
