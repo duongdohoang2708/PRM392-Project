@@ -8,6 +8,11 @@ import 'project/projects_screen.dart';
 import 'project/create_project_screen.dart';
 import 'project/project_detail_screen.dart';
 import 'project/edit_project_screen.dart';
+import 'focus/pomodoro_screen.dart';
+import 'statistics/statistics_screen.dart';
+import 'goals/achievements_screen.dart';
+import 'statistics/focus_history_screen.dart';
+import 'goals/goals_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -22,6 +27,9 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final initialRoute = args?['initialRoute'] as String? ?? '/home';
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -40,7 +48,7 @@ class _MainShellState extends State<MainShell> {
 
           final navigator = Navigator(
             key: _navigatorKey,
-            initialRoute: '/home',
+            initialRoute: initialRoute,
             observers: [
               _ShellRouteObserver((route) {
                 if (route != null) {
@@ -87,6 +95,37 @@ class _MainShellState extends State<MainShell> {
                   final args = settings.arguments as Map<String, dynamic>?;
                   final projectId = args?['projectId'] as String? ?? '';
                   page = EditProjectScreen(projectId: projectId);
+                  break;
+                case '/focus':
+                  final args = settings.arguments as Map<String, dynamic>?;
+                  final taskId = args?['taskId'] as String?;
+                  final focusMinutes = args?['focusMinutes'] as int?;
+                  final breakMinutes = args?['breakMinutes'] as int?;
+                  final longBreakMinutes = args?['longBreakMinutes'] as int?;
+                  final sessions = args?['sessions'] as int?;
+                  final longBreakInterval = args?['longBreakInterval'] as int?;
+                  final autoStart = args?['autoStart'] as bool? ?? false;
+                  page = PomodoroScreen(
+                    taskId: taskId,
+                    focusMinutes: focusMinutes,
+                    breakMinutes: breakMinutes,
+                    longBreakMinutes: longBreakMinutes,
+                    sessions: sessions,
+                    longBreakInterval: longBreakInterval,
+                    autoStart: autoStart,
+                  );
+                  break;
+                case '/statistics':
+                  page = const StatisticsScreen();
+                  break;
+                case '/goals':
+                  page = const GoalsScreen();
+                  break;
+                case '/achievements':
+                  page = const AchievementsScreen();
+                  break;
+                case '/focus-history':
+                  page = const FocusHistoryScreen();
                   break;
                 default:
                   page = const HomeScreen();

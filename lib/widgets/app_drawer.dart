@@ -193,14 +193,69 @@ class AppDrawer extends StatelessWidget {
                 title: 'Focus',
                 isActive: activeRoute == '/focus',
                 isCollapsed: isDesktopCollapsed,
-                onTap: () => _showComingSoon(context),
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context);
+                  }
+                  if (activeRoute != '/focus') {
+                    if (onNavigate != null) {
+                      onNavigate!('/focus');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamed(context, '/focus');
+                        }
+                      });
+                    }
+                  }
+                },
               ),
               _buildMenuItem(
                 context,
                 icon: Icons.bar_chart,
                 title: 'Statistics',
+                isActive: activeRoute == '/statistics' || activeRoute == '/focus-history',
                 isCollapsed: isDesktopCollapsed,
-                onTap: () => _showComingSoon(context),
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context);
+                  }
+                  if (activeRoute != '/statistics') {
+                    if (onNavigate != null) {
+                      onNavigate!('/statistics');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamed(context, '/statistics');
+                        }
+                      });
+                    }
+                  }
+                },
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.local_fire_department,
+                title: 'Streak & Goals',
+                isActive: activeRoute == '/goals' ||
+                    activeRoute == '/achievements',
+                isCollapsed: isDesktopCollapsed,
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context);
+                  }
+                  if (activeRoute != '/goals') {
+                    if (onNavigate != null) {
+                      onNavigate!('/goals');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamed(context, '/goals');
+                        }
+                      });
+                    }
+                  }
+                },
               ),
               const Divider(height: 32, color: AppColors.border),
               _buildMenuItem(

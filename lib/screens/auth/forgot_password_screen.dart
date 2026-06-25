@@ -156,15 +156,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           Center(
                             child: GestureDetector(
                               onTap: () {
-                                if (Navigator.canPop(context)) {
-                                  Navigator.pop(context);
-                                } else {
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                      builder: (context) => const LoginScreen(),
-                                    ),
-                                  );
-                                }
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginScreen(),
+                                  ),
+                                );
                               },
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
