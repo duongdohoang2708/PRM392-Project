@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../../models/project_model.dart';
 import '../../providers/project_provider.dart';
 import '../../theme/app_colors.dart';
+import '../common/app_popup_transition.dart';
+import '../common/animations/app_bottom_slide_fade.dart';
 import '../custom_snackbar.dart';
 
 class CreateProjectPopup extends StatefulWidget {
@@ -66,6 +69,10 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
   bool _showAllIcons = false;
   bool _showAllColors = false;
 
+  String? _localErrorMessage;
+  bool _showLocalError = false;
+  Timer? _errorTimer;
+
   static const int _collapsedCount = 10;
 
   Color get _accentColor => CreateProjectPopup.projectColors[_selectedColorIndex];
@@ -81,12 +88,28 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _errorTimer?.cancel();
     super.dispose();
+  }
+
+  void _showInlineError(String message) {
+    _errorTimer?.cancel();
+    setState(() {
+      _localErrorMessage = message;
+      _showLocalError = true;
+    });
+    _errorTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showLocalError = false;
+        });
+      }
+    });
   }
 
   void _createProject() {
     if (_nameController.text.trim().isEmpty) {
-      AppNotification.showError(context, 'Please enter a project name');
+      _showInlineError('Please enter a project name');
       return;
     }
 
@@ -109,21 +132,10 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
-
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: isMobile
-          ? const EdgeInsets.all(16)
-          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          width: isMobile ? double.infinity : 400,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          decoration: BoxDecoration(
+    return AppPopupShell(
+      alignment: Alignment.centerRight,
+      child: Container(
+        decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -136,62 +148,105 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 24,
-                    right: 16,
-                    top: 16,
-                    bottom: 8,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Create Project',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 24,
+                        right: 16,
+                        top: 16,
+                        bottom: 8,
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.close,
-                          color: AppColors.textSecondary,
-                        ),
-                        onPressed: () => Navigator.pop(context),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Create Project',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppColors.textSecondary,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const Divider(color: AppColors.border, height: 1),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildNameCard(),
-                        const SizedBox(height: 16),
-                        _buildDescriptionCard(),
-                        const SizedBox(height: 16),
-                        _buildIconPicker(),
-                        const SizedBox(height: 16),
-                        _buildColorPicker(),
-                        const SizedBox(height: 24),
-                        _buildActionButtons(),
-                      ],
                     ),
+                    const Divider(color: AppColors.border, height: 1),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildNameCard(),
+                            const SizedBox(height: 16),
+                            _buildDescriptionCard(),
+                            const SizedBox(height: 16),
+                            _buildIconPicker(),
+                            const SizedBox(height: 16),
+                            _buildColorPicker(),
+                            const SizedBox(height: 24),
+                            _buildActionButtons(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: AppBottomSlideFade(
+                    visible: _showLocalError,
+                    child: Material(
+                          elevation: 6,
+                          shadowColor: Colors.black.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          color: const Color(0xFFE57373),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _localErrorMessage ?? '',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                   ),
                 ),
               ],
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -499,26 +554,13 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
   }
 }
 
-Future<String?> showCreateProjectPopup(BuildContext context) {
-  return showGeneralDialog<String>(
+Future<String?> showCreateProjectPopup(
+  BuildContext context, {
+  Offset? anchor,
+}) {
+  return showAppPopup<String>(
     context: context,
-    useRootNavigator: true,
-    barrierDismissible: true,
-    barrierLabel: 'Dismiss',
-    barrierColor: Colors.black.withValues(alpha: 0.5),
-    transitionDuration: const Duration(milliseconds: 300),
-    pageBuilder: (dialogContext, animation, secondaryAnimation) {
-      return const SafeArea(child: CreateProjectPopup());
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curve = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutBack,
-      );
-      return ScaleTransition(
-        scale: Tween<double>(begin: 0.8, end: 1.0).animate(curve),
-        child: FadeTransition(opacity: animation, child: child),
-      );
-    },
+    anchor: anchor,
+    child: const CreateProjectPopup(),
   );
 }

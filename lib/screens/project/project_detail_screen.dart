@@ -9,6 +9,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/task/task_list_item.dart';
 import '../../widgets/project/project_create_task_popup.dart';
+import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/staggered_list_entry.dart';
 
@@ -26,32 +27,16 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   Set<String> _knownActiveIds = {};
   Set<String> _knownCompletedIds = {};
   bool _isFirstBuild = true;
+  final GlobalKey _createTaskFabKey = GlobalKey();
 
   void _showCreateTaskPopup(BuildContext context, String projectName) {
-    showGeneralDialog(
+    final fabContext = _createTaskFabKey.currentContext;
+    showAppPopup(
       context: context,
-      useRootNavigator: true,
-      barrierDismissible: true,
-      barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (dialogContext, animation, secondaryAnimation) {
-        return SafeArea(
-          child: ProjectCreateTaskPopup(
-            projectName: projectName,
-          ),
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final curve = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutBack,
-        );
-        return ScaleTransition(
-          scale: Tween<double>(begin: 0.8, end: 1.0).animate(curve),
-          child: FadeTransition(opacity: animation, child: child),
-        );
-      },
+      anchor: fabContext != null ? popupAnchorFromContext(fabContext) : null,
+      child: ProjectCreateTaskPopup(
+        projectName: projectName,
+      ),
     );
   }
 
@@ -617,6 +602,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   ),
                 ),
           floatingActionButton: FloatingActionButton(
+            key: _createTaskFabKey,
             backgroundColor: projectColor,
             foregroundColor: Colors.white,
             onPressed: () => _showCreateTaskPopup(context, project.name),

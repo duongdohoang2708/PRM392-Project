@@ -11,6 +11,9 @@ import '../../widgets/custom_search_bar.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/staggered_list_entry.dart';
+import '../../widgets/common/animations/app_fade_transition.dart';
+import '../../widgets/common/animations/app_scale_transition.dart';
+import '../../widgets/common/animations/app_delete_transition.dart';
 
 void _confirmDeleteProject(BuildContext parentContext, Project project, VoidCallback onConfirmDelete) {
   showDialog(
@@ -234,9 +237,7 @@ class _SearchBarWithToggle extends StatelessWidget {
             ],
           ),
           child: IconButton(
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+            icon: appScaleSwitcher(
               child: Icon(
                 isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded,
                 key: ValueKey(isGrid),
@@ -342,28 +343,7 @@ class _ProjectCollection extends StatelessWidget {
       );
     }
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 350),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
-      },
-      layoutBuilder: (currentChild, previousChildren) {
-        return Stack(
-          alignment: Alignment.topCenter,
-          children: [
-            ...previousChildren,
-            // ignore: use_null_aware_elements
-            if (currentChild != null) currentChild,
-          ],
-        );
-      },
-      child: content,
-    );
+    return appFadeSwitcher(child: content);
   }
 }
 
@@ -388,22 +368,12 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 650),
+      duration: kAppScaleDeleteDuration,
     );
 
-    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.4, 0.7, curve: Curves.easeOut),
-      ),
-    );
-
-    _sizeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.6, 1.0, curve: Curves.easeInOut),
-      ),
-    );
+    final deleteAnimations = AppScaleDeleteAnimations(_animationController);
+    _fadeAnimation = deleteAnimations.fade;
+    _sizeAnimation = deleteAnimations.scale;
   }
 
   @override
@@ -639,12 +609,10 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
       },
     );
 
-    return ScaleTransition(
+    return AppScaleDeleteTransition(
+      fade: _fadeAnimation,
       scale: _sizeAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: slidableContent,
-      ),
+      child: slidableContent,
     );
   }
 }
@@ -670,22 +638,12 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 650),
+      duration: kAppScaleDeleteDuration,
     );
 
-    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.4, 0.7, curve: Curves.easeOut),
-      ),
-    );
-
-    _sizeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.6, 1.0, curve: Curves.easeInOut),
-      ),
-    );
+    final deleteAnimations = AppScaleDeleteAnimations(_animationController);
+    _fadeAnimation = deleteAnimations.fade;
+    _sizeAnimation = deleteAnimations.scale;
   }
 
   @override
