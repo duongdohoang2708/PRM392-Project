@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/drawer_provider.dart';
@@ -9,7 +8,10 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/task/task_list_item.dart';
 import '../../widgets/calendar/calendar_create_task_popup.dart';
+import '../../widgets/custom_snackbar.dart';
 import '../../widgets/staggered_list_entry.dart';
+import '../../utils/validation/task_deadline_rules.dart';
+import '../../utils/formatters/app_date_time_format.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -108,6 +110,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showCreateTaskPopup() {
+    if (TaskDeadlineRules.isPastCalendarDay(_selectedDate)) {
+      AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
+      return;
+    }
+
     showGeneralDialog(
       context: context,
       useRootNavigator: true,
@@ -353,7 +360,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildCalendarHeader() {
-    String headerText = DateFormat('MMMM yyyy').format(_focusedDate);
+    String headerText = AppDateTimeFormat.monthYear(_focusedDate);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -396,7 +403,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         const Icon(Icons.today, color: AppColors.primaryDark),
         const SizedBox(width: 8),
         Text(
-          'Tasks for ${DateFormat('EEEE, MMM d').format(_selectedDate)}',
+          'Tasks for ${AppDateTimeFormat.weekdayMonthDay(_selectedDate)}',
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -562,6 +569,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget _buildSelectedTasksList(List<Task> selectedDayTasks, Set<String> newTasks, {bool isMobile = false}) {
     final sortedTasks = List<Task>.from(selectedDayTasks);
     sortedTasks.sort((a, b) {
+      if (a.isAllDay && !b.isAllDay) return -1;
+      if (!a.isAllDay && b.isAllDay) return 1;
+
       if (a.dueDate == null && b.dueDate == null) return 0;
       if (a.dueDate == null) return 1;
       if (b.dueDate == null) return -1;
@@ -587,11 +597,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
         },
         itemBuilder: (context, index) {
           final task = sortedTasks[index];
-          final timeStr = task.dueDate != null
-              ? DateFormat('HH:mm').format(task.dueDate!)
-              : 'All Day';
-          
           final isNew = newTasks.contains(task.id);
+
+          bool isFirstAllDay = task.isAllDay && (index == 0 || !sortedTasks[index - 1].isAllDay);
+          bool isSubsequentAllDay = task.isAllDay && !isFirstAllDay;
+
+          final timeStr = isFirstAllDay
+              ? 'All Day'
+              : (task.isAllDay
+                  ? ''
+                  : (task.dueDate != null ? AppDateTimeFormat.time(task.dueDate!) : 'All Day'));
+          
           final item = TaskListItem(
             key: ValueKey(task.id),
             task: task,
@@ -603,58 +619,72 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 children: [
                   // Timeline Connector (drawn first so it is behind the sliding card)
                   Positioned(
-                    top: 20,
+                    top: 0,
                     bottom: 0,
                     left: 56,
                     width: 16,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primaryDark,
-                          ),
-                        ),
-                        Expanded(
-                          child: index == sortedTasks.length - 1
-                              ? const SizedBox()
-                              : Container(
-                                  width: 2,
-                                  color: AppColors.border,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Offset by 8 to account for margin bottom 16 so the dot is visually centered with the card
+                        final dotY = (constraints.maxHeight - 16) / 2;
+                        return Stack(
+                          alignment: Alignment.topCenter,
+                          clipBehavior: Clip.none,
+                          children: [
+                            if (index > 0 || isSubsequentAllDay)
+                              Positioned(
+                                top: 0,
+                                height: dotY,
+                                child: Container(width: 2, color: AppColors.border),
+                              ),
+                            if (index < sortedTasks.length - 1)
+                              Positioned(
+                                top: dotY,
+                                bottom: 0,
+                                child: Container(width: 2, color: AppColors.border),
+                              ),
+                            if (!isSubsequentAllDay)
+                              Positioned(
+                                top: dotY - 6,
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.primaryDark,
+                                  ),
                                 ),
-                        ),
-                      ],
+                              ),
+                          ],
+                        );
+                      },
                     ),
                   ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Time
-                      SizedBox(
-                        width: 56,
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: Text(
-                              timeStr,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
+                  
+                  // Time Text
+                  Positioned(
+                    top: 0,
+                    bottom: 16, // Exclude margin so it centers relative to the task card
+                    left: 0,
+                    width: 50,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        timeStr,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(width: 16), // space for connector
-                      // Task Card (rendered via slidable action pane)
-                      Expanded(
-                        child: taskCard,
-                      ),
-                    ],
+                    ),
+                  ),
+                  
+                  // Task Card (rendered via slidable action pane)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 72),
+                    child: taskCard,
                   ),
                 ],
               );

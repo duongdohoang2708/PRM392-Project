@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'dart:async';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
+import '../../utils/validation/task_deadline_rules.dart';
+import '../../utils/formatters/app_date_time_format.dart';
 import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
 
@@ -31,6 +32,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   late bool _isImportant;
   late List<SubTask> _subTasks;
   late String _reminder;
+  bool _isAllDay = false;
 
   String? _localErrorMessage;
   bool _showLocalError = false;
@@ -180,9 +182,8 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
       );
     }
 
-    final now = DateTime.now();
-    if (finalDueDate.isBefore(now) && _selectedTime != null) {
-      _showSnackBar('Task time cannot be earlier than current time');
+    if (!TaskDeadlineRules.isValidForCreate(finalDueDate)) {
+      AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
       return;
     }
 
@@ -197,11 +198,15 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
       dueDate: finalDueDate,
       isCompleted: false,
       isImportant: _isImportant,
+      isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
     );
 
-    taskProvider.addTask(newTask);
+    if (!taskProvider.addTask(newTask)) {
+      AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
+      return;
+    }
 
     AppNotification.showSuccess(context, 'Task created successfully');
 
@@ -262,7 +267,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Task for ${DateFormat('MMM d').format(widget.selectedDate)}',
+                            'Task for ${AppDateTimeFormat.shortDate(widget.selectedDate)}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -430,21 +435,41 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
             icon: Icons.access_time,
             label: 'Time',
             child: InkWell(
-              onTap: _selectTime,
+              onTap: _isAllDay ? null : _selectTime,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: Text(
                   _selectedTime == null
                       ? 'Set time'
-                      : _selectedTime!.format(context),
-                  style: const TextStyle(
+                      : AppDateTimeFormat.timeOfDay(_selectedTime!),
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textPrimary,
+                    color: _isAllDay
+                        ? AppColors.textSecondary.withValues(alpha: 0.5)
+                        : AppColors.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
+            ),
+          ),
+          const Divider(color: AppColors.border, height: 24),
+          _buildInfoRow(
+            icon: Icons.all_inclusive,
+            label: 'All Day',
+            child: Switch(
+              value: _isAllDay,
+              onChanged: (val) {
+                setState(() {
+                  _isAllDay = val;
+                  if (val) {
+                    _selectedTime = null;
+                  }
+                });
+              },
+              activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
+              activeColor: AppColors.primaryDark,
             ),
           ),
           const Divider(color: AppColors.border, height: 24),
