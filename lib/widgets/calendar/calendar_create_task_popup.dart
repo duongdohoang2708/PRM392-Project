@@ -3,11 +3,19 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
+import '../../providers/project_provider.dart';
 import '../../utils/validation/task_deadline_rules.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
+import '../common/app_time_picker.dart';
+import '../common/app_dropdown.dart';
+import '../common/animations/app_bottom_slide_fade.dart';
+import '../common/app_popup_transition.dart';
 import '../../widgets/project/create_project_popup.dart';
+import '../../widgets/task/reminder_selector.dart';
+import '../../utils/reminder/task_reminder.dart';
+import '../../utils/project_accent_color.dart';
 
 class CalendarCreateTaskPopup extends StatefulWidget {
   final DateTime selectedDate;
@@ -48,7 +56,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     _priority = 'Low';
     _isImportant = false;
     _subTasks = [];
-    _reminder = 'None';
+    _reminder = TaskReminder.none;
   }
 
   @override
@@ -74,22 +82,18 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     });
   }
 
-  Future<void> _selectTime() async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
+  Color _accentColor(BuildContext context) {
+    final projectProvider = context.read<ProjectProvider>();
+    return ProjectAccentColor.resolve(projectProvider, _project);
+  }
+
+  Future<void> _selectTime(BuildContext tapContext) async {
+    final accentColor = _accentColor(tapContext);
+    final pickedTime = await showAppTimePicker(
+      context,
+      anchor: popupAnchorFromContext(tapContext),
       initialTime: _selectedTime ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryDark,
-              onPrimary: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      accentColor: accentColor,
     );
 
     if (pickedTime != null) {
@@ -99,8 +103,11 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     }
   }
 
-  void _addNewProject() async {
-    final newProjectName = await showCreateProjectPopup(context);
+  void _addNewProject(BuildContext tapContext) async {
+    final newProjectName = await showCreateProjectPopup(
+      context,
+      anchor: popupAnchorFromContext(tapContext),
+    );
 
     if (newProjectName != null && newProjectName.isNotEmpty) {
       setState(() {
@@ -178,6 +185,8 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TaskProvider>(context);
+    final projectProvider = Provider.of<ProjectProvider>(context);
+    final accentColor = ProjectAccentColor.resolve(projectProvider, _project);
     final projects = provider.availableProjects
         .where((p) => p != 'All Projects')
         .toList();
@@ -185,21 +194,13 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
       projects.add(_project);
     }
 
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
-
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: isMobile
-          ? const EdgeInsets.all(16)
-          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          width: isMobile ? double.infinity : 400,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          decoration: BoxDecoration(
+    return AppPopupShell(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -257,7 +258,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                           children: [
                             _buildTitleCard(),
                             const SizedBox(height: 16),
-                            _buildInfoCard(projects),
+                            _buildInfoCard(projects, accentColor),
                             const SizedBox(height: 16),
                             _buildSubtasksCard(),
                             const SizedBox(height: 16),
@@ -275,39 +276,30 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                   bottom: 16,
                   left: 16,
                   right: 16,
-                  child: IgnorePointer(
-                    ignoring: !_showLocalError,
-                    child: AnimatedSlide(
-                      offset: _showLocalError ? Offset.zero : const Offset(0, 1.5),
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.fastOutSlowIn,
-                      child: AnimatedOpacity(
-                        opacity: _showLocalError ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 150),
-                        child: Material(
-                          elevation: 6,
-                          shadowColor: Colors.black.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(16),
-                          color: const Color(0xFFE57373),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.error_outline, color: Colors.white, size: 20),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    _localErrorMessage ?? '',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                  child: AppBottomSlideFade(
+                    visible: _showLocalError,
+                    child: Material(
+                      elevation: 6,
+                      shadowColor: Colors.black.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      color: const Color(0xFFE57373),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _localErrorMessage ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ),
@@ -317,7 +309,6 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -383,7 +374,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     );
   }
 
-  Widget _buildInfoCard(List<String> projects) {
+  Widget _buildInfoCard(List<String> projects, Color accentColor) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -396,21 +387,23 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           _buildInfoRow(
             icon: Icons.access_time,
             label: 'Time',
-            child: InkWell(
-              onTap: _isAllDay ? null : _selectTime,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: Text(
-                  _selectedTime == null
-                      ? 'Set time'
-                      : AppDateTimeFormat.timeOfDay(_selectedTime!),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _isAllDay
-                        ? AppColors.textSecondary.withValues(alpha: 0.5)
-                        : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+            child: Builder(
+              builder: (tapContext) => InkWell(
+                onTap: _isAllDay ? null : () => _selectTime(tapContext),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: Text(
+                    _selectedTime == null
+                        ? 'Set time'
+                        : AppDateTimeFormat.timeOfDay(_selectedTime!),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _isAllDay
+                          ? AppColors.textSecondary.withValues(alpha: 0.5)
+                          : AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -425,6 +418,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
               onChanged: (val) {
                 setState(() {
                   _isAllDay = val;
+                  _reminder = TaskReminder.coerceForMode(_reminder, val);
                   if (val) {
                     _selectedTime = null;
                   }
@@ -438,73 +432,56 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           _buildInfoRow(
             icon: Icons.folder_open,
             label: 'Project',
-            child: DropdownButton<String>(
-              value: _project,
-              isExpanded: true,
-              alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items: [
-                ...projects.map(
-                  (p) => DropdownMenuItem(
-                    value: p,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(p),
+            child: Builder(
+              builder: (tapContext) => AppDropdown<String>(
+                value: _project,
+                isExpanded: true,
+                alignment: AlignmentDirectional.centerEnd,
+                accentColor: accentColor,
+                items: [
+                  ...projects.map(
+                    (p) => DropdownMenuItem(
+                      value: p,
+                      child: AppDropdown.menuChild(Text(p)),
                     ),
                   ),
-                ),
-                const DropdownMenuItem(
-                  value: '__add_new__',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '+ Add Project',
-                      style: TextStyle(
-                        color: AppColors.primaryDark,
-                        fontWeight: FontWeight.bold,
+                  DropdownMenuItem(
+                    value: '__add_new__',
+                    child: AppDropdown.menuChild(
+                      Text(
+                        '+ Add Project',
+                        style: TextStyle(
+                          color: accentColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-              onChanged: (val) {
-                if (val == '__add_new__') {
-                  _addNewProject();
-                } else if (val != null) {
-                  setState(() => _project = val);
-                }
-              },
+                ],
+                onChanged: (val) {
+                  if (val == '__add_new__') {
+                    _addNewProject(tapContext);
+                  } else if (val != null) {
+                    setState(() => _project = val);
+                  }
+                },
+              ),
             ),
           ),
           const Divider(color: AppColors.border, height: 24),
           _buildInfoRow(
             icon: Icons.flag_outlined,
             label: 'Priority',
-            child: DropdownButton<String>(
+            child: AppDropdown<String>(
               value: _priority,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
+              accentColor: accentColor,
               items: ['High', 'Medium', 'Low']
                   .map(
                     (p) => DropdownMenuItem(
                       value: p,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(p),
-                      ),
+                      child: AppDropdown.menuChild(Text(p)),
                     ),
                   )
                   .toList(),
@@ -517,32 +494,11 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           _buildInfoRow(
             icon: Icons.notifications,
             label: 'Reminder',
-            child: DropdownButton<String>(
+            child: ReminderSelector(
               value: _reminder,
-              isExpanded: true,
-              alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items:
-                  ['None', '10 minutes before', '1 hour before', '1 day before']
-                      .map(
-                        (r) => DropdownMenuItem(
-                          value: r,
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(r),
-                          ),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (val) {
-                if (val != null) setState(() => _reminder = val);
-              },
+              isAllDay: _isAllDay,
+              accentColor: accentColor,
+              onChanged: (val) => setState(() => _reminder = val),
             ),
           ),
         ],

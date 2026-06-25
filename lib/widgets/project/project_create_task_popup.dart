@@ -9,6 +9,13 @@ import '../../utils/validation/task_deadline_rules.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/reminder/task_reminder.dart';
+import '../task/reminder_selector.dart';
+import '../common/app_time_picker.dart';
+import '../common/app_date_picker.dart';
+import '../common/app_dropdown.dart';
+import '../common/app_popup_transition.dart';
+import '../common/animations/app_bottom_slide_fade.dart';
 
 class ProjectCreateTaskPopup extends StatefulWidget {
   final String projectName;
@@ -47,7 +54,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     _priority = 'Low';
     _isImportant = false;
     _subTasks = [];
-    _reminder = 'None';
+    _reminder = TaskReminder.none;
     _selectedDate = widget.selectedDate;
     if (_selectedDate != null) {
       _selectedTime = TaskDeadlineRules.defaultTimeOnDatePick();
@@ -82,7 +89,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     return DateTime(now.year, now.month, now.day);
   }
 
-  Future<void> _selectTime() async {
+  Future<void> _selectTime(BuildContext tapContext) async {
     if (_isAllDay) return;
     
     final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
@@ -97,23 +104,11 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     );
     final Color projectColor = Color(project.colorValue);
 
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
+    final TimeOfDay? pickedTime = await showAppTimePicker(
+      context,
+      anchor: popupAnchorFromContext(tapContext),
       initialTime: _selectedTime ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: projectColor,
-              onPrimary: ThemeData.estimateBrightnessForColor(projectColor) == Brightness.dark
-                  ? Colors.white
-                  : AppColors.textPrimary,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      accentColor: projectColor,
     );
 
     if (pickedTime != null) {
@@ -124,7 +119,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     }
   }
 
-  Future<void> _selectDate() async {
+  Future<void> _selectDate(BuildContext tapContext) async {
     final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
     final project = projectProvider.projects.firstWhere(
       (p) => p.name == widget.projectName,
@@ -137,25 +132,13 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     );
     final Color projectColor = Color(project.colorValue);
 
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
+    final pickedDate = await showAppDatePicker(
+      context,
+      anchor: popupAnchorFromContext(tapContext),
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: TaskDeadlineRules.minSelectableDateForCreate(),
       lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: projectColor,
-              onPrimary: ThemeData.estimateBrightnessForColor(projectColor) == Brightness.dark
-                  ? Colors.white
-                  : AppColors.textPrimary,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      accentColor: projectColor,
     );
 
     if (pickedDate != null) {
@@ -234,8 +217,6 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
-
     final projectProvider = Provider.of<ProjectProvider>(context);
     final project = projectProvider.projects.firstWhere(
       (p) => p.name == widget.projectName,
@@ -248,19 +229,13 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     );
     final Color projectColor = Color(project.colorValue);
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: isMobile
-          ? const EdgeInsets.all(16)
-          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          width: isMobile ? double.infinity : 400,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          decoration: BoxDecoration(
+    return AppPopupShell(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -340,39 +315,30 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
                   bottom: 16,
                   left: 16,
                   right: 16,
-                  child: IgnorePointer(
-                    ignoring: !_showLocalError,
-                    child: AnimatedSlide(
-                      offset: _showLocalError ? Offset.zero : const Offset(0, 1.5),
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.fastOutSlowIn,
-                      child: AnimatedOpacity(
-                        opacity: _showLocalError ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 150),
-                        child: Material(
-                          elevation: 6,
-                          shadowColor: Colors.black.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(16),
-                          color: const Color(0xFFE57373),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.error_outline, color: Colors.white, size: 20),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    _localErrorMessage ?? '',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                  child: AppBottomSlideFade(
+                    visible: _showLocalError,
+                    child: Material(
+                      elevation: 6,
+                      shadowColor: Colors.black.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      color: const Color(0xFFE57373),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _localErrorMessage ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ),
@@ -382,7 +348,6 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -462,19 +427,21 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             icon: Icons.calendar_today,
             label: 'Date',
             projectColor: projectColor,
-            child: InkWell(
-              onTap: _selectDate,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: Text(
-                  _selectedDate == null
-                      ? 'Set date'
-                      : AppDateTimeFormat.date(_selectedDate!),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+            child: Builder(
+              builder: (tapContext) => InkWell(
+                onTap: () => _selectDate(tapContext),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: Text(
+                    _selectedDate == null
+                        ? 'Set date'
+                        : AppDateTimeFormat.date(_selectedDate!),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -485,21 +452,23 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             icon: Icons.access_time,
             label: 'Time',
             projectColor: projectColor,
-            child: InkWell(
-              onTap: _selectTime,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: Text(
-                  _isAllDay
-                      ? 'All Day'
-                      : (_selectedTime == null
-                          ? 'Set time'
-                          : AppDateTimeFormat.timeOfDay(_selectedTime!)),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _isAllDay ? AppColors.textSecondary : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+            child: Builder(
+              builder: (tapContext) => InkWell(
+                onTap: () => _selectTime(tapContext),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: Text(
+                    _isAllDay
+                        ? 'All Day'
+                        : (_selectedTime == null
+                            ? 'Set time'
+                            : AppDateTimeFormat.timeOfDay(_selectedTime!)),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _isAllDay ? AppColors.textSecondary : AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -517,6 +486,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
               onChanged: (val) {
                 setState(() {
                   _isAllDay = val;
+                  _reminder = TaskReminder.coerceForMode(_reminder, val);
                 });
               },
             ),
@@ -526,25 +496,16 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             icon: Icons.flag_outlined,
             label: 'Priority',
             projectColor: projectColor,
-            child: DropdownButton<String>(
+            child: AppDropdown<String>(
               value: _priority,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
+              accentColor: projectColor,
               items: ['High', 'Medium', 'Low']
                   .map(
                     (p) => DropdownMenuItem(
                       value: p,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(p),
-                      ),
+                      child: AppDropdown.menuChild(Text(p)),
                     ),
                   )
                   .toList(),
@@ -558,32 +519,11 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             icon: Icons.notifications,
             label: 'Reminder',
             projectColor: projectColor,
-            child: DropdownButton<String>(
+            child: ReminderSelector(
               value: _reminder,
-              isExpanded: true,
-              alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items:
-                  ['None', '10 minutes before', '1 hour before', '1 day before']
-                      .map(
-                        (r) => DropdownMenuItem(
-                          value: r,
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(r),
-                          ),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (val) {
-                if (val != null) setState(() => _reminder = val);
-              },
+              isAllDay: _isAllDay,
+              accentColor: projectColor,
+              onChanged: (val) => setState(() => _reminder = val),
             ),
           ),
         ],

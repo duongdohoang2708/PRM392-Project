@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../common/animations/app_delete_transition.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../models/task_model.dart';
 import '../../models/project_model.dart';
@@ -55,22 +56,12 @@ class _TaskListItemState extends State<TaskListItem>
     _isCompletedLocal = widget.task.isCompleted;
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: kAppCollapseDeleteDuration,
     );
 
-    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-      ),
-    );
-
-    _sizeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInCubic,
-      ),
-    );
+    final deleteAnimations = AppCollapseDeleteAnimations(_animationController);
+    _fadeAnimation = deleteAnimations.fade;
+    _sizeAnimation = deleteAnimations.size;
 
     // Strikethrough controller — starts at the current completed state
     _strikeController = AnimationController(
@@ -586,16 +577,20 @@ class _TaskListItemState extends State<TaskListItem>
                 const SizedBox(width: 16),
                 // Star Action
                 GestureDetector(
-                  onTap: () {
-                    context.read<TaskProvider>().toggleTaskImportance(
-                      widget.task.id,
-                    );
-                  },
+                  onTap: _isCompletedLocal
+                      ? null
+                      : () {
+                          context.read<TaskProvider>().toggleTaskImportance(
+                            widget.task.id,
+                          );
+                        },
                   child: Icon(
                     widget.task.isImportant ? Icons.star : Icons.star_border,
-                    color: widget.task.isImportant
-                        ? AppColors.accentYellow
-                        : AppColors.textSecondary.withValues(alpha: 0.5),
+                    color: _isCompletedLocal
+                        ? AppColors.textSecondary.withValues(alpha: 0.5)
+                        : (widget.task.isImportant
+                            ? AppColors.accentYellow
+                            : AppColors.textSecondary.withValues(alpha: 0.5)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -669,14 +664,17 @@ class _TaskListItemState extends State<TaskListItem>
                         Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
-                            onPressed: widget.task.subTasks
-                                    .any((st) => st.title.trim().isEmpty)
+                            onPressed: _isCompletedLocal ||
+                                    widget.task.subTasks
+                                        .any((st) => st.title.trim().isEmpty)
                                 ? null
                                 : _addSubTask,
                             icon: const Icon(Icons.add, size: 18),
                             label: const Text('Add subtask'),
                             style: TextButton.styleFrom(
                               foregroundColor: projectColor,
+                              disabledForegroundColor:
+                                  AppColors.textSecondary.withValues(alpha: 0.5),
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                             ),
                           ),
@@ -743,11 +741,10 @@ class _TaskListItemState extends State<TaskListItem>
         // animation can play smoothly without a layout jump.
         // At rest (controller value=0), sizeFactor=1.0 and opacity=1.0
         // so there is no visual difference from a plain container.
-        return SizeTransition(
-          sizeFactor: _sizeAnimation,
-          axis: Axis.vertical,
-          axisAlignment: -1.0,
-          child: FadeTransition(opacity: _fadeAnimation, child: finalContent),
+        return AppCollapseDeleteTransition(
+          fade: _fadeAnimation,
+          size: _sizeAnimation,
+          child: finalContent,
         );
       },
     );

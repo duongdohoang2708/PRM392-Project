@@ -12,6 +12,13 @@ import '../../widgets/background_pattern.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/project/create_project_popup.dart';
+import '../../widgets/task/reminder_selector.dart';
+import '../../widgets/common/app_time_picker.dart';
+import '../../widgets/common/app_date_picker.dart';
+import '../../widgets/common/app_dropdown.dart';
+import '../../widgets/common/app_popup_transition.dart';
+import '../../utils/reminder/task_reminder.dart';
+import '../../utils/project_accent_color.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final String taskId;
@@ -62,7 +69,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     _isImportant = task.isImportant;
     _isAllDay = task.isAllDay;
     _subTasks = List.from(task.subTasks);
-    _reminder = '1 hour before'; // default mock value
+    _reminder = TaskReminder.coerceForMode('1 hour before', _isAllDay);
 
     final focusProvider = Provider.of<FocusProvider>(context, listen: false);
     _focusMinutes = focusProvider.focusMinutes;
@@ -160,24 +167,20 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  Future<void> _selectDate() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
+  Color _accentColor(BuildContext context) {
+    final projectProvider = context.read<ProjectProvider>();
+    return ProjectAccentColor.resolve(projectProvider, _project);
+  }
+
+  Future<void> _selectDate(BuildContext tapContext) async {
+    final accentColor = _accentColor(tapContext);
+    final pickedDate = await showAppDatePicker(
+      context,
+      anchor: popupAnchorFromContext(tapContext),
       initialDate: _dueDate ?? DateTime.now(),
       firstDate: DateTime(2025),
       lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryDark,
-              onPrimary: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      accentColor: accentColor,
     );
 
     if (pickedDate != null) {
@@ -191,24 +194,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
-  Future<void> _selectTime() async {
+  Future<void> _selectTime(BuildContext tapContext) async {
     if (_isAllDay) return;
 
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
+    final accentColor = _accentColor(tapContext);
+    final pickedTime = await showAppTimePicker(
+      context,
+      anchor: popupAnchorFromContext(tapContext),
       initialTime: TimeOfDay.fromDateTime(_dueDate ?? DateTime.now()),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryDark,
-              onPrimary: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      accentColor: accentColor,
     );
 
     if (pickedTime != null) {
@@ -219,8 +213,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
-  void _addNewProject() async {
-    final newProjectName = await showCreateProjectPopup(context);
+  void _addNewProject(BuildContext tapContext) async {
+    final newProjectName = await showCreateProjectPopup(
+      context,
+      anchor: popupAnchorFromContext(tapContext),
+    );
 
     if (newProjectName != null && newProjectName.isNotEmpty) {
       setState(() {
@@ -255,6 +252,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     final projects = provider.availableProjects
         .where((p) => p != 'All Projects')
         .toList();
+    if (!projects.contains('None')) {
+      projects.insert(0, 'None');
+    }
     if (!projects.contains(_project)) {
       projects.add(_project);
     }
@@ -611,19 +611,21 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             icon: Icons.calendar_today,
             label: 'Date',
             projectColor: projectColor,
-            child: InkWell(
-              onTap: _selectDate,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: Text(
-                  _dueDate == null
-                      ? 'Set date'
-                      : AppDateTimeFormat.date(_dueDate!),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+            child: Builder(
+              builder: (tapContext) => InkWell(
+                onTap: () => _selectDate(tapContext),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: Text(
+                    _dueDate == null
+                        ? 'Set date'
+                        : AppDateTimeFormat.date(_dueDate!),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -636,21 +638,23 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             icon: Icons.access_time,
             label: 'Time',
             projectColor: projectColor,
-            child: InkWell(
-              onTap: _selectTime,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: Text(
-                  _isAllDay
-                      ? 'All Day'
-                      : (_dueDate == null
-                          ? 'Set time'
-                          : AppDateTimeFormat.time(_dueDate!)),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _isAllDay ? AppColors.textSecondary : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+            child: Builder(
+              builder: (tapContext) => InkWell(
+                onTap: () => _selectTime(tapContext),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: Text(
+                    _isAllDay
+                        ? 'All Day'
+                        : (_dueDate == null
+                            ? 'Set time'
+                            : AppDateTimeFormat.time(_dueDate!)),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _isAllDay ? AppColors.textSecondary : AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -670,6 +674,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               onChanged: (val) {
                 setState(() {
                   _isAllDay = val;
+                  _reminder = TaskReminder.coerceForMode(_reminder, val);
                 });
               },
             ),
@@ -681,31 +686,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             icon: Icons.pending_actions,
             label: 'Status',
             projectColor: projectColor,
-            child: DropdownButton<bool>(
+            child: AppDropdown<bool>(
               value: _isCompleted,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items: const [
+              accentColor: projectColor,
+              items: [
                 DropdownMenuItem(
                   value: false,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('In Progress'),
-                  ),
+                  child: AppDropdown.menuChild(Text('In Progress')),
                 ),
                 DropdownMenuItem(
                   value: true,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('Completed'),
-                  ),
+                  child: AppDropdown.menuChild(Text('Completed')),
                 ),
               ],
               onChanged: (val) {
@@ -724,50 +717,42 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             icon: Icons.folder_open,
             label: 'Project',
             projectColor: projectColor,
-            child: DropdownButton<String>(
-              value: _project,
-              isExpanded: true,
-              alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items: [
-                ...projects.map(
-                  (p) => DropdownMenuItem(
-                    value: p,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(p),
+            child: Builder(
+              builder: (tapContext) => AppDropdown<String>(
+                value: _project,
+                isExpanded: true,
+                alignment: AlignmentDirectional.centerEnd,
+                accentColor: projectColor,
+                items: [
+                  ...projects.map(
+                    (p) => DropdownMenuItem(
+                      value: p,
+                      child: AppDropdown.menuChild(Text(p)),
                     ),
                   ),
-                ),
-                const DropdownMenuItem(
-                  value: '__add_new__',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '+ Add Project',
-                      style: TextStyle(
-                        color: AppColors.primaryDark,
-                        fontWeight: FontWeight.bold,
+                  DropdownMenuItem(
+                    value: '__add_new__',
+                    child: AppDropdown.menuChild(
+                      Text(
+                        '+ Add Project',
+                        style: TextStyle(
+                          color: projectColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-              onChanged: (val) {
-                if (val == '__add_new__') {
-                  _addNewProject();
-                } else if (val != null) {
-                  setState(() {
-                    _project = val;
-                  });
-                }
-              },
+                ],
+                onChanged: (val) {
+                  if (val == '__add_new__') {
+                    _addNewProject(tapContext);
+                  } else if (val != null) {
+                    setState(() {
+                      _project = val;
+                    });
+                  }
+                },
+              ),
             ),
           ),
           const Divider(color: AppColors.border, height: 24),
@@ -777,38 +762,23 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             icon: Icons.flag_outlined,
             label: 'Priority',
             projectColor: projectColor,
-            child: DropdownButton<String>(
+            child: AppDropdown<String>(
               value: _priority,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items: const [
+              accentColor: projectColor,
+              items: [
                 DropdownMenuItem(
                   value: 'High',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('High'),
-                  ),
+                  child: AppDropdown.menuChild(Text('High')),
                 ),
                 DropdownMenuItem(
                   value: 'Medium',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('Medium'),
-                  ),
+                  child: AppDropdown.menuChild(Text('Medium')),
                 ),
                 DropdownMenuItem(
                   value: 'Low',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('Low'),
-                  ),
+                  child: AppDropdown.menuChild(Text('Low')),
                 ),
               ],
               onChanged: (val) {
@@ -827,54 +797,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             icon: Icons.notifications,
             label: 'Reminder',
             projectColor: projectColor,
-            child: DropdownButton<String>(
+            child: ReminderSelector(
               value: _reminder,
-              isExpanded: true,
-              alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'None',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('None'),
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: '10 minutes before',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('10 minutes before'),
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: '1 hour before',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('1 hour before'),
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: '1 day before',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('1 day before'),
-                  ),
-                ),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    _reminder = val;
-                  });
-                }
-              },
+              isAllDay: _isAllDay,
+              accentColor: projectColor,
+              onChanged: (val) => setState(() => _reminder = val),
             ),
           ),
         ],
