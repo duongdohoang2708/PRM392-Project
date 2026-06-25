@@ -69,6 +69,48 @@ class AppTheme {
         elevation: 4,
       ),
 
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
+          elevation: const WidgetStatePropertyAll(6),
+          shadowColor: WidgetStatePropertyAll(
+            Colors.black.withValues(alpha: 0.08),
+          ),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppColors.border),
+            ),
+          ),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
+          elevation: const WidgetStatePropertyAll(6),
+          shadowColor: WidgetStatePropertyAll(
+            Colors.black.withValues(alpha: 0.08),
+          ),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppColors.border),
+            ),
+          ),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+
       // Input Decoration (Text Fields)
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -101,32 +143,6 @@ class AppTheme {
           TargetPlatform.windows: PredictiveBackPageTransitionsBuilder(),
           TargetPlatform.linux: PredictiveBackPageTransitionsBuilder(),
         },
-      ),
-    );
-  }
-}
-
-class BouncyPageTransitionsBuilder extends PageTransitionsBuilder {
-  const BouncyPageTransitionsBuilder();
-
-  @override
-  Widget buildTransitions<T>(
-    PageRoute<T> route,
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) {
-    final scaleTween = Tween<double>(begin: 0.8, end: 1.0)
-        .chain(CurveTween(curve: Curves.easeOutBack));
-    final fadeTween = Tween<double>(begin: 0.0, end: 1.0)
-        .chain(CurveTween(curve: Curves.easeOut));
-
-    return ScaleTransition(
-      scale: animation.drive(scaleTween),
-      child: FadeTransition(
-        opacity: animation.drive(fadeTween),
-        child: child,
       ),
     );
   }

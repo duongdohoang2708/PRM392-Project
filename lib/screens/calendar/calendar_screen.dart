@@ -8,6 +8,8 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/task/task_list_item.dart';
 import '../../widgets/calendar/calendar_create_task_popup.dart';
+import '../../widgets/common/app_popup_transition.dart';
+import '../../widgets/common/animations/app_page_transition.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/staggered_list_entry.dart';
 import '../../utils/validation/task_deadline_rules.dart';
@@ -28,6 +30,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Set<String> _knownTaskIds = {};
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey _createTaskFabKey = GlobalKey();
 
   late final PageController _monthPageController;
   late final PageController _dayPageController;
@@ -85,15 +88,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _navigateToNext() {
     if (_monthPageController.hasClients) {
-      _monthPageController.nextPage(
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      animatePageNext(_monthPageController);
     }
   }
 
   void _navigateToPrevious() {
     if (_monthPageController.hasClients) {
-      _monthPageController.previousPage(
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      animatePagePrevious(_monthPageController);
     }
   }
 
@@ -115,31 +116,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
       return;
     }
 
-    showGeneralDialog(
+    final fabContext = _createTaskFabKey.currentContext;
+    showAppPopup(
       context: context,
-      useRootNavigator: true,
-      barrierDismissible: true,
-      barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (dialogContext, animation, secondaryAnimation) {
-        return SafeArea(
-          child: CalendarCreateTaskPopup(selectedDate: _selectedDate),
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final curve = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutBack,
-        );
-        return ScaleTransition(
-          scale: Tween<double>(begin: 0.8, end: 1.0).animate(curve),
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
-        );
-      },
+      anchor: fabContext != null ? popupAnchorFromContext(fabContext) : null,
+      child: CalendarCreateTaskPopup(selectedDate: _selectedDate),
     );
   }
 
@@ -315,6 +296,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             child: mainContent,
           ),
           floatingActionButton: FloatingActionButton(
+            key: _createTaskFabKey,
             onPressed: _showCreateTaskPopup,
             child: const Icon(Icons.add),
           ),

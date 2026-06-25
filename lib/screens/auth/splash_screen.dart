@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/common/animations/app_fade_transition.dart';
 import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -19,10 +20,10 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: kAppSplashFadeDuration,
       vsync: this,
     );
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _animation = createFadeInAnimation(_controller);
     _controller.forward();
 
     // Navigate to next screen after 2.5 seconds

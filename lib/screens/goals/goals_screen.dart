@@ -8,6 +8,8 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/goals/edit_goals_sheet.dart';
+import '../../widgets/common/animations/app_horizontal_slide_transition.dart';
+import '../../widgets/common/animations/app_page_transition.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
 
 enum _StreakView { week, month }
@@ -247,30 +249,18 @@ class _StreakCalendarWidgetState extends State<_StreakCalendarWidget> {
   void _goToPreviousPeriod() {
     _slideDirection = -1;
     if (_activeView == _StreakView.week) {
-      _weekPageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      animatePagePrevious(_weekPageController);
     } else {
-      _monthPageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      animatePagePrevious(_monthPageController);
     }
   }
 
   void _goToNextPeriod() {
     _slideDirection = 1;
     if (_activeView == _StreakView.week) {
-      _weekPageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      animatePageNext(_weekPageController);
     } else {
-      _monthPageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      animatePageNext(_monthPageController);
     }
   }
 
@@ -694,67 +684,15 @@ class _StreakCalendarSection extends StatelessWidget {
           onNext: onNextPeriod,
         ),
         const SizedBox(height: 16),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            layoutBuilder: (currentChild, previousChildren) {
-              return Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                  ...previousChildren.map(
-                    (child) =>
-                        Positioned(top: 0, left: 0, right: 0, child: child),
-                  ),
-                  if (currentChild != null) currentChild,
-                ],
-              );
-            },
-            transitionBuilder: (child, animation) {
-              final isIncoming =
-                  (activeView == _StreakView.week &&
-                      child.key == const ValueKey('week-page-view')) ||
-                  (activeView == _StreakView.month &&
-                      child.key == const ValueKey('month-page-view'));
-
-              final inCurve = isIncoming
-                  ? CurveTween(curve: Curves.easeOutCubic)
-                  : CurveTween(curve: Curves.easeInCubic);
-
-              final slideAnimation = animation.drive(
-                Tween<Offset>(
-                  begin: Offset(
-                    0.28 * (isIncoming ? slideDirection : -slideDirection),
-                    0,
-                  ),
-                  end: Offset.zero,
-                ).chain(inCurve),
-              );
-              final fadeAnimation = animation.drive(
-                Tween<double>(begin: 0.0, end: 1.0).chain(
-                  CurveTween(
-                    curve: isIncoming
-                        ? Curves.easeOutCubic
-                        : Curves.easeInCubic,
-                  ),
-                ),
-              );
-
-              return ClipRect(
-                child: FadeTransition(
-                  opacity: fadeAnimation,
-                  child: SlideTransition(
-                    position: slideAnimation,
-                    child: child,
-                  ),
-                ),
-              );
-            },
-            child: activeView == _StreakView.week
+        appHorizontalSlideSwitcher(
+          slideDirection: slideDirection,
+          pinPreviousChildren: true,
+          isIncomingChild: (child) =>
+              (activeView == _StreakView.week &&
+                  child.key == const ValueKey('week-page-view')) ||
+              (activeView == _StreakView.month &&
+                  child.key == const ValueKey('month-page-view')),
+          child: activeView == _StreakView.week
                 ? SizedBox(
                     key: const ValueKey('week-page-view'),
                     height: 135,
@@ -791,7 +729,6 @@ class _StreakCalendarSection extends StatelessWidget {
                       },
                     ),
                   ),
-          ),
         ),
       ],
     );

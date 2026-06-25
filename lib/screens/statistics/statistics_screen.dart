@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_snackbar.dart';
+import '../../widgets/common/animations/app_horizontal_slide_transition.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
 
@@ -203,57 +204,14 @@ class _StatisticsTabSwitcherState extends State<_StatisticsTabSwitcher>
             statsProvider: widget.statsProvider,
           );
 
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-      alignment: Alignment.topCenter,
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        layoutBuilder: (currentChild, previousChildren) {
-          return Stack(
-            alignment: Alignment.topCenter,
-            children: [
-              ...previousChildren,
-              ?currentChild,
-            ],
-          );
-        },
-        transitionBuilder: (child, animation) {
-          final isIncoming =
-              (widget.activeTab == StatisticsTab.focus && child.key == const ValueKey('focus-stats')) ||
-              (widget.activeTab == StatisticsTab.task && child.key == const ValueKey('task-stats'));
-          final offsetDirection = isIncoming ? _direction : -_direction;
-
-          final inCurve = isIncoming
-              ? CurveTween(curve: Curves.easeOutCubic)
-              : CurveTween(curve: Curves.easeInCubic);
-
-          final slideAnimation = animation.drive(
-            Tween<Offset>(
-              begin: Offset(0.28 * offsetDirection, 0),
-              end: Offset.zero,
-            ).chain(inCurve),
-          );
-          final fadeAnimation = animation.drive(
-            Tween<double>(begin: 0.0, end: 1.0).chain(
-              CurveTween(curve: isIncoming ? Curves.easeOutCubic : Curves.easeInCubic),
-            ),
-          );
-
-          return ClipRect(
-            child: FadeTransition(
-              opacity: fadeAnimation,
-              child: SlideTransition(
-                position: slideAnimation,
-                child: child,
-              ),
-            ),
-          );
-        },
-        child: child,
-      ),
+    return appHorizontalSlideSwitcher(
+      slideDirection: _direction,
+      isIncomingChild: (child) =>
+          (widget.activeTab == StatisticsTab.focus &&
+              child.key == const ValueKey('focus-stats')) ||
+          (widget.activeTab == StatisticsTab.task &&
+              child.key == const ValueKey('task-stats')),
+      child: child,
     );
   }
 }

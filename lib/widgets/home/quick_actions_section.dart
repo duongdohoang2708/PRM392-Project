@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../project/create_project_popup.dart';
+import '../common/app_popup_transition.dart';
 import '../custom_snackbar.dart';
 
 class QuickActionsSection extends StatelessWidget {
@@ -74,44 +75,49 @@ class QuickActionsSection extends StatelessWidget {
     required Color color,
     required Color bgColor,
   }) {
-    return InkWell(
-      onTap: () {
-        if (title == 'Create Task') {
-          Navigator.pushNamed(context, '/create-task');
-        } else if (title == 'Calendar') {
-          Navigator.pushNamed(context, '/calendar');
-        } else if (title == 'New Project') {
-          showCreateProjectPopup(context);
-        } else if (title == 'Start Focus') {
-          Navigator.pushNamed(context, '/focus');
-        } else {
-          AppNotification.showInfo(context, '$title coming soon!');
-        }
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+    return Builder(
+      builder: (buttonContext) => InkWell(
+        onTap: () {
+          if (title == 'Create Task') {
+            Navigator.pushNamed(context, '/create-task');
+          } else if (title == 'Calendar') {
+            Navigator.pushNamed(context, '/calendar');
+          } else if (title == 'New Project') {
+            showCreateProjectPopup(
+              context,
+              anchor: popupAnchorFromContext(buttonContext),
+            );
+          } else if (title == 'Start Focus') {
+            Navigator.pushNamed(context, '/focus');
+          } else {
+            AppNotification.showInfo(context, '$title coming soon!');
+          }
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
