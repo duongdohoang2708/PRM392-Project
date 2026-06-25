@@ -773,10 +773,10 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
               ],
             ),
           ),
-          CustomPaint(
-            painter: PlannerLinesPainter(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: CustomPaint(
+              painter: PlannerLinesPainter(),
               child: TextField(
                 controller: _notesController,
                 maxLines: null,
@@ -843,7 +843,7 @@ class PlannerLinesPainter extends CustomPainter {
       ..color = lineColor
       ..strokeWidth = 1.0;
 
-    double y = 34.0;
+    double y = 28.0;
     while (y < size.height) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
       y += lineHeight;

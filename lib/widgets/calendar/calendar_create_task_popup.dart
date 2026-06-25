@@ -7,6 +7,7 @@ import '../../utils/validation/task_deadline_rules.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
+import '../../screens/project/create_project_screen.dart';
 
 class CalendarCreateTaskPopup extends StatefulWidget {
   final DateTime selectedDate;
@@ -98,53 +99,19 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     }
   }
 
-  void _addNewProject() {
-    final textController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppColors.surface,
-          title: const Text('Add New Project'),
-          content: TextField(
-            controller: textController,
-            decoration: const InputDecoration(
-              hintText: 'Enter project name',
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              fillColor: Colors.transparent,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                if (textController.text.trim().isNotEmpty) {
-                  setState(() {
-                    _project = textController.text.trim();
-                  });
-                }
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Add',
-                style: TextStyle(
-                  color: AppColors.primaryDark,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+  void _addNewProject() async {
+    final newProjectName = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreateProjectScreen(),
+      ),
     );
+
+    if (newProjectName != null && newProjectName.isNotEmpty) {
+      setState(() {
+        _project = newProjectName;
+      });
+    }
   }
 
   void _addNewSubTask() {
@@ -469,7 +436,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                 });
               },
               activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
-              activeColor: AppColors.primaryDark,
+              activeThumbColor: AppColors.primaryDark,
             ),
           ),
           const Divider(color: AppColors.border, height: 24),
@@ -769,10 +736,10 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
               ],
             ),
           ),
-          CustomPaint(
-            painter: PlannerLinesPainter(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: CustomPaint(
+              painter: PlannerLinesPainter(),
               child: TextField(
                 controller: _notesController,
                 maxLines: null,
@@ -837,7 +804,7 @@ class PlannerLinesPainter extends CustomPainter {
       ..color = lineColor
       ..strokeWidth = 1.0;
 
-    double y = 34.0;
+    double y = 28.0;
     while (y < size.height) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
       y += lineHeight;

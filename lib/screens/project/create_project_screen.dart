@@ -105,7 +105,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
     AppNotification.showSuccess(context, 'Project "${newProject.name}" created!');
 
-    Navigator.pop(context);
+    Navigator.pop(context, newProject.name);
   }
 
   @override

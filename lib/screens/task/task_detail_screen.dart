@@ -11,6 +11,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/custom_snackbar.dart';
+import '../project/create_project_screen.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final String taskId;
@@ -218,47 +219,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
-  void _addNewProject() {
-    final textController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppColors.surface,
-          title: const Text('Add New Project'),
-          content: TextField(
-            controller: textController,
-            decoration: const InputDecoration(hintText: 'Enter project name'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                if (textController.text.trim().isNotEmpty) {
-                  setState(() {
-                    _project = textController.text.trim();
-                  });
-                }
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Add',
-                style: TextStyle(
-                  color: AppColors.primaryDark,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+  void _addNewProject() async {
+    final newProjectName = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreateProjectScreen(),
+      ),
     );
+
+    if (newProjectName != null && newProjectName.isNotEmpty) {
+      setState(() {
+        _project = newProjectName;
+      });
+    }
   }
 
   void _addNewSubTask() {
@@ -1373,10 +1346,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ),
           ),
           // Custom Paint notes container
-          CustomPaint(
-            painter: PlannerLinesPainter(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: CustomPaint(
+              painter: PlannerLinesPainter(),
               child: TextField(
                 controller: _notesController,
                 maxLines: null,
