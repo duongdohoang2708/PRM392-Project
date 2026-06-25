@@ -8,6 +8,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/goals/edit_goals_sheet.dart';
+import '../../widgets/goals/weekly_streak_panel.dart';
 import '../../widgets/common/animations/app_horizontal_slide_transition.dart';
 import '../../widgets/common/animations/app_page_transition.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
@@ -695,7 +696,7 @@ class _StreakCalendarSection extends StatelessWidget {
           child: activeView == _StreakView.week
                 ? SizedBox(
                     key: const ValueKey('week-page-view'),
-                    height: 135,
+                    height: 118,
                     child: PageView.builder(
                       controller: weekPageController,
                       onPageChanged: onWeekPageChanged,
@@ -704,8 +705,12 @@ class _StreakCalendarSection extends StatelessWidget {
                         final displayWeek = baseDate.add(
                           Duration(days: offset * 7),
                         );
-                        return _WeeklyStreakPanel(
+                        return WeeklyStreakPanel(
                           days: goalsProvider.goalWeekDaysFor(displayWeek),
+                          panelPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                         );
                       },
                     ),
@@ -856,146 +861,6 @@ class _PeriodNavigator extends StatelessWidget {
   }
 }
 
-class _WeeklyStreakPanel extends StatelessWidget {
-  final List<GoalDayData> days;
-
-  const _WeeklyStreakPanel({required this.days});
-
-  @override
-  Widget build(BuildContext context) {
-    return StatPanel(
-      child: Row(
-        children: days
-            .map((day) => Expanded(child: _WeekDayTile(day: day)))
-            .toList(),
-      ),
-    );
-  }
-}
-
-class _WeekDayTile extends StatelessWidget {
-  final GoalDayData day;
-
-  const _WeekDayTile({required this.day});
-
-  @override
-  Widget build(BuildContext context) {
-    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final label = labels[day.date.weekday - 1];
-    final missed = day.isMissed;
-    final isFuture = day.date.isAfter(DateTime.now());
-
-    final borderColor = day.isToday
-        ? AppColors.primaryDark
-        : day.isComplete
-        ? AppColors.accentPeach.withValues(alpha: 0.55)
-        : missed
-        ? AppColors.accentPink.withValues(alpha: 0.45)
-        : day.isPartial
-        ? AppColors.accentYellow.withValues(alpha: 0.55)
-        : AppColors.border;
-
-    return Column(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: day.isComplete
-                ? AppColors.accentPeach.withValues(alpha: 0.18)
-                : AppColors.background,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: borderColor,
-              width: day.isToday ? 1.8 : 1,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              '${day.date.day}',
-              style: TextStyle(
-                color: day.isToday
-                    ? AppColors.primaryDark
-                    : AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: TextStyle(
-            color: day.isToday
-                ? AppColors.primaryDark
-                : AppColors.textSecondary,
-            fontSize: 11,
-            fontWeight: day.isToday ? FontWeight.w800 : FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        if (day.isComplete)
-          const Icon(
-            Icons.local_fire_department,
-            color: AppColors.accentPeach,
-            size: 16,
-          )
-        else if (missed)
-          const Text(
-            'x',
-            style: TextStyle(
-              color: AppColors.accentPink,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              height: 1,
-            ),
-          )
-        else
-          const SizedBox(height: 16),
-        const SizedBox(height: 4),
-        if (!isFuture)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _GoalStatusDot(
-                color: AppColors.accentYellow,
-                active: day.taskGoalMet,
-              ),
-              const SizedBox(width: 4),
-              _GoalStatusDot(
-                color: AppColors.primaryDark,
-                active: day.focusGoalMet,
-              ),
-            ],
-          )
-        else
-          const SizedBox(height: 7),
-      ],
-    );
-  }
-}
-
-class _GoalStatusDot extends StatelessWidget {
-  final Color color;
-  final bool active;
-
-  const _GoalStatusDot({required this.color, required this.active});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 7,
-      height: 7,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: active ? color : Colors.transparent,
-        border: Border.all(color: active ? color : AppColors.border),
-      ),
-    );
-  }
-}
-
 class _MonthlyStreakPanel extends StatelessWidget {
   final List<GoalDayData> days;
   final DateTime displayMonth;
@@ -1089,7 +954,6 @@ class _MonthDayTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final missed = day.isMissed;
-    final isFuture = day.date.isAfter(DateTime.now());
 
     final borderColor = day.isToday
         ? AppColors.primaryDark
@@ -1129,41 +993,20 @@ class _MonthDayTile extends StatelessWidget {
               const Icon(
                 Icons.local_fire_department,
                 color: AppColors.accentPeach,
-                size: 16,
+                size: 20,
               )
             else if (missed)
-              Transform.translate(
-                offset: const Offset(0, -2),
-                child: const Text(
-                  'x',
-                  style: TextStyle(
-                    color: AppColors.accentPink,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    height: 1,
-                  ),
+              const Text(
+                'x',
+                style: TextStyle(
+                  color: Color(0xFFE53935),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
                 ),
               )
             else
-              const SizedBox(height: 16),
-            const SizedBox(height: 4),
-            if (!isFuture)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _GoalStatusDot(
-                    color: AppColors.accentYellow,
-                    active: day.taskGoalMet,
-                  ),
-                  const SizedBox(width: 4),
-                  _GoalStatusDot(
-                    color: AppColors.primaryDark,
-                    active: day.focusGoalMet,
-                  ),
-                ],
-              )
-            else
-              const SizedBox(height: 7),
+              const SizedBox(height: 20),
           ],
         ),
       ),
