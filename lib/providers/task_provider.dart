@@ -652,6 +652,61 @@ class TaskProvider with ChangeNotifier {
     }
   }
 
+  void addSubTask(String taskId, {String? subTaskId}) {
+    final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) return;
+
+    final task = _tasks[taskIndex];
+    final newId = subTaskId ?? '${taskId}_sub_${DateTime.now().millisecondsSinceEpoch}';
+    final subTasks = [...task.subTasks, SubTask(id: newId, title: '')];
+    _tasks[taskIndex] = task.copyWith(subTasks: subTasks);
+    notifyListeners();
+  }
+
+  void updateSubTaskTitle(String taskId, String subTaskId, String title) {
+    final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) return;
+
+    final task = _tasks[taskIndex];
+    final subTaskIndex = task.subTasks.indexWhere((st) => st.id == subTaskId);
+    if (subTaskIndex == -1) return;
+
+    final subTasks = List<SubTask>.from(task.subTasks);
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) {
+      subTasks.removeAt(subTaskIndex);
+    } else {
+      subTasks[subTaskIndex] = subTasks[subTaskIndex].copyWith(title: trimmed);
+    }
+
+    final allCompleted = subTasks.isNotEmpty && subTasks.every((st) => st.isCompleted);
+    _tasks[taskIndex] = task.copyWith(
+      subTasks: subTasks,
+      isCompleted: subTasks.isEmpty ? task.isCompleted : allCompleted,
+      completedAt: subTasks.isEmpty
+          ? task.completedAt
+          : (allCompleted ? (task.completedAt ?? DateTime.now()) : null),
+    );
+    notifyListeners();
+  }
+
+  void removeSubTask(String taskId, String subTaskId) {
+    final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) return;
+
+    final task = _tasks[taskIndex];
+    final subTasks = task.subTasks.where((st) => st.id != subTaskId).toList();
+    final allCompleted = subTasks.isNotEmpty && subTasks.every((st) => st.isCompleted);
+    _tasks[taskIndex] = task.copyWith(
+      subTasks: subTasks,
+      isCompleted: subTasks.isEmpty ? task.isCompleted : allCompleted,
+      completedAt: subTasks.isEmpty
+          ? task.completedAt
+          : (allCompleted ? (task.completedAt ?? DateTime.now()) : null),
+    );
+    notifyListeners();
+  }
+
   void toggleSubTaskCompletion(String taskId, String subTaskId, {bool autoCompleteParent = true}) {
     final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
     if (taskIndex != -1) {

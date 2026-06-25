@@ -42,6 +42,7 @@ class _TaskListItemState extends State<TaskListItem>
   bool _isAnimating = false;
   bool _deleteTriggered = false; // Prevents fallback from running after .then() already ran
   bool _isExpanded = false; // Tracks if subtasks are expanded
+  String? _editingSubTaskId;
   bool? _overrideSubTasksCompleted;
 
   // Dedicated controller for the strikethrough line
@@ -90,6 +91,8 @@ class _TaskListItemState extends State<TaskListItem>
       setState(() {
         _isCompletedLocal = widget.task.isCompleted;
         _isAnimating = false;
+        _isExpanded = false;
+        _editingSubTaskId = null;
         _overrideSubTasksCompleted = null;
       });
       _animationController.reset();
@@ -152,6 +155,33 @@ class _TaskListItemState extends State<TaskListItem>
           }
         });
       });
+    }
+  }
+
+  void _addSubTask() {
+    final newId = '${widget.task.id}_sub_${DateTime.now().millisecondsSinceEpoch}';
+    context.read<TaskProvider>().addSubTask(widget.task.id, subTaskId: newId);
+    setState(() {
+      _isExpanded = true;
+      _editingSubTaskId = newId;
+    });
+  }
+
+  void _commitSubTaskTitle(String subTaskId, String title) {
+    context.read<TaskProvider>().updateSubTaskTitle(
+      widget.task.id,
+      subTaskId,
+      title,
+    );
+    if (_editingSubTaskId == subTaskId) {
+      setState(() => _editingSubTaskId = null);
+    }
+  }
+
+  void _removeSubTask(String subTaskId) {
+    context.read<TaskProvider>().removeSubTask(widget.task.id, subTaskId);
+    if (_editingSubTaskId == subTaskId) {
+      setState(() => _editingSubTaskId = null);
     }
   }
 
@@ -580,8 +610,6 @@ class _TaskListItemState extends State<TaskListItem>
                         : projectColor,
                   ),
                 ),
-              ],
-              if (widget.task.subTasks.isNotEmpty) ...[
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
@@ -603,25 +631,55 @@ class _TaskListItemState extends State<TaskListItem>
             alignment: Alignment.topCenter,
             child: SizedBox(
               width: double.infinity,
-              child: _isExpanded && widget.task.subTasks.isNotEmpty
+              child: !widget.hideActions && _isExpanded
                   ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 12),
-                        const Divider(color: AppColors.border, height: 1),
-                        const SizedBox(height: 12),
-                        Column(
-                          children: widget.task.subTasks.map((subTask) {
+                        if (widget.task.subTasks.isNotEmpty) ...[
+                          const Divider(color: AppColors.border, height: 1),
+                          const SizedBox(height: 12),
+                          ...widget.task.subTasks.map((subTask) {
                             return Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0, left: 8.0, right: 8.0),
-                              child: SubTaskItem(
-                                subTask: subTask,
-                                taskId: widget.task.id,
-                                projectColor: projectColor,
-                                onToggle: _handleSubTaskToggle,
-                                overrideCompleted: _overrideSubTasksCompleted,
+                              padding: const EdgeInsets.only(
+                                bottom: 12.0,
+                                left: 8.0,
+                                right: 8.0,
                               ),
+                              child: subTask.title.trim().isEmpty
+                                  ? _EditableSubTaskRow(
+                                      key: ValueKey(subTask.id),
+                                      subTask: subTask,
+                                      projectColor: projectColor,
+                                      autofocus: _editingSubTaskId == subTask.id,
+                                      onCommit: (title) =>
+                                          _commitSubTaskTitle(subTask.id, title),
+                                      onDelete: () => _removeSubTask(subTask.id),
+                                    )
+                                  : SubTaskItem(
+                                      subTask: subTask,
+                                      taskId: widget.task.id,
+                                      projectColor: projectColor,
+                                      onToggle: _handleSubTaskToggle,
+                                      overrideCompleted: _overrideSubTasksCompleted,
+                                    ),
                             );
-                          }).toList(),
+                          }),
+                        ],
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: widget.task.subTasks
+                                    .any((st) => st.title.trim().isEmpty)
+                                ? null
+                                : _addSubTask,
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Add subtask'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: projectColor,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                            ),
+                          ),
                         ),
                       ],
                     )
@@ -724,6 +782,97 @@ class _TaskListItemState extends State<TaskListItem>
           lineColor: AppColors.textSecondary,
         );
       },
+    );
+  }
+}
+
+class _EditableSubTaskRow extends StatefulWidget {
+  final SubTask subTask;
+  final Color projectColor;
+  final bool autofocus;
+  final ValueChanged<String> onCommit;
+  final VoidCallback onDelete;
+
+  const _EditableSubTaskRow({
+    super.key,
+    required this.subTask,
+    required this.projectColor,
+    required this.autofocus,
+    required this.onCommit,
+    required this.onDelete,
+  });
+
+  @override
+  State<_EditableSubTaskRow> createState() => _EditableSubTaskRowState();
+}
+
+class _EditableSubTaskRowState extends State<_EditableSubTaskRow> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.subTask.title);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _commit() {
+    widget.onCommit(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: widget.projectColor.withValues(alpha: 0.5),
+              width: 2,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            autofocus: widget.autofocus,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textPrimary,
+            ),
+            decoration: const InputDecoration(
+              hintText: 'Enter subtask...',
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+              fillColor: Colors.transparent,
+            ),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _commit(),
+            onEditingComplete: _commit,
+          ),
+        ),
+        IconButton(
+          icon: const Icon(
+            Icons.close,
+            size: 18,
+            color: AppColors.textSecondary,
+          ),
+          onPressed: widget.onDelete,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        ),
+      ],
     );
   }
 }
