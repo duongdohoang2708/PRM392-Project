@@ -9,18 +9,19 @@ import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver
 
 object PomodoroNotificationHelper {
     const val CHANNEL_ID = "pomodoro_timer_v3"
-    private const val ACTION_PAUSE_RESUME = "pause_resume"
-    private const val ACTION_STOP = "stop"
+    const val ACTION_PAUSE_RESUME = "pause_resume"
+    const val ACTION_STOP = "stop"
 
-    private const val EXTRA_NOTIFICATION_ID = "notificationId"
-    private const val EXTRA_ACTION_ID = "actionId"
-    private const val EXTRA_PAYLOAD = "payload"
+    const val EXTRA_NOTIFICATION_ID = "notificationId"
+    const val EXTRA_ACTION_ID = "actionId"
+    const val EXTRA_PAYLOAD = "payload"
     private const val EXTRA_CANCEL_NOTIFICATION = "cancelNotification"
     private const val EXTRA_NOTIFICATION_PAYLOAD = "notification_payload"
+
+    private var lastArgs: MutableMap<String, Any>? = null
 
     fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -49,6 +50,14 @@ object PomodoroNotificationHelper {
         val timeString = args["timeString"] as? String ?: "00:00"
         val isRunning = args["isRunning"] as? Boolean ?: false
         val notificationId = (args["notificationId"] as? Number)?.toInt() ?: 1001
+
+        lastArgs = mutableMapOf(
+            "phaseLabel" to phaseLabel,
+            "taskName" to (taskName ?: ""),
+            "timeString" to timeString,
+            "isRunning" to isRunning,
+            "notificationId" to notificationId,
+        )
 
         val remoteViews = buildRemoteViews(
             context = context,
@@ -91,9 +100,22 @@ object PomodoroNotificationHelper {
     }
 
     fun cancel(context: Context, notificationId: Int = 1001) {
+        lastArgs = null
         val manager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.cancel(notificationId)
+    }
+
+    fun toggleRunningOptimistic(context: Context) {
+        val cached = lastArgs ?: return
+        val isRunning = cached["isRunning"] as? Boolean ?: false
+        cached["isRunning"] = !isRunning
+        show(context, cached)
+    }
+
+    fun cancelOptimistic(context: Context) {
+        val notificationId = (lastArgs?.get("notificationId") as? Number)?.toInt() ?: 1001
+        cancel(context, notificationId)
     }
 
     fun isPomodoroOpenIntent(intent: Intent?): Boolean {
@@ -153,12 +175,9 @@ object PomodoroNotificationHelper {
         notificationId: Int,
         requestCodeOffset: Int,
     ): PendingIntent {
-        val intent = Intent(context, ActionBroadcastReceiver::class.java).apply {
-            action = ActionBroadcastReceiver.ACTION_TAPPED
+        val intent = Intent(context, PomodoroActionReceiver::class.java).apply {
             putExtra(EXTRA_NOTIFICATION_ID, notificationId)
             putExtra(EXTRA_ACTION_ID, actionId)
-            putExtra(EXTRA_CANCEL_NOTIFICATION, false)
-            putExtra(EXTRA_PAYLOAD, "pomodoro")
         }
 
         return PendingIntent.getBroadcast(

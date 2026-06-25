@@ -42,10 +42,11 @@ class ActiveFocusSection extends StatelessWidget {
          timeString = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
       } else {
         if (totalSeconds > 0) {
-          progress = 1 - (focusProvider.remainingSeconds / totalSeconds);
+          progress = focusProvider.phaseElapsedFraction(totalSeconds);
         }
-        final int minutes = focusProvider.remainingSeconds ~/ 60;
-        final int seconds = focusProvider.remainingSeconds % 60;
+        final int remaining = focusProvider.displayRemainingSeconds;
+        final int minutes = remaining ~/ 60;
+        final int seconds = remaining % 60;
         timeString = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
       }
     } else {

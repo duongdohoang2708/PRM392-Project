@@ -166,32 +166,99 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
   }
 
   String _getTimeString() {
-    final int minutes = _remainingSeconds ~/ 60;
-    final int seconds = _remainingSeconds % 60;
+    final remaining = displayRemainingSeconds;
+    final int minutes = remaining ~/ 60;
+    final int seconds = remaining % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   void _updateNotification() {
+    final remaining = displayRemainingSeconds;
     NotificationService.showTimerNotification(
       phaseLabel: _getCurrentPhaseLabel(),
       timeString: _getTimeString(),
       isRunning: _timerState == TimerState.running,
-      remainingSeconds: _remainingSeconds,
+      remainingSeconds: remaining,
       taskName: _selectedTask?.title,
     );
+  }
+
+  /// Deadline aligned to wall-clock second boundaries so display,
+  /// notification, and aligned ticks all decrement together.
+  DateTime _deadlineFromRemainingSeconds(int remainingSeconds) {
+    final now = DateTime.now();
+    if (remainingSeconds <= 0) return now;
+
+    final msPart = now.millisecond;
+    final msUntilNextBoundary = msPart == 0 ? 1000 : (1000 - msPart);
+    final totalMs = (remainingSeconds - 1) * 1000 + msUntilNextBoundary;
+
+    return DateTime.fromMillisecondsSinceEpoch(
+      now.millisecondsSinceEpoch + totalMs,
+    );
+  }
+
+  int _remainingFromDeadline(DateTime endTime) {
+    final diffMs = endTime.difference(DateTime.now()).inMilliseconds;
+    if (diffMs <= 0) return 0;
+    return (diffMs + 999) ~/ 1000;
+  }
+
+  /// Whole seconds left for display — uses wall-clock deadline while running.
+  int get displayRemainingSeconds {
+    if (_timerState == TimerState.running && _expectedEndTime != null) {
+      return _remainingFromDeadline(_expectedEndTime!);
+    }
+    return _remainingSeconds;
+  }
+
+  /// Elapsed fraction of the current phase (0.0–1.0), smooth while running.
+  double phaseElapsedFraction(int totalPhaseSeconds) {
+    if (totalPhaseSeconds <= 0) return 0;
+    if (_timerState == TimerState.running && _expectedEndTime != null) {
+      final totalMs = totalPhaseSeconds * 1000;
+      final remainMs =
+          _expectedEndTime!.difference(DateTime.now()).inMilliseconds;
+      if (remainMs <= 0) return 1.0;
+      return ((totalMs - remainMs) / totalMs).clamp(0.0, 1.0);
+    }
+    return ((totalPhaseSeconds - _remainingSeconds) / totalPhaseSeconds)
+        .clamp(0.0, 1.0);
+  }
+
+  void _armAlignedTimer() {
+    _timer?.cancel();
+
+    void scheduleNext() {
+      if (_timerState != TimerState.running || _expectedEndTime == null) {
+        return;
+      }
+
+      final now = DateTime.now();
+      final msUntilNextSecond = 1000 - (now.millisecond % 1000);
+      final delayMs = msUntilNextSecond == 0 ? 1000 : msUntilNextSecond;
+
+      _timer = Timer(Duration(milliseconds: delayMs), () {
+        _onTimerTick();
+        scheduleNext();
+      });
+    }
+
+    _onTimerTick();
+    scheduleNext();
   }
 
   void _onTimerTick() {
     if (_expectedEndTime == null) return;
 
-    final diffMs = _expectedEndTime!.difference(DateTime.now()).inMilliseconds;
-    if (diffMs > 0) {
-      final nextRemaining = diffMs ~/ 1000;
-      if (nextRemaining != _remainingSeconds) {
-        _remainingSeconds = nextRemaining;
-        if (_timerState == TimerState.running) {
-          _updateNotification();
-        }
+    final nextRemaining = _remainingFromDeadline(_expectedEndTime!);
+    if (nextRemaining > 0) {
+      final changed = nextRemaining != _remainingSeconds;
+      _remainingSeconds = nextRemaining;
+      if (_timerState == TimerState.running) {
+        _updateNotification();
+      }
+      if (changed) {
         notifyListeners();
       }
       return;
@@ -205,25 +272,25 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
     if (_currentPhaseIndex >= _sequence.length) {
       _resetTimerState();
     }
-    _timerState = TimerState.running;
-    _expectedEndTime = DateTime.now().add(Duration(seconds: _remainingSeconds));
 
     _timer?.cancel();
+    _timerState = TimerState.running;
+    _updateNotification();
+
+    _expectedEndTime = _deadlineFromRemainingSeconds(_remainingSeconds);
     _onTimerTick();
     _updateNotification();
     notifyListeners();
 
-    _timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
-      _onTimerTick();
-    });
+    _armAlignedTimer();
   }
 
   void pauseTimer() {
     _timer?.cancel();
     if (_expectedEndTime != null) {
-      final diffMs = _expectedEndTime!.difference(DateTime.now()).inMilliseconds;
-      if (diffMs > 0) {
-        _remainingSeconds = diffMs ~/ 1000;
+      final nextRemaining = _remainingFromDeadline(_expectedEndTime!);
+      if (nextRemaining > 0) {
+        _remainingSeconds = nextRemaining;
       }
     }
     _expectedEndTime = null;
