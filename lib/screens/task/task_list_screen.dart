@@ -11,8 +11,10 @@ import '../../providers/drawer_provider.dart';
 import '../../models/task_model.dart';
 import '../../widgets/task/task_group_list.dart';
 import '../../widgets/background_pattern.dart';
-import '../../widgets/custom_snackbar.dart';
 import '../../widgets/staggered_list_entry.dart';
+import '../../widgets/common/notification_bell_button.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
+import '../../widgets/common/app_scaffold.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -325,6 +327,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                           ),
                         ),
                       ),
+                      SliverToBoxAdapter(child: KeyboardBottomSpacer()),
                     ],
                   ),
                 ),
@@ -341,7 +344,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
         );
 
         if (isDesktop) {
-          return Scaffold(
+          return AppScaffold(
             backgroundColor: AppColors.background,
             appBar: _buildAppBar(context, showMenuIcon: false),
             body: mainContent,
@@ -349,7 +352,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           );
         }
 
-        return Scaffold(
+        return AppScaffold(
           backgroundColor: AppColors.background,
           drawer: const AppDrawer(
             isPermanent: false,
@@ -394,14 +397,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
           },
         ),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
-        const SizedBox(width: 8),
+      actions: const [
+        NotificationBellButton(),
+        SizedBox(width: 8),
       ],
     );
   }

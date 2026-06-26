@@ -443,7 +443,6 @@ class _TaskListItemState extends State<TaskListItem>
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Checkbox
               GestureDetector(
                 onTap: _handleToggle,
                 child: AnimatedContainer(
@@ -466,12 +465,15 @@ class _TaskListItemState extends State<TaskListItem>
                     scale: _isCompletedLocal ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.elasticOut,
-                    child: const Icon(Icons.check, size: 16, color: Colors.white),
+                    child: const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 16),
-              // Content
               Expanded(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -489,134 +491,85 @@ class _TaskListItemState extends State<TaskListItem>
                     children: [
                       _buildTitleText(theme),
                       const SizedBox(height: 4),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (showProject) ...[
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.folder_outlined,
-                                  size: 14,
-                                  color: projectColor,
-                                ),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    widget.task.project,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: projectColor,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                      if (showProject) ...[
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.folder_outlined,
+                              size: 14,
+                              color: projectColor,
                             ),
-                            const SizedBox(height: 4),
-                          ],
-                          Wrap(
-                            spacing: 16,
-                            runSpacing: 4,
-                            children: [
-                              // Priority
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.flag, size: 14, color: priorityColor),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    widget.task.priority,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: priorityColor,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (widget.task.dueDate != null && !widget.hideTime)
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _isCompletedLocal
-                                          ? Icons.check_circle_outline
-                                          : Icons.schedule,
-                                      size: 14,
-                                      color: _isCompletedLocal
-                                          ? AppColors.primaryDark
-                                          : (isOverdue
-                                                ? const Color(0xFFE57373)
-                                                : AppColors.textPrimary),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      timeString,
-                                      style: theme.textTheme.labelMedium?.copyWith(
-                                        color: _isCompletedLocal
-                                            ? AppColors.primaryDark
-                                            : (isOverdue
-                                                  ? const Color(0xFFE57373)
-                                                  : AppColors.textPrimary),
-                                        fontWeight: isOverdue || _isCompletedLocal
-                                            ? FontWeight.bold
-                                            : FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                widget.task.project,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: projectColor,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                            ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.flag, size: 14, color: priorityColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.task.priority,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: priorityColor,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
+                      if (widget.task.dueDate != null && !widget.hideTime) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              _isCompletedLocal
+                                  ? Icons.check_circle_outline
+                                  : Icons.schedule,
+                              size: 14,
+                              color: _isCompletedLocal
+                                  ? AppColors.primaryDark
+                                  : (isOverdue
+                                        ? const Color(0xFFE57373)
+                                        : AppColors.textPrimary),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                timeString,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: _isCompletedLocal
+                                      ? AppColors.primaryDark
+                                      : (isOverdue
+                                            ? const Color(0xFFE57373)
+                                            : AppColors.textPrimary),
+                                  fontWeight:
+                                      isOverdue || _isCompletedLocal
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ),
               if (!widget.hideActions) ...[
-                const SizedBox(width: 16),
-                // Star Action
-                GestureDetector(
-                  onTap: _isCompletedLocal
-                      ? null
-                      : () {
-                          context.read<TaskProvider>().toggleTaskImportance(
-                            widget.task.id,
-                          );
-                        },
-                  child: Icon(
-                    widget.task.isImportant ? Icons.star : Icons.star_border,
-                    color: _isCompletedLocal
-                        ? AppColors.textSecondary.withValues(alpha: 0.5)
-                        : (widget.task.isImportant
-                            ? AppColors.accentYellow
-                            : AppColors.textSecondary.withValues(alpha: 0.5)),
-                  ),
-                ),
                 const SizedBox(width: 12),
-                // Play Action
-                GestureDetector(
-                  onTap: _isCompletedLocal ? null : () => _handleStartFocus(context),
-                  child: Icon(
-                    Icons.play_circle_fill,
-                    size: 28,
-                    color: _isCompletedLocal
-                        ? AppColors.textSecondary.withValues(alpha: 0.5)
-                        : projectColor,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isExpanded = !_isExpanded;
-                    });
-                  },
-                  child: Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                _buildTrailingActions(context, projectColor),
               ],
             ],
           ),
@@ -750,6 +703,56 @@ class _TaskListItemState extends State<TaskListItem>
     );
   }
 
+  Widget _buildTrailingActions(BuildContext context, Color projectColor) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _isCompletedLocal
+              ? null
+              : () {
+                  context.read<TaskProvider>().toggleTaskImportance(
+                    widget.task.id,
+                  );
+                },
+          child: Icon(
+            widget.task.isImportant ? Icons.star : Icons.star_border,
+            size: 22,
+            color: _isCompletedLocal
+                ? AppColors.textSecondary.withValues(alpha: 0.5)
+                : (widget.task.isImportant
+                      ? AppColors.accentYellow
+                      : AppColors.textSecondary.withValues(alpha: 0.5)),
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: _isCompletedLocal ? null : () => _handleStartFocus(context),
+          child: Icon(
+            Icons.play_circle_fill,
+            size: 26,
+            color: _isCompletedLocal
+                ? AppColors.textSecondary.withValues(alpha: 0.5)
+                : projectColor,
+          ),
+        ),
+        const SizedBox(width: 4),
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _isExpanded = !_isExpanded;
+            });
+          },
+          child: Icon(
+            _isExpanded ? Icons.expand_less : Icons.expand_more,
+            size: 22,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTitleText(ThemeData theme) {
     final style = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
@@ -759,12 +762,16 @@ class _TaskListItemState extends State<TaskListItem>
     );
 
     if (_strikeAnimation == null) {
-      return Text(
-        widget.task.title,
-        style: style?.copyWith(
-          decoration:
-              _isCompletedLocal ? TextDecoration.lineThrough : TextDecoration.none,
-          decorationColor: AppColors.textSecondary,
+      return SizedBox(
+        width: double.infinity,
+        child: Text(
+          widget.task.title,
+          style: style?.copyWith(
+            decoration: _isCompletedLocal
+                ? TextDecoration.lineThrough
+                : TextDecoration.none,
+            decorationColor: AppColors.textSecondary,
+          ),
         ),
       );
     }
@@ -772,11 +779,14 @@ class _TaskListItemState extends State<TaskListItem>
     return AnimatedBuilder(
       animation: _strikeAnimation!,
       builder: (context, _) {
-        return _MultiLineStrikethroughText(
-          text: widget.task.title,
-          style: style!,
-          progress: _strikeAnimation!.value,
-          lineColor: AppColors.textSecondary,
+        return SizedBox(
+          width: double.infinity,
+          child: _MultiLineStrikethroughText(
+            text: widget.task.title,
+            style: style!,
+            progress: _strikeAnimation!.value,
+            lineColor: AppColors.textSecondary,
+          ),
         );
       },
     );
@@ -896,7 +906,11 @@ class _MultiLineStrikethroughText extends StatelessWidget {
         progress: progress,
         lineColor: lineColor,
       ),
-      child: Text(text, style: style),
+      child: Text(
+        text,
+        style: style,
+        softWrap: true,
+      ),
     );
   }
 }

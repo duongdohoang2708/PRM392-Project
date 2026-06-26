@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
+import '../utils/reminder/task_reminder.dart';
 import '../utils/validation/task_deadline_rules.dart';
 
 class TaskProvider with ChangeNotifier {
   final List<Task> _tasks = [];
+  Timer? _searchNotifyDebounce;
 
   TaskProvider() {
     _initializeMockTasks();
@@ -222,11 +226,12 @@ class TaskProvider with ChangeNotifier {
       _tasks[index] = task.copyWith(
         createdAt: createdAt,
         completedAt: completedAt,
+        reminder: _defaultReminderFor(task),
       );
     }
 
-    // Keep recent mock data aligned with streak-goal rules:
-    // last 6 days each have >= 2 completed tasks.
+    // Keep recent mock data aligned with dynamic streak-goal rules:
+    // each streak day has all tasks due that day completed.
     final completionPlan = <String, int>{
       '1': 0,
       '10': 0,
@@ -249,17 +254,27 @@ class TaskProvider with ChangeNotifier {
       final task = _tasks[index];
       final completionDay = DateTime(today.year, today.month, today.day)
           .subtract(Duration(days: dayOffset));
-      final completedAt = completionDay.add(Duration(hours: 9 + (index % 6)));
+      final dueDate = completionDay.add(Duration(hours: 9 + (index % 5)));
+      final completedAt = completionDay.add(Duration(hours: 11 + (index % 6)));
       final safeCreatedAt = task.createdAt.isAfter(completedAt)
           ? completedAt.subtract(const Duration(days: 1))
           : task.createdAt;
 
       _tasks[index] = task.copyWith(
         createdAt: safeCreatedAt,
+        dueDate: dueDate,
         isCompleted: true,
         completedAt: completedAt,
       );
     });
+  }
+
+  String _defaultReminderFor(Task task) {
+    if (task.dueDate == null) return TaskReminder.none;
+    if (task.isAllDay) return '1 day before';
+    final timedReminders = const ['30 mins before', '1 hour before', '15 mins before'];
+    final index = int.tryParse(task.id) ?? 0;
+    return timedReminders[index % timedReminders.length];
   }
 
   String _activeFilter = '';
@@ -609,8 +624,12 @@ class TaskProvider with ChangeNotifier {
   }
 
   void setSearchQuery(String query) {
+    if (_searchQuery == query) return;
     _searchQuery = query;
-    notifyListeners();
+    _searchNotifyDebounce?.cancel();
+    _searchNotifyDebounce = Timer(const Duration(milliseconds: 200), () {
+      notifyListeners();
+    });
   }
 
   void setFilterProject(String project) {
@@ -781,17 +800,41 @@ class TaskProvider with ChangeNotifier {
   int get remainingTodayCount => tasksTodayCount;
 
   int get completedTodayCount {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return _tasks.where((t) {
-      if (t.completedAt == null) return false;
-      final completedDay = DateTime(
-        t.completedAt!.year,
-        t.completedAt!.month,
-        t.completedAt!.day,
+    return tasksDueOnCompletedCount(DateTime.now());
+  }
+
+  int totalTasksDueOn(DateTime day) {
+    final normalized = DateTime(day.year, day.month, day.day);
+    return _tasks.where((task) => _isTaskDueOn(task, normalized)).length;
+  }
+
+  int tasksDueOnCompletedCount(DateTime day) {
+    final normalized = DateTime(day.year, day.month, day.day);
+    return _tasks.where((task) {
+      if (task.completedAt == null || task.dueDate == null) return false;
+      final dueDay = DateTime(
+        task.dueDate!.year,
+        task.dueDate!.month,
+        task.dueDate!.day,
       );
-      return completedDay.isAtSameMomentAs(today);
+      final completedDay = DateTime(
+        task.completedAt!.year,
+        task.completedAt!.month,
+        task.completedAt!.day,
+      );
+      return dueDay.isAtSameMomentAs(normalized) &&
+          completedDay.isAtSameMomentAs(normalized);
     }).length;
+  }
+
+  bool _isTaskDueOn(Task task, DateTime day) {
+    if (task.dueDate == null) return false;
+    final dueDay = DateTime(
+      task.dueDate!.year,
+      task.dueDate!.month,
+      task.dueDate!.day,
+    );
+    return dueDay.isAtSameMomentAs(day);
   }
 
   int get overdueCount => getCountForFilter('Overdue');

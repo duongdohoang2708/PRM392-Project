@@ -28,6 +28,7 @@ class Task {
   final bool isImportant;
   final bool isAllDay;
   final String notes;
+  final String reminder;
   final List<SubTask> subTasks;
 
   Task({
@@ -42,6 +43,7 @@ class Task {
     this.isImportant = false,
     this.isAllDay = false,
     this.notes = '',
+    this.reminder = 'None',
     this.subTasks = const [],
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -49,13 +51,14 @@ class Task {
     String? title,
     String? project,
     String? priority,
-    DateTime? dueDate,
+    Object? dueDate = _noValue,
     DateTime? createdAt,
     Object? completedAt = _noValue,
     bool? isCompleted,
     bool? isImportant,
     bool? isAllDay,
     String? notes,
+    String? reminder,
     List<SubTask>? subTasks,
   }) {
     return Task(
@@ -63,13 +66,14 @@ class Task {
       title: title ?? this.title,
       project: project ?? this.project,
       priority: priority ?? this.priority,
-      dueDate: dueDate ?? this.dueDate,
+      dueDate: dueDate == _noValue ? this.dueDate : dueDate as DateTime?,
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt == _noValue ? this.completedAt : completedAt as DateTime?,
       isCompleted: isCompleted ?? this.isCompleted,
       isImportant: isImportant ?? this.isImportant,
       isAllDay: isAllDay ?? this.isAllDay,
       notes: notes ?? this.notes,
+      reminder: reminder ?? this.reminder,
       subTasks: subTasks ?? this.subTasks,
     );
   }

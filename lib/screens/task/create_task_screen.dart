@@ -12,12 +12,16 @@ import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/project/create_project_popup.dart';
 import '../../widgets/task/reminder_selector.dart';
+import '../../widgets/task/subtask_title_field.dart';
 import '../../widgets/common/app_time_picker.dart';
 import '../../widgets/common/app_date_picker.dart';
 import '../../widgets/common/app_dropdown.dart';
 import '../../widgets/common/app_popup_transition.dart';
+import '../../widgets/common/notification_bell_button.dart';
 import '../../utils/reminder/task_reminder.dart';
 import '../../utils/project_accent_color.dart';
+import '../../widgets/common/app_scaffold.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
 
 class CreateTaskScreen extends StatefulWidget {
   final String? initialProjectName;
@@ -175,6 +179,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
+      reminder: _reminder,
     );
 
     if (!taskProvider.addTask(newTask)) {
@@ -215,7 +220,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = MediaQuery.of(context).size.width >= 768;
+        final bool isDesktop = MediaQuery.sizeOf(context).width >= 768;
         final bool useTwoColumns = constraints.maxWidth >= 1024;
 
         // Main Columns
@@ -261,7 +266,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
-                  child: SingleChildScrollView(
+                  child: KeyboardAwareSingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,7 +310,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
           ],
         );
 
-        return Scaffold(
+        return AppScaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop ? null : const AppDrawer(
             isPermanent: false,
@@ -359,15 +366,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         ],
       ),
       actions: [
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_outlined,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
+        const NotificationBellButton(),
         const SizedBox(width: 8),
       ],
     );
@@ -803,28 +802,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                     const SizedBox(width: 12),
                     // Subtask input
                     Expanded(
-                      child: TextField(
-                        controller: TextEditingController(text: subtask.title)
-                          ..selection = TextSelection.fromPosition(
-                            TextPosition(offset: subtask.title.length),
-                          ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: subtask.isCompleted
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
-                          decoration: subtask.isCompleted
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'Enter subtask...',
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                          fillColor: Colors.transparent,
-                        ),
+                      child: SubtaskTitleField(
+                        title: subtask.title,
+                        isCompleted: subtask.isCompleted,
                         onChanged: (val) {
                           _subTasks[index] = subtask.copyWith(title: val);
                         },
