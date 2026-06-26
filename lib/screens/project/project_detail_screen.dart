@@ -12,8 +12,6 @@ import '../../widgets/project/project_create_task_popup.dart';
 import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/staggered_list_entry.dart';
-import '../../widgets/common/notification_bell_button.dart';
-import '../../widgets/common/app_scaffold.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final String projectId;
@@ -118,7 +116,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
 
     if (project.id.isEmpty) {
-      return AppScaffold(
+      return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -584,7 +582,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           );
         }
 
-        return AppScaffold(
+        return Scaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop
               ? null
@@ -663,7 +661,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           tooltip: 'Delete Project',
           onPressed: () => _confirmDeleteProject(context, project),
         ),
-        const NotificationBellButton(),
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          tooltip: 'Notifications',
+          onPressed: () {
+            AppNotification.showInfo(context, 'Notifications coming soon!');
+          },
+        ),
         const SizedBox(width: 8),
       ],
     );

@@ -11,13 +11,10 @@ import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/reminder/task_reminder.dart';
 import '../task/reminder_selector.dart';
-import '../task/subtask_title_field.dart';
 import '../common/app_time_picker.dart';
 import '../common/app_date_picker.dart';
-import '../common/app_dropdown.dart';
 import '../common/app_popup_transition.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
-import '../../utils/keyboard/keyboard_insets.dart';
 
 class ProjectCreateTaskPopup extends StatefulWidget {
   final String projectName;
@@ -205,7 +202,6 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
       isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
-      reminder: _reminder,
     );
 
     if (!taskProvider.addTask(newTask)) {
@@ -220,6 +216,8 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
     final projectProvider = Provider.of<ProjectProvider>(context);
     final project = projectProvider.projects.firstWhere(
       (p) => p.name == widget.projectName,
@@ -232,13 +230,19 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     );
     final Color projectColor = Color(project.colorValue);
 
-    return AppPopupShell(
-      alignment: Alignment.centerRight,
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-        ),
-        decoration: BoxDecoration(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: isMobile
+          ? const EdgeInsets.all(16)
+          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          width: isMobile ? double.infinity : 400,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -293,9 +297,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
 
                     // Scrollable Content
                     Flexible(
-                      child: KeyboardAwareSingleChildScrollView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,6 +355,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             ),
           ),
         ),
+      ),
     );
   }
 
@@ -501,16 +504,25 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             icon: Icons.flag_outlined,
             label: 'Priority',
             projectColor: projectColor,
-            child: AppDropdown<String>(
+            child: DropdownButton<String>(
               value: _priority,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              accentColor: projectColor,
+              dropdownColor: AppColors.surface,
+              underline: const SizedBox(),
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
               items: ['High', 'Medium', 'Low']
                   .map(
                     (p) => DropdownMenuItem(
                       value: p,
-                      child: AppDropdown.menuChild(Text(p)),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(p),
+                      ),
                     ),
                   )
                   .toList(),
@@ -527,7 +539,6 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             child: ReminderSelector(
               value: _reminder,
               isAllDay: _isAllDay,
-              accentColor: projectColor,
               onChanged: (val) => setState(() => _reminder = val),
             ),
           ),
@@ -631,12 +642,31 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: SubtaskTitleField(
-                        title: subtask.title,
-                        isCompleted: subtask.isCompleted,
-                        onChanged: (val) {
-                          _subTasks[index] = subtask.copyWith(title: val);
-                        },
+                      child: TextField(
+                        controller: TextEditingController(text: subtask.title)
+                          ..selection = TextSelection.fromPosition(
+                            TextPosition(offset: subtask.title.length),
+                          ),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: subtask.isCompleted
+                              ? AppColors.textSecondary
+                              : AppColors.textPrimary,
+                          decoration: subtask.isCompleted
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Enter subtask...',
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          fillColor: Colors.transparent,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        onChanged: (val) =>
+                            _subTasks[index] = subtask.copyWith(title: val),
                       ),
                     ),
                     IconButton(

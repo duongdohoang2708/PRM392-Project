@@ -112,7 +112,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
           child: Text(
             'Edit Project',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                   fontWeight: FontWeight.bold,
                 ),
           ),
@@ -200,7 +200,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         );
 
         return AppScaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop
               ? null
               : const AppDrawer(
@@ -231,9 +231,9 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     required bool showMenuIcon,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      iconTheme: IconThemeData(color: AppColors.textPrimaryOf(context)),
       leadingWidth: 96,
       leading: Row(
         mainAxisSize: MainAxisSize.min,
@@ -267,9 +267,16 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(_accentColor.withValues(alpha: 0.08), AppColors.surface),
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _accentColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(color: AppColors.borderOf(context)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: child,
     );
@@ -282,14 +289,14 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.edit_outlined, color: _accentColor, size: 20),
+              Icon(Icons.edit_outlined, color: AppColors.primaryDark, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Project Name',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -298,15 +305,15 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
           TextField(
             controller: _nameController,
             onChanged: (_) => setState(() {}),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Enter project name...',
               hintStyle: TextStyle(
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
                 fontWeight: FontWeight.normal,
               ),
               border: InputBorder.none,
@@ -328,14 +335,14 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.description_outlined, color: _accentColor, size: 20),
+              Icon(Icons.description_outlined, color: AppColors.primaryDark, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Description',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -345,14 +352,14 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             controller: _descriptionController,
             onChanged: (_) => setState(() {}),
             maxLines: 3,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               height: 1.5,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Describe your project...',
-              hintStyle: TextStyle(color: AppColors.textSecondary),
+              hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
@@ -376,14 +383,14 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.emoji_emotions_outlined, color: _accentColor, size: 20),
+              Icon(Icons.emoji_emotions_outlined, color: AppColors.primaryDark, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Project Icon',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -400,24 +407,27 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedIconIndex == index;
+              final accent = AppColors.projectAccentOf(context, _accentColor);
               return GestureDetector(
                 onTap: () => setState(() => _selectedIconIndex = index),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? _accentColor.withValues(alpha: 0.2)
-                        : AppColors.background,
+                        ? accent.withValues(alpha: 0.2)
+                        : AppColors.insetSurfaceOf(context),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isSelected ? _accentColor : AppColors.border,
+                      color: isSelected ? accent : AppColors.borderOf(context),
                       width: isSelected ? 2 : 1,
                     ),
                   ),
                   child: Center(
                     child: Icon(
                       CreateProjectScreen.projectIcons[index],
-                      color: isSelected ? _accentColor : AppColors.textSecondary,
+                      color: isSelected
+                          ? accent
+                          : AppColors.textSecondaryOf(context),
                       size: 22,
                     ),
                   ),
@@ -433,13 +443,13 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                   onPressed: () => setState(() => _showAllIcons = !_showAllIcons),
                   icon: Icon(
                     _showAllIcons ? Icons.expand_less : Icons.expand_more,
-                    color: _accentColor,
+                    color: AppColors.primaryDark,
                     size: 20,
                   ),
                   label: Text(
                     _showAllIcons ? 'Show Less' : 'Show More',
-                    style: TextStyle(
-                      color: _accentColor,
+                    style: const TextStyle(
+                      color: AppColors.primaryDark,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -463,14 +473,14 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.palette_outlined, color: _accentColor, size: 20),
+              Icon(Icons.palette_outlined, color: AppColors.primaryDark, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Project Color',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -487,22 +497,24 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedColorIndex == index;
-              final color = CreateProjectScreen.projectColors[index];
+              final raw = CreateProjectScreen.projectColors[index];
+              final color = AppColors.projectAccentOf(context, raw);
+              final isDark = AppColors.isDark(context);
               return GestureDetector(
                 onTap: () => setState(() => _selectedColorIndex = index),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: isSelected ? 1.0 : 0.6),
+                    color: color.withValues(alpha: isSelected ? 1.0 : (isDark ? 0.65 : 0.6)),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected ? AppColors.textPrimary : Colors.transparent,
+                      color: isSelected ? AppColors.textPrimaryOf(context) : Colors.transparent,
                       width: 2.5,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: color.withValues(alpha: 0.4),
+                              color: AppColors.projectGlowOf(context, raw),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -526,13 +538,13 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                   onPressed: () => setState(() => _showAllColors = !_showAllColors),
                   icon: Icon(
                     _showAllColors ? Icons.expand_less : Icons.expand_more,
-                    color: _accentColor,
+                    color: AppColors.primaryDark,
                     size: 20,
                   ),
                   label: Text(
                     _showAllColors ? 'Show Less' : 'Show More',
-                    style: TextStyle(
-                      color: _accentColor,
+                    style: const TextStyle(
+                      color: AppColors.primaryDark,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -550,11 +562,8 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
       onPressed: _saveChanges,
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 52),
-        backgroundColor: _accentColor,
-        foregroundColor:
-            ThemeData.estimateBrightnessForColor(_accentColor) == Brightness.dark
-            ? Colors.white
-            : AppColors.textPrimary,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),

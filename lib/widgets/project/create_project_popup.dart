@@ -7,7 +7,6 @@ import '../../theme/app_colors.dart';
 import '../common/app_popup_transition.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
 import '../custom_snackbar.dart';
-import '../../utils/keyboard/keyboard_insets.dart';
 
 class CreateProjectPopup extends StatefulWidget {
   const CreateProjectPopup({super.key});
@@ -133,10 +132,21 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
 
   @override
   Widget build(BuildContext context) {
-    return AppPopupShell(
-      alignment: Alignment.centerRight,
-      child: Container(
-        decoration: BoxDecoration(
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: isMobile
+          ? const EdgeInsets.all(16)
+          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          width: isMobile ? double.infinity : 400,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -184,9 +194,7 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
                     ),
                     const Divider(color: AppColors.border, height: 1),
                     Flexible(
-                      child: KeyboardAwareSingleChildScrollView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,6 +258,7 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
             ),
           ),
         ),
+      ),
     );
   }
 
