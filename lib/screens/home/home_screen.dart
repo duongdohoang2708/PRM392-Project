@@ -105,7 +105,7 @@ class HomeScreen extends StatelessWidget {
         );
 
         return AppScaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop ? null : const AppDrawer(isPermanent: false),
           appBar: _buildAppBar(context, showMenuIcon: !isDesktop),
           body: isDesktop ? mainContent : Builder(
@@ -128,9 +128,9 @@ class HomeScreen extends StatelessWidget {
     required bool showMenuIcon,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      iconTheme: IconThemeData(color: AppColors.textPrimaryOf(context)),
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu),

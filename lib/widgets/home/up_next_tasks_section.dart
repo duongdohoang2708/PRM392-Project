@@ -36,12 +36,12 @@ class UpNextTasksSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Up Next',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
             SectionActionButton(
@@ -53,19 +53,22 @@ class UpNextTasksSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         if (displayTasks.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
               "No upcoming tasks. Enjoy your day!",
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondaryOf(context)),
             ),
           ),
         ...displayTasks.map((task) {
-          return TaskListItem(
-            key: ValueKey(task.id),
-            task: task,
-            disableCompleteAnimation: true,
-            hideActions: true,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: TaskListItem(
+              key: ValueKey(task.id),
+              task: task,
+              disableCompleteAnimation: true,
+              hideActions: true,
+            ),
           );
         }),
       ],

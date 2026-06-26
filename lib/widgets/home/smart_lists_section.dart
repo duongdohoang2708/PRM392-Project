@@ -13,12 +13,12 @@ class SmartListsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Smart Lists',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
           ),
         ),
         const SizedBox(height: 16),
@@ -72,7 +72,7 @@ class SmartListsSection extends StatelessWidget {
                   Icons.event_busy_outlined,
                   'Unscheduled',
                   taskProvider.getCountForFilter('Unscheduled').toString(),
-                  AppColors.border,
+                  AppColors.borderOf(context),
                 ),
                 _buildListFilter(
                   context,
@@ -105,12 +105,14 @@ class SmartListsSection extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.cardOf(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.borderOf(context)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.textPrimary.withAlpha((255 * 0.02).round()),
+              color: Colors.black.withValues(
+                alpha: AppColors.isDark(context) ? 0.15 : 0.02,
+              ),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -123,10 +125,10 @@ class SmartListsSection extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -135,15 +137,15 @@ class SmartListsSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: AppColors.backgroundOf(context),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 count,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondaryOf(context),
                 ),
               ),
             ),

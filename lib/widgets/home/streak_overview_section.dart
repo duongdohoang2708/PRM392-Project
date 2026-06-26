@@ -22,12 +22,12 @@ class StreakOverviewSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Streak Overview',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
             SectionActionButton(
@@ -55,9 +55,9 @@ class StreakOverviewSection extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.borderOf(context)),
                   ),
                   child: WeeklyStreakRow(days: weekDays),
                 );
@@ -143,8 +143,8 @@ class _StreakSummary extends StatelessWidget {
             children: [
               Text(
                 goalsProvider.streakHeroTitle,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: AppColors.textPrimaryOf(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                 ),
@@ -154,8 +154,8 @@ class _StreakSummary extends StatelessWidget {
                 goalsProvider.streakHeroSubtitle,
                 maxLines: isCompact ? 2 : 3,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: AppColors.textSecondaryOf(context),
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 1.35,

@@ -26,15 +26,15 @@ class GreetingSection extends StatelessWidget {
       children: [
         Text(
           greeting,
-          style: const TextStyle(fontSize: 16, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondaryOf(context)),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Dương',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
             letterSpacing: -0.5,
           ),
         ),

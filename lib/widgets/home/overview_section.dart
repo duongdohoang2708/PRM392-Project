@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
+import '../../providers/focus_provider.dart';
 import '../../providers/task_provider.dart';
 
 class OverviewSection extends StatelessWidget {
@@ -9,12 +10,13 @@ class OverviewSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
+    final focusProvider = context.watch<FocusProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Today Overview',
+          'Overview',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -38,29 +40,29 @@ class OverviewSection extends StatelessWidget {
                   title: 'Tasks Today',
                   value: '${taskProvider.tasksTodayCount}',
                   icon: Icons.task_alt,
-                  color: const Color(0xFF0277BD),
-                  bgColor: const Color(0xFF0277BD).withAlpha(50),
-                ),
-                _buildStatCard(
-                  title: 'Completed',
-                  value: '${taskProvider.completedTodayCount}',
-                  icon: Icons.check_circle_outline,
-                  color: AppColors.primaryDark,
+                  color: AppColors.primary,
                   bgColor: AppColors.primaryLight.withAlpha(100),
                 ),
                 _buildStatCard(
-                  title: 'Remaining',
-                  value: '${taskProvider.remainingTodayCount}',
-                  icon: Icons.pending_actions_outlined,
+                  title: 'Completed',
+                  value: '${taskProvider.completedCount}',
+                  icon: Icons.check_circle_outline,
+                  color: AppColors.accentPeach,
+                  bgColor: AppColors.accentPeach.withAlpha(50),
+                ),
+                _buildStatCard(
+                  title: 'Focus Time',
+                  value: _formatMinutes(focusProvider.totalFocusMinutes),
+                  icon: Icons.timer_outlined,
                   color: AppColors.accentYellow,
                   bgColor: AppColors.accentYellow.withAlpha(50),
                 ),
                 _buildStatCard(
-                  title: 'Overdue',
-                  value: '${taskProvider.overdueCount}',
-                  icon: Icons.event_busy_outlined,
-                  color: const Color(0xFFD32F2F),
-                  bgColor: const Color(0xFFD32F2F).withAlpha(50),
+                  title: 'Productivity',
+                  value: '${taskProvider.productivityScore}%',
+                  icon: Icons.trending_up,
+                  color: AppColors.primaryDark,
+                  bgColor: AppColors.primaryLight.withAlpha(150),
                 ),
               ],
             );
@@ -68,6 +70,14 @@ class OverviewSection extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _formatMinutes(int totalMinutes) {
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    if (hours == 0) return '${minutes}m';
+    if (minutes == 0) return '${hours}h';
+    return '${hours}h ${minutes}m';
   }
 
   Widget _buildStatCard({

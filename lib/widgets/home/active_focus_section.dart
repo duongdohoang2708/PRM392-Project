@@ -53,15 +53,23 @@ class ActiveFocusSection extends StatelessWidget {
       timeString = '${focusProvider.focusMinutes.toString().padLeft(2, '0')}:00';
     }
 
+    final isDark = AppColors.isDark(context);
+    final accent = isDark ? AppColors.primary : AppColors.primaryDark;
+    final titleColor = AppColors.textPrimaryOf(context);
+    final subtitleColor = AppColors.textSecondaryOf(context);
+    final progressTrack = isDark
+        ? AppColors.primary.withValues(alpha: 0.15)
+        : AppColors.primaryLight.withValues(alpha: 0.55);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Active Focus',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
           ),
         ),
         const SizedBox(height: 16),
@@ -73,19 +81,22 @@ class ActiveFocusSection extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.cardOf(context),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withAlpha(100),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              border: Border.all(
+                color: isDark
+                    ? AppColors.primary.withValues(alpha: 0.3)
+                    : AppColors.border,
+              ),
+              boxShadow: isDark
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
             ),
             child: Row(
               children: [
@@ -98,13 +109,11 @@ class ActiveFocusSection extends StatelessWidget {
                       child: CircularProgressIndicator(
                         value: progress,
                         strokeWidth: 6,
-                        backgroundColor: Colors.white.withAlpha(50),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.white,
-                        ),
+                        backgroundColor: progressTrack,
+                        valueColor: AlwaysStoppedAnimation<Color>(accent),
                       ),
                     ),
-                    const Icon(Icons.timer, color: Colors.white, size: 24),
+                    Icon(Icons.timer, color: accent, size: 24),
                   ],
                 ),
                 const SizedBox(width: 20),
@@ -114,10 +123,10 @@ class ActiveFocusSection extends StatelessWidget {
                     children: [
                       Text(
                         timeString,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: titleColor,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -125,7 +134,8 @@ class ActiveFocusSection extends StatelessWidget {
                         title,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withAlpha(200),
+                          color: subtitleColor,
+                          fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -133,27 +143,86 @@ class ActiveFocusSection extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
-                    if (isRunning) {
-                      context.read<FocusProvider>().pauseTimer();
-                    } else {
-                      context.read<FocusProvider>().startTimer();
-                    }
-                  },
-                  icon: Icon(
-                    isRunning ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                const SizedBox(width: 12),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _FocusControlButton(
+                      icon: Icons.refresh,
+                      onPressed: () {
+                        context.read<FocusProvider>().resetEntireCycle();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _FocusControlButton(
+                      icon: isRunning
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_filled,
+                      size: 40,
+                      iconSize: 40,
+                      onPressed: () {
+                        if (isRunning) {
+                          context.read<FocusProvider>().pauseTimer();
+                        } else {
+                          context.read<FocusProvider>().startTimer();
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _FocusControlButton(
+                      icon: Icons.skip_next,
+                      onPressed: () {
+                        context.read<FocusProvider>().skipPhase();
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FocusControlButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+  final double size;
+  final double iconSize;
+
+  const _FocusControlButton({
+    required this.icon,
+    required this.onPressed,
+    this.size = 38,
+    this.iconSize = 22,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+    final accent = isDark ? AppColors.primary : AppColors.primaryDark;
+
+    return Material(
+      color: isDark
+          ? AppColors.insetSurfaceOf(context)
+          : AppColors.primaryLight.withValues(alpha: 0.45),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Icon(
+            icon,
+            color: accent,
+            size: iconSize,
+          ),
+        ),
+      ),
     );
   }
 }

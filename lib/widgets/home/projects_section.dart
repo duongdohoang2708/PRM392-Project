@@ -20,12 +20,12 @@ class ProjectsSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'My Projects',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
             SectionActionButton(
@@ -55,11 +55,15 @@ class ProjectsSection extends StatelessWidget {
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: _buildProjectCard(
+                    context,
                     title: project.name,
                     taskCount: '${taskProvider.getProjectTaskCount(project.name)} tasks',
                     progress: taskProvider.getProjectProgress(project.name),
-                    color: Color(project.colorValue),
-                    bgColor: Color(project.colorValue).withValues(alpha: 0.15),
+                    color: AppColors.projectAccentOf(context, Color(project.colorValue)),
+                    bgColor: AppColors.projectTintOf(
+                      context,
+                      Color(project.colorValue),
+                    ),
                   ),
                 ),
               );
@@ -70,7 +74,8 @@ class ProjectsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildProjectCard({
+  Widget _buildProjectCard(
+    BuildContext context, {
     required String title,
     required String taskCount,
     required double progress,
@@ -81,12 +86,12 @@ class ProjectsSection extends StatelessWidget {
       width: 180,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.03),
+            color: AppColors.textPrimaryOf(context).withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -109,10 +114,10 @@ class ProjectsSection extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -123,9 +128,9 @@ class ProjectsSection extends StatelessWidget {
                 children: [
                   Text(
                     taskCount,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryOf(context),
                     ),
                   ),
                   Text(
@@ -141,7 +146,7 @@ class ProjectsSection extends StatelessWidget {
               const SizedBox(height: 12),
               LinearProgressIndicator(
                 value: progress,
-                backgroundColor: AppColors.background,
+                backgroundColor: AppColors.backgroundOf(context),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
                 borderRadius: BorderRadius.circular(4),
                 minHeight: 6,
