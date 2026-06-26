@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
-import '../../main.dart' show navigatorKey;
+import '../../navigation/app_navigator.dart' show navigatorKey;
 import '../../providers/focus_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/background_pattern.dart';
@@ -114,12 +114,12 @@ class _PomodoroFullscreenTimerScreenState
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.cardOf(context),
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
           ),
           child: IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh, color: AppColors.textSecondaryOf(context)),
             onPressed: focusProvider.resetEntireCycle,
           ),
         ),
@@ -135,17 +135,10 @@ class _PomodoroFullscreenTimerScreenState
           child: Container(
             width: 132,
             height: 56,
-            decoration: BoxDecoration(
-              color: isRunning ? AppColors.accentYellow : AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: (isRunning ? AppColors.accentYellow : AppColors.primary)
-                      .withAlpha(40),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+            decoration: AppColors.pomodoroPlayButtonDecoration(
+              context,
+              isRunning: isRunning,
+              borderRadius: 28,
             ),
             alignment: Alignment.center,
             child: Text(
@@ -153,8 +146,10 @@ class _PomodoroFullscreenTimerScreenState
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color:
-                    isRunning ? AppColors.textPrimary : AppColors.primaryDark,
+                color: AppColors.pomodoroPlayButtonLabelOf(
+                  context,
+                  isRunning: isRunning,
+                ),
               ),
             ),
           ),
@@ -164,12 +159,12 @@ class _PomodoroFullscreenTimerScreenState
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.cardOf(context),
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
           ),
           child: IconButton(
-            icon: const Icon(Icons.skip_next, color: AppColors.textSecondary),
+            icon: Icon(Icons.skip_next, color: AppColors.textSecondaryOf(context)),
             onPressed: focusProvider.skipPhase,
           ),
         ),
@@ -193,9 +188,9 @@ class _PomodoroFullscreenTimerScreenState
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(12),
@@ -206,10 +201,10 @@ class _PomodoroFullscreenTimerScreenState
       ),
       child: IconButton(
         padding: EdgeInsets.zero,
-        icon: const Icon(
+        icon: Icon(
           Icons.close_fullscreen,
           size: 20,
-          color: AppColors.textSecondary,
+          color: AppColors.textSecondaryOf(context),
         ),
         tooltip: 'Exit fullscreen',
         onPressed: () => Navigator.of(context).pop(),
@@ -468,7 +463,7 @@ class _PomodoroFullscreenTimerScreenState
     );
 
     return AppScaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       body: Stack(
         fit: StackFit.expand,
         children: [

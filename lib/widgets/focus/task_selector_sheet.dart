@@ -79,21 +79,21 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
     }
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: AppColors.cardOf(context),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 0),
       height: MediaQuery.of(context).size.height * 0.75,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Select a Task',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -130,10 +130,10 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
           const SizedBox(height: 8),
           Expanded(
             child: filteredTasks.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       'No tasks match your filters.',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(color: AppColors.textSecondaryOf(context)),
                     ),
                   )
                 : ListView.builder(
@@ -151,8 +151,8 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
                         ),
                         title: Text(
                           task.title,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: AppColors.textPrimaryOf(context),
                             fontWeight: FontWeight.w600,
                           ),
                           maxLines: 1,
@@ -163,8 +163,8 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
                           children: [
                             Text(
                               task.project,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: AppColors.textSecondaryOf(context),
                                 fontSize: 12,
                               ),
                             ),
@@ -172,12 +172,12 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
                               const SizedBox(height: 2),
                               Row(
                                 children: [
-                                  Icon(Icons.calendar_today, size: 10, color: AppColors.textSecondary.withValues(alpha: 0.8)),
+                                  Icon(Icons.calendar_today, size: 10, color: AppColors.textSecondaryOf(context).withValues(alpha: 0.8)),
                                   const SizedBox(width: 4),
                                   Text(
                                     AppDateTimeFormat.slashDate(task.dueDate!),
                                     style: TextStyle(
-                                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                                      color: AppColors.textSecondaryOf(context).withValues(alpha: 0.8),
                                       fontSize: 11,
                                     ),
                                   ),
@@ -214,17 +214,17 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.backgroundOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: AppDropdown<String>(
         value: safeValue,
         isDense: true,
-        icon: const Icon(Icons.expand_more, color: AppColors.textSecondary, size: 20),
-        style: const TextStyle(
+        icon: Icon(Icons.expand_more, color: AppColors.textSecondaryOf(context), size: 20),
+        style: TextStyle(
           fontSize: 13,
-          color: AppColors.textPrimary,
+          color: AppColors.textPrimaryOf(context),
           fontWeight: FontWeight.w500,
         ),
         items: items.map((item) {

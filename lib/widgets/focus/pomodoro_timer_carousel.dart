@@ -205,7 +205,9 @@ class _PomodoroTimerCarouselState extends State<PomodoroTimerCarousel>
               width: (active ? 18 : 7) * _scale,
               height: 7 * _scale,
               decoration: BoxDecoration(
-                color: active ? widget.phaseColor : AppColors.border,
+                color: active
+                    ? widget.phaseColor
+                    : AppColors.borderOf(context),
                 borderRadius: BorderRadius.circular(100),
               ),
             );
@@ -276,6 +278,7 @@ class _ClassicRingTimer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ringThickness = 8 * scale;
+    final trackColor = AppColors.borderOf(context);
     return SizedBox(
       width: timerSize,
       height: timerSize,
@@ -285,7 +288,7 @@ class _ClassicRingTimer extends StatelessWidget {
           CustomPaint(
             size: Size(timerSize, timerSize),
             painter: _TimerTrackPainter(
-              color: AppColors.border,
+              color: trackColor,
               thickness: ringThickness,
             ),
           ),
@@ -295,6 +298,9 @@ class _ClassicRingTimer extends StatelessWidget {
               progress: progress,
               color: phaseColor,
               thickness: ringThickness,
+              knobColor: AppColors.isDark(context)
+                  ? phaseColor
+                  : Colors.white,
             ),
           ),
           _TimerCenterDisplay(
@@ -536,9 +542,9 @@ class _FlipDigitState extends State<_FlipDigit>
       height: 96 * s,
       margin: EdgeInsets.symmetric(horizontal: 5 * s),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16 * s),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
             color: widget.phaseColor.withValues(alpha: 0.12),
@@ -553,7 +559,7 @@ class _FlipDigitState extends State<_FlipDigit>
         style: TextStyle(
           fontSize: 56 * s,
           fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
+          color: AppColors.textPrimaryOf(context),
           height: 1,
         ),
       ),
@@ -615,9 +621,9 @@ class _TimerCenterDisplay extends StatelessWidget {
       width: 160 * scale,
       height: 160 * scale,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.65)),
+        border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
             color: phaseColor.withValues(alpha: 0.1),
@@ -635,7 +641,7 @@ class _TimerCenterDisplay extends StatelessWidget {
             style: TextStyle(
               fontSize: 48 * scale,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
               letterSpacing: -1,
             ),
           ),
@@ -708,11 +714,13 @@ class _TimerProgressPainter extends CustomPainter {
   final double progress;
   final Color color;
   final double thickness;
+  final Color knobColor;
 
   const _TimerProgressPainter({
     required this.progress,
     required this.color,
     required this.thickness,
+    required this.knobColor,
   });
 
   @override
@@ -750,12 +758,14 @@ class _TimerProgressPainter extends CustomPainter {
           ..color = color.withValues(alpha: 0.4)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
-      canvas.drawCircle(dotCenter, 2.5, Paint()..color = Colors.white);
+      canvas.drawCircle(dotCenter, 2.5, Paint()..color = knobColor);
     }
   }
 
   @override
   bool shouldRepaint(covariant _TimerProgressPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.color != color;
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.knobColor != knobColor;
   }
 }

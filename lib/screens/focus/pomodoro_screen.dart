@@ -1,5 +1,5 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/task_provider.dart';
@@ -8,16 +8,12 @@ import '../../providers/focus_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/custom_snackbar.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/focus/pomodoro_settings_popup.dart';
-import '../../widgets/focus/pomodoro_session_progress_card.dart';
 import '../../widgets/common/app_popup_transition.dart';
-import '../../widgets/focus/pomodoro_timer_carousel.dart';
+import '../../widgets/common/animations/app_scale_transition.dart';
 import '../../widgets/focus/task_selector_sheet.dart';
-import '../../widgets/common/section_action_button.dart';
-import '../../widgets/common/notification_bell_button.dart';
-import '../../widgets/common/app_scaffold.dart';
-import 'pomodoro_fullscreen_timer_screen.dart';
 
 class PomodoroScreen extends StatefulWidget {
   final String? taskId;
@@ -43,60 +39,12 @@ class PomodoroScreen extends StatefulWidget {
   State<PomodoroScreen> createState() => _PomodoroScreenState();
 }
 
-class _PomodoroScreenState extends State<PomodoroScreen>
-    with SingleTickerProviderStateMixin {
+class _PomodoroScreenState extends State<PomodoroScreen> {
   final GlobalKey _settingsFabKey = GlobalKey();
-  Ticker? _liveTicker;
-
-  void _syncLiveTicker(FocusProvider focusProvider) {
-    final shouldRun = focusProvider.timerState == TimerState.running &&
-        focusProvider.expectedEndTime != null;
-    if (shouldRun) {
-      if (_liveTicker != null && !_liveTicker!.isActive) {
-        _liveTicker!.start();
-      }
-    } else if (_liveTicker != null && _liveTicker!.isActive) {
-      _liveTicker!.stop();
-    }
-  }
-
-  Widget _buildSessionProgressCard({bool allCompleted = false}) {
-    final focusProvider = context.watch<FocusProvider>();
-    final sequence = focusProvider.sequence;
-    if (sequence.isEmpty) return const SizedBox.shrink();
-
-    final phaseIndex = focusProvider.currentPhaseIndex;
-    var phaseProgress = 0.0;
-    if (!allCompleted && phaseIndex < sequence.length) {
-      final phaseSeconds = _getPhaseDurationInSeconds(
-        sequence[phaseIndex],
-        focusProvider,
-      );
-      if (phaseSeconds > 0) {
-        phaseProgress = focusProvider.phaseElapsedFraction(phaseSeconds);
-      }
-    } else if (allCompleted) {
-      phaseProgress = 1.0;
-    }
-
-    return PomodoroSessionProgressCard(
-      sequence: sequence,
-      currentPhaseIndex: phaseIndex,
-      rounds: focusProvider.rounds,
-      focusMinutes: focusProvider.focusMinutes,
-      shortBreakMinutes: focusProvider.shortBreakMinutes,
-      longBreakMinutes: focusProvider.longBreakMinutes,
-      phaseProgress: phaseProgress,
-      allCompleted: allCompleted,
-    );
-  }
 
   @override
   void initState() {
     super.initState();
-    _liveTicker = createTicker((_) {
-      if (mounted) setState(() {});
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final focusProvider = context.read<FocusProvider>();
@@ -160,26 +108,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     });
   }
 
-  @override
-  void deactivate() {
-    _liveTicker?.stop();
-    super.deactivate();
-  }
-
-  @override
-  void activate() {
-    super.activate();
-    if (mounted) {
-      _syncLiveTicker(context.read<FocusProvider>());
-    }
-  }
-
-  @override
-  void dispose() {
-    _liveTicker?.dispose();
-    super.dispose();
-  }
-
   void _showSettingsPopup() {
     final focusProvider = context.read<FocusProvider>();
     final fabContext = _settingsFabKey.currentContext;
@@ -219,11 +147,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   @override
   Widget build(BuildContext context) {
-    _syncLiveTicker(context.watch<FocusProvider>());
-
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = MediaQuery.sizeOf(context).width >= 768;
+        final bool isDesktop = MediaQuery.of(context).size.width >= 768;
         final bool useTwoColumns = constraints.maxWidth >= 1024;
 
         final titleWidget = Padding(
@@ -311,7 +237,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           ],
         );
 
-        return AppScaffold(
+        return Scaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop
               ? null
@@ -360,7 +286,15 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         ),
       ),
       actions: [
-        const NotificationBellButton(),
+        IconButton(
+          icon: const Icon(
+            Icons.notifications_outlined,
+            color: AppColors.textPrimary,
+          ),
+          onPressed: () {
+            AppNotification.showInfo(context, 'Notifications coming soon!');
+          },
+        ),
         const SizedBox(width: 8),
       ],
     );
@@ -397,19 +331,16 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
     final double progress = totalSeconds == 0
         ? 0
-        : focusProvider.phaseElapsedFraction(totalSeconds);
-    final int remaining = focusProvider.displayRemainingSeconds;
-    final int minutes = remaining ~/ 60;
-    final int seconds = remaining % 60;
+        : 1 - (focusProvider.remainingSeconds / totalSeconds);
+    final int minutes = focusProvider.remainingSeconds ~/ 60;
+    final int seconds = focusProvider.remainingSeconds % 60;
     final String timeString =
         '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
+    return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 28),
+      height: 520,
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
@@ -423,84 +354,110 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(
+              color: phaseColor.withAlpha(30),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: phaseColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: 260,
+            height: 260,
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: phaseColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      color: phaseColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                CustomPaint(
+                  size: const Size(260, 260),
+                  painter: TimerTrackPainter(
+                    color: AppColors.border,
+                    thickness: 8,
                   ),
                 ),
-                const SizedBox(height: 24),
-                PomodoroTimerCarousel(
-                  progress: progress,
-                  timeString: timeString,
-                  minutes: minutes,
-                  seconds: seconds,
-                  phaseColor: phaseColor,
-                  totalSeconds: totalSeconds,
-                  deadline: focusProvider.expectedEndTime,
-                  isRunning:
-                      focusProvider.timerState == TimerState.running,
+                TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                  tween: Tween<double>(begin: 0.0, end: progress),
+                  builder: (context, value, child) {
+                    return CustomPaint(
+                      size: const Size(260, 260),
+                      painter: TimerProgressPainter(
+                        progress: value,
+                        color: phaseColor,
+                        thickness: 8,
+                      ),
+                    );
+                  },
+                ),
+                Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border.withAlpha(150)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: phaseColor.withAlpha(10),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        timeString,
+                        style: const TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Remaining',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: phaseColor,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: _buildSessionProgressCard(),
+          const SizedBox(height: 32),
+          // Custom Progress Bar
+          _buildSequenceProgressBar(),
+          const SizedBox(height: 16),
+          Text(
+            _getSessionProgressText(),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
-    ),
-        Positioned(
-          top: 12,
-          right: 12,
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(12),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              tooltip: 'Fullscreen timer',
-              icon: const Icon(
-                Icons.open_in_full,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-              onPressed: () => openPomodoroFullscreenTimer(context),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -512,7 +469,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 28),
+      height: 520,
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
@@ -526,67 +484,54 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withAlpha(100),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.emoji_events,
-                    color: AppColors.primaryDark,
-                    size: 40,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'EXCELLENT WORK!',
-                  style: TextStyle(
-                    color: AppColors.primaryDark,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Session Completed',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'You stayed focused and productive!',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight.withAlpha(100),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.emoji_events,
+              color: AppColors.primaryDark,
+              size: 40,
             ),
           ),
-          const SizedBox(height: 32),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: _buildSessionProgressCard(allCompleted: true),
+          const SizedBox(height: 16),
+          const Text(
+            'EXCELLENT WORK!',
+            style: TextStyle(
+              color: AppColors.primaryDark,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Session Completed',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'You stayed focused and productive!',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
           const SizedBox(height: 32),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Row(
-              children: [
+          // Sequence bar for summary
+          _buildSummarySequenceBar(),
+          const SizedBox(height: 32),
+          // Stats row
+          Row(
+            children: [
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -680,7 +625,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 ),
               ),
             ],
-            ),
           ),
         ],
       ),
@@ -715,6 +659,183 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSummarySequenceBar() {
+    final focusProvider = context.read<FocusProvider>();
+    final sequence = focusProvider.sequence;
+
+    return Container(
+      width: double.infinity,
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight.withAlpha(100),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(sequence.length, (index) {
+          final phase = sequence[index];
+          IconData iconData;
+
+          switch (phase) {
+            case PhaseType.focus:
+              iconData = Icons.check;
+              break;
+            case PhaseType.shortBreak:
+              iconData = Icons.local_cafe;
+              break;
+            case PhaseType.longBreak:
+              iconData = Icons.nightlight_round;
+              break;
+          }
+
+          return Icon(iconData, size: 18, color: AppColors.primaryDark);
+        }),
+      ),
+    );
+  }
+
+  String _getSessionProgressText() {
+    final focusProvider = context.read<FocusProvider>();
+    final sequence = focusProvider.sequence;
+    if (sequence.isEmpty) return '0/0 Sessions Completed';
+
+    int completedFocus = 0;
+    for (
+      int i = 0;
+      i < focusProvider.currentPhaseIndex && i < sequence.length;
+      i++
+    ) {
+      if (sequence[i] == PhaseType.focus) {
+        completedFocus++;
+      }
+    }
+
+    return '$completedFocus/${focusProvider.rounds} Sessions Completed';
+  }
+
+  Widget _buildSequenceProgressBar() {
+    final focusProvider = context.watch<FocusProvider>();
+    final sequence = focusProvider.sequence;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double width = constraints.maxWidth;
+        // Total slots
+        final int total = sequence.length;
+        // The current index is active. Completed is anything < _currentPhaseIndex
+        double fillPercentage = 0;
+        double currentProgress = 0;
+        if (total > 0) {
+          final currentPhaseSeconds = _getPhaseDurationInSeconds(
+            sequence[focusProvider.currentPhaseIndex],
+            focusProvider,
+          );
+          currentProgress = currentPhaseSeconds > 0
+              ? (currentPhaseSeconds - focusProvider.remainingSeconds) /
+                    currentPhaseSeconds
+              : 0;
+          fillPercentage =
+              (focusProvider.currentPhaseIndex + currentProgress) / total;
+        }
+
+        return Container(
+          width: width,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.primaryLight.withAlpha(100),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+                // Filled portion
+                TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                  tween: Tween<double>(begin: 0.0, end: fillPercentage),
+                  builder: (context, value, child) {
+                    return FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: value.clamp(0.0, 1.0),
+                      heightFactor: 1.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(200),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                // Icons row
+                Row(
+                  children: List.generate(total, (index) {
+                    final phase = sequence[index];
+                    bool isActive = index == focusProvider.currentPhaseIndex;
+                    bool isCompleted = index < focusProvider.currentPhaseIndex;
+
+                    IconData iconData;
+                    Color iconColor = isActive
+                        ? AppColors.primaryDark
+                        : (isCompleted ? Colors.white : AppColors.primary);
+
+                    switch (phase) {
+                      case PhaseType.focus:
+                        iconData = isCompleted ? Icons.check : Icons.menu_book;
+                        break;
+                      case PhaseType.shortBreak:
+                        iconData = Icons.local_cafe;
+                        break;
+                      case PhaseType.longBreak:
+                        iconData = Icons.nightlight_round;
+                        break;
+                    }
+
+                    Widget iconWidget = AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      padding: EdgeInsets.all(isActive ? 4 : 0),
+                      decoration: BoxDecoration(
+                        color: isActive ? Colors.white : Colors.transparent,
+                        shape: BoxShape.circle,
+                        boxShadow: isActive
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(20),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : [],
+                      ),
+                      child: AnimatedScale(
+                        scale: isActive ? 1.1 : 1.0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        child: appScaleSwitcher(
+                          child: Icon(
+                            iconData,
+                            key: ValueKey<IconData>(iconData),
+                            size: 18,
+                            color: iconColor,
+                          ),
+                        ),
+                      ),
+                    );
+
+                    return Expanded(child: Center(child: iconWidget));
+                  }),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -888,9 +1009,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             ],
           ),
           child: Row(
-            crossAxisAlignment: selectedTask == null
-                ? CrossAxisAlignment.center
-                : CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: selectedTask == null
@@ -912,6 +1030,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 8),
                           Wrap(
@@ -1043,9 +1163,11 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 color: AppColors.textPrimary,
               ),
             ),
-            SectionActionButton(
-              label: 'View history',
-              onPressed: () => Navigator.pushNamed(context, '/focus-history'),
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/focus-history');
+              },
+              child: const Text('View history'),
             ),
           ],
         ),
@@ -1148,5 +1270,116 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         ],
       ),
     );
+  }
+}
+
+class TimerTrackPainter extends CustomPainter {
+  final Color color;
+  final double thickness;
+
+  TimerTrackPainter({required this.color, required this.thickness});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - thickness / 2;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness;
+
+    // Outer dashed ring
+    final dashPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5;
+
+    final double dashLength = 2;
+    final double dashSpace = 4;
+    final double outerRadius = radius + 6;
+    double startAngle = 0;
+    while (startAngle < 2 * math.pi) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: outerRadius),
+        startAngle,
+        dashLength / outerRadius,
+        false,
+        dashPaint,
+      );
+      startAngle += (dashLength + dashSpace) / outerRadius;
+    }
+
+    // Main thick track
+    canvas.drawCircle(center, radius, paint);
+
+    // Inner thin ring
+    final innerPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5;
+    canvas.drawCircle(center, radius - 8, innerPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class TimerProgressPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double thickness;
+
+  TimerProgressPainter({
+    required this.progress,
+    required this.color,
+    required this.thickness,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - thickness / 2;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.round;
+
+    final sweepAngle = 2 * math.pi * progress;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      sweepAngle,
+      false,
+      paint,
+    );
+
+    // Draw the dot at the end of the progress
+    if (progress > 0 && progress < 1) {
+      final dotPaint = Paint()..color = Colors.white;
+      final currentAngle = -math.pi / 2 + sweepAngle;
+      final dotCenter = Offset(
+        center.dx + radius * math.cos(currentAngle),
+        center.dy + radius * math.sin(currentAngle),
+      );
+
+      // Shadow for dot
+      canvas.drawCircle(
+        dotCenter,
+        4,
+        Paint()
+          ..color = color.withAlpha(100)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+      canvas.drawCircle(dotCenter, 2.5, dotPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant TimerProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }

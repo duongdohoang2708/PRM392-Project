@@ -107,7 +107,7 @@ class PomodoroSessionProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(12 * s),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.backgroundOf(context),
         borderRadius: BorderRadius.circular(16 * s),
         border: Border.all(color: AppColors.border.withAlpha(150)),
       ),
@@ -134,7 +134,7 @@ class PomodoroSessionProgressCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14 * s,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryOf(context),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -171,7 +171,7 @@ class PomodoroSessionProgressCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11 * s,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textSecondary.withAlpha(200),
+                    color: AppColors.textSecondaryOf(context).withAlpha(200),
                     letterSpacing: 1.1,
                   ),
                 ),
@@ -182,7 +182,7 @@ class PomodoroSessionProgressCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13 * s,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryOf(context),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
