@@ -1,23 +1,27 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_flow/main.dart';
+import 'package:task_flow/providers/settings_provider.dart';
+import 'package:task_flow/providers/user_provider.dart';
 
 void main() {
   testWidgets('TaskFlow app smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
 
-    // Verify that TaskFlow is shown on the splash screen.
+    final settingsProvider = SettingsProvider();
+    final userProvider = UserProvider();
+    await settingsProvider.load();
+    await userProvider.load();
+
+    await tester.pumpWidget(
+      MyApp(
+        settingsProvider: settingsProvider,
+        userProvider: userProvider,
+      ),
+    );
+
     expect(find.text('TaskFlow'), findsOneWidget);
-
-    // Settle the navigation timer so it doesn't leak.
     await tester.pumpAndSettle(const Duration(seconds: 3));
   });
 }
