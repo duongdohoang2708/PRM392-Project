@@ -63,3 +63,6 @@ docs/
 # Scripts & Configs
 .cursor/
 merge_goals.py
+
+# Ignore markdown docs at root level
+*.md
