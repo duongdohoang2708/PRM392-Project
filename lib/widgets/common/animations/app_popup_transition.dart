@@ -62,10 +62,14 @@ Future<T?> showAppPopup<T>({
   Offset? anchor,
   bool barrierDismissible = true,
   bool useRootNavigator = true,
-}) {
+}) async {
   final resolvedAnchor = anchor ?? popupAnchorFromContext(context);
 
-  return showGeneralDialog<T>(
+  // Dismiss keyboard before opening so a still-focused field does not reopen it
+  // after the popup closes and the parent rebuilds.
+  FocusManager.instance.primaryFocus?.unfocus();
+
+  final result = await showGeneralDialog<T>(
     context: context,
     useRootNavigator: useRootNavigator,
     barrierDismissible: barrierDismissible,
@@ -91,4 +95,10 @@ Future<T?> showAppPopup<T>({
     },
     transitionBuilder: buildAppPopupTransition(anchor: resolvedAnchor),
   );
+
+  FocusManager.instance.primaryFocus?.unfocus();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    FocusManager.instance.primaryFocus?.unfocus();
+  });
+  return result;
 }

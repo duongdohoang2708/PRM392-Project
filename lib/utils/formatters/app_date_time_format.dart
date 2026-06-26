@@ -41,6 +41,28 @@ class AppDateTimeFormat {
     );
   }
 
+  /// Hour number for statistics charts (e.g. "12", "5").
+  static String chartHourNumber(int hour) {
+    if (use12HourClock) {
+      final display = hour % 12;
+      return '${display == 0 ? 12 : display}';
+    }
+    return hour.toString().padLeft(2, '0');
+  }
+
+  /// AM/PM suffix for statistics charts; null in 24-hour mode.
+  static String? chartHourPeriod(int hour) {
+    if (!use12HourClock) return null;
+    return hour < 12 ? 'AM' : 'PM';
+  }
+
+  /// Hour bucket label for statistics charts (e.g. "12 AM", "5 PM").
+  static String chartHour(int hour) {
+    final period = chartHourPeriod(hour);
+    if (period == null) return chartHourNumber(hour);
+    return '${chartHourNumber(hour)} $period';
+  }
+
   static String sessionTimestamp(DateTime value) =>
       '${date(value)} - ${time(value)}';
 

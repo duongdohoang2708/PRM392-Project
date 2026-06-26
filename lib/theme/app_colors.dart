@@ -15,6 +15,15 @@ class AppColors {
   static const Color accentPeach = Color(0xFFDF7E52); // Darker orange/peach
   static const Color accentPink = Color(0xFFD65D7F); // Darker pink
 
+  /// Ice blue for freeze-day streak UI (icons, borders, highlights).
+  static const Color freezeBlue = Color(0xFF4BA3D6);
+
+  /// Streak flame icon (dark orange).
+  static const Color streakFlame = Color(0xFFE65100);
+
+  /// Streak flame cells in calendar views.
+  static const Color streakRed = Color(0xFFC62828);
+
   // Typography
   static const Color textPrimary = Color(0xFF333C31); // Muted text
   static const Color textSecondary = Color(0xFF6A7565); // Secondary text
