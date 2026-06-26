@@ -7,10 +7,62 @@ import '../common/app_dropdown.dart';
 class TaskSortDropdowns extends StatelessWidget {
   const TaskSortDropdowns({super.key});
 
+  static const double _wideBreakpoint = 768;
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final provider = context.watch<TaskProvider>();
+    final isWide = MediaQuery.sizeOf(context).width >= _wideBreakpoint;
+
+    final projectFilter = _buildDropdownButton(
+      context: context,
+      icon: Icons.folder_open_outlined,
+      label: 'Project',
+      value: provider.filterProject,
+      items: provider.availableProjects,
+      onChanged: (val) {
+        if (val != null) provider.setFilterProject(val);
+      },
+    );
+    final priorityFilter = _buildDropdownButton(
+      context: context,
+      icon: Icons.flag_outlined,
+      label: 'Priority',
+      value: provider.filterPriority,
+      items: provider.availablePriorities,
+      onChanged: (val) {
+        if (val != null) provider.setFilterPriority(val);
+      },
+    );
+    final statusFilter = _buildDropdownButton(
+      context: context,
+      icon: Icons.schedule,
+      label: 'Status',
+      value: provider.filterStatus,
+      items: provider.availableStatuses,
+      onChanged: (val) {
+        if (val != null) provider.setFilterStatus(val);
+      },
+    );
+    final sortControl = _buildSortControl(context, provider);
+
+    if (isWide) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            projectFilter,
+            const SizedBox(width: 8),
+            priorityFilter,
+            const SizedBox(width: 8),
+            statusFilter,
+            const SizedBox(width: 16),
+            sortControl,
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -18,27 +70,9 @@ class TaskSortDropdowns extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildDropdownButton(
-                context: context,
-                icon: Icons.folder_open_outlined,
-                label: 'Project',
-                value: provider.filterProject,
-                items: provider.availableProjects,
-                onChanged: (val) {
-                  if (val != null) provider.setFilterProject(val);
-                },
-              ),
+              projectFilter,
               const SizedBox(width: 8),
-              _buildDropdownButton(
-                context: context,
-                icon: Icons.flag_outlined,
-                label: 'Priority',
-                value: provider.filterPriority,
-                items: provider.availablePriorities,
-                onChanged: (val) {
-                  if (val != null) provider.setFilterPriority(val);
-                },
-              ),
+              priorityFilter,
             ],
           ),
         ),
@@ -46,53 +80,49 @@ class TaskSortDropdowns extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            _buildDropdownButton(
-              context: context,
-              icon: Icons.schedule,
-              label: 'Status',
-              value: provider.filterStatus,
-              items: provider.availableStatuses,
-              onChanged: (val) {
-                if (val != null) provider.setFilterStatus(val);
-              },
-            ),
+            statusFilter,
             const SizedBox(width: 16),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Sort by: ',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                AppDropdown<String>(
-                  value: provider.sortBy,
-                  isDense: true,
-                  icon: const Icon(
-                    Icons.expand_more,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: AppColors.primaryDark,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  onChanged: (val) {
-                    if (val != null) {
-                      provider.setSortBy(val);
-                    }
-                  },
-                  items: ['Due Date', 'Priority', 'Name'].map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
+            sortControl,
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSortControl(BuildContext context, TaskProvider provider) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Sort by: ',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: AppColors.textSecondaryOf(context),
+          ),
+        ),
+        AppDropdown<String>(
+          value: provider.sortBy,
+          isDense: true,
+          icon: Icon(
+            Icons.expand_more,
+            size: 16,
+            color: AppColors.textSecondaryOf(context),
+          ),
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: AppColors.primaryDark,
+            fontWeight: FontWeight.bold,
+          ),
+          onChanged: (val) {
+            if (val != null) {
+              provider.setSortBy(val);
+            }
+          },
+          items: ['Due Date', 'Priority', 'Name'].map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -110,9 +140,9 @@ class TaskSortDropdowns extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.04),
@@ -124,13 +154,13 @@ class TaskSortDropdowns extends StatelessWidget {
       child: AppDropdown<String>(
         value: value,
         isDense: true,
-        icon: const Icon(
+        icon: Icon(
           Icons.expand_more,
           size: 16,
-          color: AppColors.textSecondary,
+          color: AppColors.textSecondaryOf(context),
         ),
         style: theme.textTheme.labelMedium?.copyWith(
-          color: AppColors.textPrimary,
+          color: AppColors.textPrimaryOf(context),
         ),
         onChanged: onChanged,
         items: items.map((String val) {

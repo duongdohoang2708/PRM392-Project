@@ -50,8 +50,8 @@ class _SubtaskTitleFieldState extends State<SubtaskTitleField> {
       style: TextStyle(
         fontSize: 14,
         color: widget.isCompleted
-            ? AppColors.textSecondary
-            : AppColors.textPrimary,
+            ? AppColors.textSecondaryOf(context)
+            : AppColors.textPrimaryOf(context),
         decoration:
             widget.isCompleted ? TextDecoration.lineThrough : null,
       ),

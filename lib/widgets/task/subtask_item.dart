@@ -92,7 +92,7 @@ class _SubTaskItemState extends State<SubTaskItem> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final style = theme.textTheme.bodyMedium?.copyWith(
-      color: _isCompletedLocal ? AppColors.textSecondary : AppColors.textPrimary,
+      color: _isCompletedLocal ? AppColors.textSecondaryOf(context) : AppColors.textPrimaryOf(context),
     );
 
     return Row(
@@ -129,7 +129,7 @@ class _SubTaskItemState extends State<SubTaskItem> with SingleTickerProviderStat
                   text: widget.subTask.title,
                   style: style!,
                   progress: _strikeAnimation!.value,
-                  lineColor: AppColors.textSecondary,
+                  lineColor: AppColors.textSecondaryOf(context),
                 ),
                 child: Text(
                   widget.subTask.title,

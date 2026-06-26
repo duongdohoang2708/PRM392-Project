@@ -46,7 +46,7 @@ class TaskFilterChips extends StatelessWidget {
               : AppColors.border;
           Color textColor = isSelected
               ? Colors.white
-              : AppColors.textSecondary;
+              : AppColors.textSecondaryOf(context);
 
           return Padding(
             padding: const EdgeInsets.only(right: 12.0),

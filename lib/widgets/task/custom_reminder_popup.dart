@@ -10,7 +10,6 @@ Future<String?> showCustomReminderPopup(
   required bool isAllDay,
   String? initialReminder,
   Offset? anchor,
-  Color accentColor = AppColors.primaryDark,
 }) {
   return showAppPopup<String>(
     context: context,
@@ -18,7 +17,6 @@ Future<String?> showCustomReminderPopup(
     child: CustomReminderPopup(
       isAllDay: isAllDay,
       initialReminder: initialReminder,
-      accentColor: accentColor,
     ),
   );
 }
@@ -26,13 +24,11 @@ Future<String?> showCustomReminderPopup(
 class CustomReminderPopup extends StatefulWidget {
   final bool isAllDay;
   final String? initialReminder;
-  final Color accentColor;
 
   const CustomReminderPopup({
     super.key,
     required this.isAllDay,
     this.initialReminder,
-    this.accentColor = AppColors.primaryDark,
   });
 
   @override
@@ -109,15 +105,18 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
 
   @override
   Widget build(BuildContext context) {
-    final onAccent = ThemeData.estimateBrightnessForColor(widget.accentColor) ==
-            Brightness.dark
-        ? Colors.white
-        : AppColors.textPrimary;
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
 
-    return AppPopupShell(
-      alignment: Alignment.centerRight,
-      child: Container(
-        decoration: BoxDecoration(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: isMobile
+          ? const EdgeInsets.all(16)
+          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          width: isMobile ? double.infinity : 400,
+          decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -168,10 +167,10 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       _previewLabel,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: widget.accentColor,
+                        color: AppColors.primaryDark,
                       ),
                     ),
                   ),
@@ -246,7 +245,6 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                   ),
                   AppCupertinoTimePicker(
                     time: _notificationTime,
-                    accentColor: widget.accentColor,
                     onTimeChanged: (time) {
                       setState(() => _notificationTime = time);
                     },
@@ -258,8 +256,8 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                     onPressed: _save,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
-                      backgroundColor: widget.accentColor,
-                      foregroundColor: onAccent,
+                      backgroundColor: AppColors.primaryDark,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
                       ),
@@ -274,6 +272,7 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
             ),
           ),
         ),
+      ),
     );
   }
 }

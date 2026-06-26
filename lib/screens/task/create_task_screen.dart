@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
-import '../../providers/project_provider.dart';
 import '../../providers/drawer_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
@@ -12,16 +11,10 @@ import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/project/create_project_popup.dart';
 import '../../widgets/task/reminder_selector.dart';
-import '../../widgets/task/subtask_title_field.dart';
 import '../../widgets/common/app_time_picker.dart';
 import '../../widgets/common/app_date_picker.dart';
-import '../../widgets/common/app_dropdown.dart';
 import '../../widgets/common/app_popup_transition.dart';
-import '../../widgets/common/notification_bell_button.dart';
 import '../../utils/reminder/task_reminder.dart';
-import '../../utils/project_accent_color.dart';
-import '../../widgets/common/app_scaffold.dart';
-import '../../utils/keyboard/keyboard_insets.dart';
 
 class CreateTaskScreen extends StatefulWidget {
   final String? initialProjectName;
@@ -68,20 +61,13 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     return DateTime(now.year, now.month, now.day);
   }
 
-  Color _accentColor(BuildContext context) {
-    final projectProvider = context.read<ProjectProvider>();
-    return ProjectAccentColor.resolve(projectProvider, _project);
-  }
-
   Future<void> _selectDate(BuildContext tapContext) async {
-    final accentColor = _accentColor(tapContext);
     final pickedDate = await showAppDatePicker(
       context,
       anchor: popupAnchorFromContext(tapContext),
       initialDate: _dueDate ?? DateTime.now(),
       firstDate: TaskDeadlineRules.minSelectableDateForCreate(),
       lastDate: DateTime(2030),
-      accentColor: accentColor,
     );
 
     if (pickedDate != null) {
@@ -111,12 +97,10 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   Future<void> _selectTime(BuildContext tapContext) async {
     if (_isAllDay) return;
 
-    final accentColor = _accentColor(tapContext);
     final pickedTime = await showAppTimePicker(
       context,
       anchor: popupAnchorFromContext(tapContext),
       initialTime: TimeOfDay.fromDateTime(_dueDate ?? DateTime.now()),
-      accentColor: accentColor,
     );
 
     if (pickedTime != null) {
@@ -179,7 +163,6 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
-      reminder: _reminder,
     );
 
     if (!taskProvider.addTask(newTask)) {
@@ -195,14 +178,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TaskProvider>(context);
-    final projectProvider = Provider.of<ProjectProvider>(context);
-    final accentColor = ProjectAccentColor.resolve(projectProvider, _project);
     final projects = provider.availableProjects
-         .where((p) => p != 'All Projects')
-         .toList();
-    if (!projects.contains('None')) {
-      projects.insert(0, 'None');
-    }
+        .where((p) => p != 'All Projects')
+        .toList();
     if (!projects.contains(_project)) {
       projects.add(_project);
     }
@@ -220,7 +198,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = MediaQuery.sizeOf(context).width >= 768;
+        final bool isDesktop = MediaQuery.of(context).size.width >= 768;
         final bool useTwoColumns = constraints.maxWidth >= 1024;
 
         // Main Columns
@@ -231,7 +209,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
           // Task details info for Mobile/Tablet only
           if (!useTwoColumns) ...[
-            _buildInfoCard(projects, accentColor),
+            _buildInfoCard(projects),
             const SizedBox(height: 16),
           ],
 
@@ -252,7 +230,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         final rightColumnWidgets = [
           // Task details info for Desktop only
           if (useTwoColumns) ...[
-            _buildInfoCard(projects, accentColor),
+            _buildInfoCard(projects),
             const SizedBox(height: 16),
             _buildActionButtons(),
           ],
@@ -266,9 +244,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
-                  child: KeyboardAwareSingleChildScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,7 +286,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
           ],
         );
 
-        return AppScaffold(
+        return Scaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop ? null : const AppDrawer(
             isPermanent: false,
@@ -366,7 +342,15 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         ],
       ),
       actions: [
-        const NotificationBellButton(),
+        IconButton(
+          icon: const Icon(
+            Icons.notifications_outlined,
+            color: AppColors.textPrimary,
+          ),
+          onPressed: () {
+            AppNotification.showInfo(context, 'Notifications coming soon!');
+          },
+        ),
         const SizedBox(width: 8),
       ],
     );
@@ -475,15 +459,17 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                             ? AppColors.accentPeach
                             : (_priority == 'Medium'
                                   ? AppColors.accentYellow
-                                  : AppColors.primaryDark),
+                                  : AppColors.primaryLight),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
                         '$_priority Priority',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: _priority == 'High'
+                              ? const Color(0xFFC0392B)
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -513,7 +499,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
   }
 
-  Widget _buildInfoCard(List<String> projects, Color accentColor) {
+  Widget _buildInfoCard(List<String> projects) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -607,25 +593,35 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             icon: Icons.folder_open,
             label: 'Project',
             child: Builder(
-              builder: (tapContext) => AppDropdown<String>(
+              builder: (tapContext) => DropdownButton<String>(
                 value: _project,
                 isExpanded: true,
                 alignment: AlignmentDirectional.centerEnd,
-                accentColor: accentColor,
+                dropdownColor: AppColors.surface,
+                underline: const SizedBox(),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
                 items: [
                   ...projects.map(
                     (p) => DropdownMenuItem(
                       value: p,
-                      child: AppDropdown.menuChild(Text(p)),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(p),
+                      ),
                     ),
                   ),
-                  DropdownMenuItem(
+                  const DropdownMenuItem(
                     value: '__add_new__',
-                    child: AppDropdown.menuChild(
-                      Text(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
                         '+ Add Project',
                         style: TextStyle(
-                          color: accentColor,
+                          color: AppColors.primaryDark,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -650,23 +646,38 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
           _buildInfoRow(
             icon: Icons.flag_outlined,
             label: 'Priority',
-            child: AppDropdown<String>(
+            child: DropdownButton<String>(
               value: _priority,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              accentColor: accentColor,
-              items: [
+              dropdownColor: AppColors.surface,
+              underline: const SizedBox(),
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              items: const [
                 DropdownMenuItem(
                   value: 'High',
-                  child: AppDropdown.menuChild(Text('High')),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('High'),
+                  ),
                 ),
                 DropdownMenuItem(
                   value: 'Medium',
-                  child: AppDropdown.menuChild(Text('Medium')),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('Medium'),
+                  ),
                 ),
                 DropdownMenuItem(
                   value: 'Low',
-                  child: AppDropdown.menuChild(Text('Low')),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('Low'),
+                  ),
                 ),
               ],
               onChanged: (val) {
@@ -687,7 +698,6 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             child: ReminderSelector(
               value: _reminder,
               isAllDay: _isAllDay,
-              accentColor: accentColor,
               onChanged: (val) => setState(() => _reminder = val),
             ),
           ),
@@ -802,9 +812,28 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                     const SizedBox(width: 12),
                     // Subtask input
                     Expanded(
-                      child: SubtaskTitleField(
-                        title: subtask.title,
-                        isCompleted: subtask.isCompleted,
+                      child: TextField(
+                        controller: TextEditingController(text: subtask.title)
+                          ..selection = TextSelection.fromPosition(
+                            TextPosition(offset: subtask.title.length),
+                          ),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: subtask.isCompleted
+                              ? AppColors.textSecondary
+                              : AppColors.textPrimary,
+                          decoration: subtask.isCompleted
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Enter subtask...',
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                          fillColor: Colors.transparent,
+                        ),
                         onChanged: (val) {
                           _subTasks[index] = subtask.copyWith(title: val);
                         },

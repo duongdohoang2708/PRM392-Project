@@ -1,4 +1,5 @@
 import '../../models/task_model.dart';
+import '../formatters/app_date_time_format.dart';
 import 'task_reminder.dart';
 
 /// Computes scheduled fire times for task reminders and due-deadline alerts.
@@ -219,11 +220,6 @@ class ReminderScheduler {
     return 'This task is due now';
   }
 
-  static String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour;
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    return '$displayHour:$minute $period';
-  }
+  static String _formatTime(DateTime dateTime) =>
+      AppDateTimeFormat.time(dateTime);
 }

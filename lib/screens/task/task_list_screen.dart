@@ -176,7 +176,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                     .textTheme
                                     .headlineMedium
                                     ?.copyWith(
-                                      color: AppColors.textPrimary,
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
@@ -193,7 +192,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         pinned: true,
                         delegate: _StickyHeaderDelegate(
                           height: 60.0,
-                          backgroundColor: AppColors.background,
+                          backgroundColor: AppColors.backgroundOf(context),
                           child: const Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: 24.0,
@@ -283,17 +282,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                     children: [
                                       Text(
                                         'Completed Tasks (${completedTasks.length})',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: AppColors.textSecondary,
+                                          color: AppColors.textSecondaryOf(context),
                                         ),
                                       ),
                                       Icon(
                                         _showCompleted
                                             ? Icons.keyboard_arrow_up
                                             : Icons.keyboard_arrow_down,
-                                        color: AppColors.textSecondary,
+                                        color: AppColors.textSecondaryOf(context),
                                       ),
                                     ],
                                   ),
@@ -345,7 +344,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
         if (isDesktop) {
           return AppScaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: AppColors.backgroundOf(context),
             appBar: _buildAppBar(context, showMenuIcon: false),
             body: mainContent,
             floatingActionButton: fab,
@@ -353,7 +352,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
         }
 
         return AppScaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: const AppDrawer(
             isPermanent: false,
             activeRoute: '/task-list',
@@ -380,9 +379,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
     required bool showMenuIcon,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      iconTheme: IconThemeData(color: AppColors.textPrimaryOf(context)),
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu),
