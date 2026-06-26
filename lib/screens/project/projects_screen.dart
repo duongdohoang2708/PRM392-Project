@@ -14,6 +14,9 @@ import '../../widgets/staggered_list_entry.dart';
 import '../../widgets/common/animations/app_fade_transition.dart';
 import '../../widgets/common/animations/app_scale_transition.dart';
 import '../../widgets/common/animations/app_delete_transition.dart';
+import '../../widgets/common/notification_bell_button.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
+import '../../widgets/common/app_scaffold.dart';
 
 void _confirmDeleteProject(BuildContext parentContext, Project project, VoidCallback onConfirmDelete) {
   showDialog(
@@ -132,6 +135,7 @@ class ProjectsScreen extends StatelessWidget {
                           ),
                         ),
                       ),
+                      SliverToBoxAdapter(child: KeyboardBottomSpacer()),
                     ],
                   ),
                 ),
@@ -140,7 +144,7 @@ class ProjectsScreen extends StatelessWidget {
           ],
         );
 
-        return Scaffold(
+        return AppScaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop ? null : const AppDrawer(
             isPermanent: false,
@@ -190,14 +194,9 @@ class ProjectsScreen extends StatelessWidget {
           },
         ),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
-        const SizedBox(width: 8),
+      actions: const [
+        NotificationBellButton(),
+        SizedBox(width: 8),
       ],
     );
   }

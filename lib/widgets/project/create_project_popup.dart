@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../common/app_popup_transition.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
 import '../custom_snackbar.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
 
 class CreateProjectPopup extends StatefulWidget {
   const CreateProjectPopup({super.key});
@@ -183,7 +184,9 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
                     ),
                     const Divider(color: AppColors.border, height: 1),
                     Flexible(
-                      child: SingleChildScrollView(
+                      child: KeyboardAwareSingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

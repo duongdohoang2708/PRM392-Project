@@ -11,11 +11,13 @@ import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/reminder/task_reminder.dart';
 import '../task/reminder_selector.dart';
+import '../task/subtask_title_field.dart';
 import '../common/app_time_picker.dart';
 import '../common/app_date_picker.dart';
 import '../common/app_dropdown.dart';
 import '../common/app_popup_transition.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
 
 class ProjectCreateTaskPopup extends StatefulWidget {
   final String projectName;
@@ -203,6 +205,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
       isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
+      reminder: _reminder,
     );
 
     if (!taskProvider.addTask(newTask)) {
@@ -233,7 +236,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
       alignment: Alignment.centerRight,
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
         ),
         decoration: BoxDecoration(
             color: AppColors.background,
@@ -290,7 +293,9 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
 
                     // Scrollable Content
                     Flexible(
-                      child: SingleChildScrollView(
+                      child: KeyboardAwareSingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,31 +631,12 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: TextField(
-                        controller: TextEditingController(text: subtask.title)
-                          ..selection = TextSelection.fromPosition(
-                            TextPosition(offset: subtask.title.length),
-                          ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: subtask.isCompleted
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
-                          decoration: subtask.isCompleted
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'Enter subtask...',
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          fillColor: Colors.transparent,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        onChanged: (val) =>
-                            _subTasks[index] = subtask.copyWith(title: val),
+                      child: SubtaskTitleField(
+                        title: subtask.title,
+                        isCompleted: subtask.isCompleted,
+                        onChanged: (val) {
+                          _subTasks[index] = subtask.copyWith(title: val);
+                        },
                       ),
                     ),
                     IconButton(

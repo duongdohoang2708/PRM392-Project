@@ -12,6 +12,8 @@ import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/common/animations/app_page_transition.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/staggered_list_entry.dart';
+import '../../widgets/common/notification_bell_button.dart';
+import '../../widgets/common/app_scaffold.dart';
 import '../../utils/validation/task_deadline_rules.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 
@@ -278,9 +280,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ],
         );
 
-        return Scaffold(
+        return AppScaffold(
           key: _scaffoldKey,
-          resizeToAvoidBottomInset: false,
           backgroundColor: AppColors.background,
           drawer: isDesktop ? null : const AppDrawer(
             isPermanent: false,
@@ -325,17 +326,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_outlined,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notifications coming soon!')),
-            );
-          },
-        ),
+        const NotificationBellButton(),
         const SizedBox(width: 8),
       ],
     );
