@@ -62,9 +62,9 @@ class NotificationListItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: AppColors.cardOf(context),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,17 +80,17 @@ class NotificationListItem extends StatelessWidget {
                         Expanded(
                           child: Text(
                             record.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                         ),
                         Text(
                           AppDateTimeFormat.time(record.timestamp),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryOf(context),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -99,8 +99,8 @@ class NotificationListItem extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       record.body,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: AppColors.textSecondaryOf(context),
                         fontWeight: FontWeight.w500,
                       ),
                     ),

@@ -13,6 +13,7 @@ import '../utils/reminder/insight_notification_builder.dart';
 import '../utils/reminder/insight_notification_ids.dart';
 import '../utils/reminder/reminder_scheduler.dart';
 import 'task_provider.dart';
+import 'settings_provider.dart';
 
 class NotificationProvider with ChangeNotifier {
   static const String _firedKeysPref = 'notification_fired_keys';
@@ -32,6 +33,10 @@ class NotificationProvider with ChangeNotifier {
   List<Task> _tasks = [];
   String? _tasksSignature;
   String? _insightSignature;
+  SettingsProvider? _settingsProvider;
+  GoalsProvider? _goalsProvider;
+  FocusProvider? _focusProvider;
+  String? _settingsSignature;
   Timer? _watchdog;
   bool _initialized = false;
   bool _firedKeysLoaded = false;
@@ -58,7 +63,20 @@ class NotificationProvider with ChangeNotifier {
     required TaskProvider taskProvider,
     required FocusProvider focusProvider,
     required GoalsProvider goalsProvider,
+    SettingsProvider? settingsProvider,
   }) {
+    _goalsProvider = goalsProvider;
+    _focusProvider = focusProvider;
+
+    if (settingsProvider != null) {
+      final newSettingsSignature = _buildSettingsSignature(settingsProvider);
+      final settingsChanged = newSettingsSignature != _settingsSignature;
+      _settingsProvider = settingsProvider;
+      _settingsSignature = newSettingsSignature;
+      if (settingsChanged && _initialized) {
+        unawaited(_applyNotificationPreferenceChanges());
+      }
+    }
     final firstBind = !_initialized;
     final newTasks = List<Task>.from(taskProvider.tasks);
     final removedTaskIds = _tasks.map((t) => t.id).toSet()
@@ -72,7 +90,13 @@ class NotificationProvider with ChangeNotifier {
     final taskSignature = _buildTasksSignature(_tasks);
     if (taskSignature != _tasksSignature) {
       _tasksSignature = taskSignature;
-      unawaited(NotificationService.rescheduleAllTaskReminders(_tasks));
+      if (_settingsProvider?.canDeliverTaskReminders ?? true) {
+        unawaited(NotificationService.rescheduleAllTaskReminders(_tasks));
+      } else {
+        for (final task in _tasks) {
+          unawaited(NotificationService.cancelAllTaskNotifications(task.id));
+        }
+      }
     }
 
     final insightSignature = _buildInsightSignature(
@@ -145,6 +169,50 @@ class NotificationProvider with ChangeNotifier {
     }
     _lastCompletedTasksAllTime = goalsProvider.completedTasksAllTime;
     await _persistAchievementState();
+  }
+
+  String _buildSettingsSignature(SettingsProvider settings) {
+    return [
+      settings.notificationsEnabled,
+      settings.taskRemindersEnabled,
+      settings.goalsInsightsEnabled,
+      settings.achievementsEnabled,
+      settings.quietHoursEnabled,
+      settings.quietHoursStart.hour,
+      settings.quietHoursStart.minute,
+      settings.quietHoursEnd.hour,
+      settings.quietHoursEnd.minute,
+    ].join('|');
+  }
+
+  Future<void> _applyNotificationPreferenceChanges() async {
+    if (_settingsProvider == null) return;
+
+    if (_settingsProvider!.canDeliverTaskReminders) {
+      await NotificationService.rescheduleAllTaskReminders(_tasks);
+    } else {
+      for (final task in _tasks) {
+        await NotificationService.cancelAllTaskNotifications(task.id);
+      }
+    }
+
+    final goalsProvider = _goalsProvider;
+    final focusProvider = _focusProvider;
+    if (goalsProvider != null && focusProvider != null) {
+      await _syncInsightNotifications(
+        tasks: _tasks,
+        goalsProvider: goalsProvider,
+        focusProvider: focusProvider,
+      );
+    }
+  }
+
+  bool _canDeliverTaskReminderNow() {
+    final settings = _settingsProvider;
+    if (settings == null) return true;
+    if (!settings.canDeliverTaskReminders) return false;
+    if (settings.isInQuietHours()) return false;
+    return true;
   }
 
   String _buildTasksSignature(List<Task> tasks) {
@@ -291,6 +359,8 @@ class NotificationProvider with ChangeNotifier {
   }
 
   Future<void> _checkDueReminders() async {
+    if (!_canDeliverTaskReminderNow()) return;
+
     for (final task in _tasks) {
       final reminderAt = ReminderScheduler.computeRawFireTime(
         dueDate: task.dueDate,
@@ -325,6 +395,10 @@ class NotificationProvider with ChangeNotifier {
     required GoalsProvider goalsProvider,
     required FocusProvider focusProvider,
   }) async {
+    if (_settingsProvider != null && !_settingsProvider!.notificationsEnabled) {
+      await NotificationService.cancelAllInsightNotifications();
+      return;
+    }
     await _loadAchievementState();
     await _loadDailyFlags();
 
@@ -450,6 +524,12 @@ class NotificationProvider with ChangeNotifier {
   int _insightEventId(String seed) =>
       121000 + (seed.hashCode & 0x7fffffff) % 8000;
 
+  bool _canScheduleInsightType(String type) {
+    final settings = _settingsProvider;
+    if (settings == null) return true;
+    return settings.canDeliverInsightType(type);
+  }
+
   Future<void> _rescheduleInsightNotifications({
     required List<Task> tasks,
     required GoalsProvider goalsProvider,
@@ -462,7 +542,7 @@ class NotificationProvider with ChangeNotifier {
       hour: InsightNotificationBuilder.morningHour,
       minute: InsightNotificationBuilder.morningMinute,
     );
-    if (morningAt != null) {
+    if (morningAt != null && _canScheduleInsightType('morning_digest')) {
       await NotificationService.scheduleInsightNotification(
         notificationId: InsightNotificationIds.morningDigest,
         type: 'morning_digest',
@@ -477,7 +557,7 @@ class NotificationProvider with ChangeNotifier {
       hour: InsightNotificationBuilder.morningHour,
       minute: InsightNotificationBuilder.overdueDigestMinute,
     );
-    if (overdue != null && overdueAt != null) {
+    if (overdue != null && overdueAt != null && _canScheduleInsightType('overdue_digest')) {
       await NotificationService.scheduleInsightNotification(
         notificationId: InsightNotificationIds.overdueDigest,
         type: 'overdue_digest',
@@ -492,7 +572,7 @@ class NotificationProvider with ChangeNotifier {
       hour: InsightNotificationBuilder.importantEodHour,
       minute: InsightNotificationBuilder.importantEodMinute,
     );
-    if (important != null && importantAt != null) {
+    if (important != null && importantAt != null && _canScheduleInsightType('important_eod')) {
       await NotificationService.scheduleInsightNotification(
         notificationId: InsightNotificationIds.importantEod,
         type: 'important_eod',
@@ -507,7 +587,7 @@ class NotificationProvider with ChangeNotifier {
       hour: InsightNotificationBuilder.goalsEodHour,
       minute: InsightNotificationBuilder.goalsEodMinute,
     );
-    if (goalsEod != null && goalsAt != null) {
+    if (goalsEod != null && goalsAt != null && _canScheduleInsightType('streak_reminder')) {
       await NotificationService.scheduleInsightNotification(
         notificationId: InsightNotificationIds.goalsEod,
         type: 'streak_reminder',
@@ -523,7 +603,7 @@ class NotificationProvider with ChangeNotifier {
         hour: InsightNotificationBuilder.freezeDayHour,
         minute: 0,
       );
-      if (freezeAt != null) {
+      if (freezeAt != null && _canScheduleInsightType('freeze_day')) {
         await NotificationService.scheduleInsightNotification(
           notificationId: InsightNotificationIds.freezeDayMorning,
           type: 'freeze_day',
@@ -538,7 +618,7 @@ class NotificationProvider with ChangeNotifier {
       hour: InsightNotificationBuilder.weeklySummaryHour,
       minute: InsightNotificationBuilder.weeklySummaryMinute,
     );
-    if (weeklyAt != null) {
+    if (weeklyAt != null && _canScheduleInsightType('weekly_summary')) {
       final weekly = InsightNotificationBuilder.weeklySummary(
         tasks: tasks,
         goals: goalsProvider,
@@ -561,6 +641,9 @@ class NotificationProvider with ChangeNotifier {
     required String title,
     required String body,
   }) async {
+    if (_settingsProvider != null && !_settingsProvider!.canDeliverInsightType(type)) {
+      return;
+    }
     await NotificationService.showInsightNotification(
       notificationId: notificationId,
       type: type,

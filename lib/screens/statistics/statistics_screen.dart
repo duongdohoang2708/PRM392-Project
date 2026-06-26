@@ -7,13 +7,10 @@ import '../../providers/statistics_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/custom_snackbar.dart';
 import '../../widgets/common/animations/app_horizontal_slide_transition.dart';
-import '../../widgets/common/animations/app_popup_transition.dart';
-import '../../widgets/common/app_date_picker.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
-import '../../widgets/common/notification_bell_button.dart';
-import '../../widgets/common/app_scaffold.dart';
 
 class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({super.key});
@@ -69,7 +66,7 @@ class StatisticsScreen extends StatelessWidget {
           ],
         );
 
-        return AppScaffold(
+        return Scaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop
               ? null
@@ -116,9 +113,14 @@ class StatisticsScreen extends StatelessWidget {
           },
         ),
       ),
-      actions: const [
-        NotificationBellButton(),
-        SizedBox(width: 8),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          onPressed: () {
+            AppNotification.showInfo(context, 'Notifications coming soon!');
+          },
+        ),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -340,181 +342,18 @@ class _OverviewCluster extends StatelessWidget {
   Widget build(BuildContext context) {
     return StatPanel(
       padding: const EdgeInsets.all(16),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 44),
-                child: _RangeSelector(
-                  activeRange: statsProvider.activeRange,
-                  onChanged: statsProvider.setActiveRange,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _PeriodNavigator(
-                label: statsProvider.periodLabel,
-                canGoForward: statsProvider.canShiftForward,
-                onPrevious: () => statsProvider.shiftPeriod(-1),
-                onNext: () => statsProvider.shiftPeriod(1),
-                onPick: () => _pickStatisticsPeriod(context, statsProvider),
-              ),
-              const SizedBox(height: 16),
-              ...children,
-            ],
+          _RangeSelector(
+            activeRange: statsProvider.activeRange,
+            onChanged: statsProvider.setActiveRange,
           ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: _PeriodNavButton(
-              icon: Icons.today_outlined,
-              tooltip: 'Jump to current period',
-              onPressed: statsProvider.resetToCurrentPeriod,
-            ),
-          ),
+          const SizedBox(height: 16),
+          ...children,
         ],
       ),
     );
-  }
-}
-
-class _PeriodNavigator extends StatelessWidget {
-  final String label;
-  final bool canGoForward;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-  final VoidCallback onPick;
-
-  const _PeriodNavigator({
-    required this.label,
-    required this.canGoForward,
-    required this.onPrevious,
-    required this.onNext,
-    required this.onPick,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _PeriodNavButton(
-          icon: Icons.chevron_left,
-          onPressed: onPrevious,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: InkWell(
-            onTap: onPick,
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                    color: AppColors.primaryDark,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        _PeriodNavButton(
-          icon: Icons.chevron_right,
-          onPressed: canGoForward ? onNext : null,
-        ),
-      ],
-    );
-  }
-}
-
-class _PeriodNavButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onPressed;
-  final String? tooltip;
-
-  const _PeriodNavButton({
-    required this.icon,
-    required this.onPressed,
-    this.tooltip,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = onPressed != null;
-    final button = InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: enabled ? AppColors.primaryDark : AppColors.textSecondary.withValues(alpha: 0.4),
-        ),
-      ),
-    );
-
-    if (tooltip == null) return button;
-    return Tooltip(message: tooltip!, child: button);
-  }
-}
-
-Future<void> _pickStatisticsPeriod(
-  BuildContext context,
-  StatisticsProvider provider,
-) async {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final initialDate =
-      provider.anchorDate.isAfter(today) ? today : provider.anchorDate;
-
-  final title = switch (provider.activeRange) {
-    StatisticsRange.today => 'Select a day',
-    StatisticsRange.week => 'Select a day in the week',
-    StatisticsRange.month => 'Select a day in the month',
-  };
-
-  final picked = await showAppDatePicker(
-    context,
-    anchor: popupAnchorFromContext(context),
-    initialDate: initialDate,
-    firstDate: DateTime(2020, 1, 1),
-    lastDate: today,
-    title: title,
-  );
-
-  if (picked != null && context.mounted) {
-    provider.setAnchorDate(picked);
   }
 }
 
@@ -526,8 +365,7 @@ class _FocusStatisticsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = statsProvider.focusStats;
-    final recent = statsProvider.recentSessionsInRange(limit: 5);
-    final granularity = statsProvider.chartGranularityLabel;
+    final recent = statsProvider.recentSessions(limit: 5);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -560,7 +398,7 @@ class _FocusStatisticsContent extends StatelessWidget {
                 ),
                 _StatCardModel(
                   title: 'Longest',
-                  value: '${data.longestMinutes}m',
+                  value: '${statsProvider.longestSessionMinutes}m',
                   icon: Icons.emoji_events_outlined,
                   color: AppColors.accentPink,
                   bgColor: AppColors.accentPink.withValues(alpha: 0.15),
@@ -568,24 +406,20 @@ class _FocusStatisticsContent extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            _ClusterChartHeader(title: 'Focus Minutes by $granularity'),
+            const _ClusterChartHeader(title: 'Focus Minutes by Day'),
             const SizedBox(height: 12),
             StatBarChart(
-              key: ValueKey('focus-chart-${statsProvider.chartPeriodKey}'),
               points: data.minutesBars,
               activeColor: AppColors.primaryDark,
               idleColor: AppColors.primaryLight,
               unitSuffix: 'm',
-              periodKey: statsProvider.chartPeriodKey,
             ),
           ],
         ),
         const SizedBox(height: 16),
-        FocusGoalProgressPanel(data: data.goalProgress),
-        const SizedBox(height: 16),
         _SessionsSection(
-          totalSessions: statsProvider.totalSessionsInRange,
-          averageMinutes: statsProvider.averageSessionMinutesInRange,
+          totalSessions: statsProvider.totalSessions,
+          averageMinutes: statsProvider.averageSessionMinutes,
           recentSessions: recent,
           onViewAll: () => Navigator.pushNamed(context, '/focus-history'),
         ),
@@ -602,7 +436,6 @@ class _TaskStatisticsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = statsProvider.taskStats;
-    final granularity = statsProvider.chartGranularityLabel;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -644,7 +477,7 @@ class _TaskStatisticsContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _ClusterChartHeader(
-              title: 'Task Completion by $granularity',
+              title: 'Task Completion by Day',
               trailing: Text(
                 '${data.completionRate}%',
                 style: const TextStyle(
@@ -656,11 +489,9 @@ class _TaskStatisticsContent extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             StatBarChart(
-              key: ValueKey('task-chart-${statsProvider.chartPeriodKey}'),
               points: data.completionBars,
               activeColor: AppColors.primaryDark,
               idleColor: AppColors.primaryLight,
-              periodKey: statsProvider.chartPeriodKey,
             ),
             const SizedBox(height: 20),
             const _ClusterChartHeader(title: 'Priority Breakdown'),
@@ -668,8 +499,6 @@ class _TaskStatisticsContent extends StatelessWidget {
             PriorityBreakdownChart(data: data.priorityBreakdown),
           ],
         ),
-        const SizedBox(height: 16),
-        TaskDueInsightPanel(data: data.dueSummary),
       ],
     );
   }
@@ -765,7 +594,7 @@ class _SessionsSection extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                'No focus sessions in this range.',
+                'No focus sessions yet.',
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,

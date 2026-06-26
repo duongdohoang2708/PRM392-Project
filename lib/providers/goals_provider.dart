@@ -1,6 +1,4 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../models/task_model.dart';
 import 'focus_provider.dart';
@@ -26,9 +24,8 @@ class DailyGoalData {
   });
 
   int get remaining => (goal - current) <= 0 ? 0 : goal - current;
-  bool get isCompleted => goal == 0 || current >= goal;
-  double get progress =>
-      goal == 0 ? 1 : (current / goal).clamp(0, 1).toDouble();
+  bool get isCompleted => current >= goal;
+  double get progress => goal == 0 ? 0 : (current / goal).clamp(0, 1).toDouble();
 }
 
 class Achievement {
@@ -45,16 +42,7 @@ class Achievement {
   });
 
   bool get isUnlocked => current >= target;
-  double get progress =>
-      target == 0 ? 0 : (current / target).clamp(0, 1).toDouble();
-}
-
-enum ManualRestResult {
-  success,
-  alreadyManualRest,
-  scheduledRestDay,
-  noCreditsRemaining,
-  streakAlreadyMet,
+  double get progress => target == 0 ? 0 : (current / target).clamp(0, 1).toDouble();
 }
 
 class GoalDayData {
@@ -64,9 +52,6 @@ class GoalDayData {
   final int taskGoal;
   final int focusGoal;
   final bool isToday;
-  final bool isRestDay;
-  final bool isScheduledRestDay;
-  final bool isManualRestDay;
 
   const GoalDayData({
     required this.date,
@@ -75,137 +60,44 @@ class GoalDayData {
     required this.taskGoal,
     required this.focusGoal,
     required this.isToday,
-    this.isRestDay = false,
-    this.isScheduledRestDay = false,
-    this.isManualRestDay = false,
   });
 
-  bool get taskGoalMet => taskGoal == 0 || tasksCompleted >= taskGoal;
+  bool get taskGoalMet => tasksCompleted >= taskGoal;
   bool get focusGoalMet => focusMinutes >= focusGoal;
-
-  bool get isFuture {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return date.isAfter(today);
-  }
-
-  /// Counts toward streak (today or past only). Freeze days never count.
-  bool get isStreakDay {
-    if (isFuture) return false;
-    if (isRestDay) return false;
-    return taskGoalMet && focusGoalMet;
-  }
-
-  /// Regular streak day — shows flame on calendar.
-  bool get isComplete => isStreakDay && !isRestDay;
-
-  bool get isPartial {
-    if (isFuture || isRestDay || isStreakDay) return false;
-    return taskGoalMet || focusGoalMet;
-  }
+  bool get isComplete => taskGoalMet && focusGoalMet;
+  bool get isPartial => taskGoalMet || focusGoalMet;
 
   bool get isMissed {
-    if (isFuture) return false;
-    if (isRestDay) return false;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    return date.isBefore(today) && !isStreakDay;
+    return date.isBefore(today) && !isComplete;
   }
 }
 
 class GoalsProvider with ChangeNotifier {
   static const int defaultFocusGoalMinutes = 60;
-  static const int manualRestCreditsPerMonth = 3;
-
-  /// Dart [DateTime.weekday]: 1 = Mon … 7 = Sun.
-  static const Set<int> defaultRestWeekdays = {DateTime.sunday};
+  static const int defaultTaskGoalCount = 2;
 
   TaskProvider? _taskProvider;
   FocusProvider? _focusProvider;
-  Timer? _sourceNotifyDebounce;
 
+  int _taskGoal = defaultTaskGoalCount;
   int _focusGoal = defaultFocusGoalMinutes;
-  Set<int> _restWeekdays = Set<int>.from(defaultRestWeekdays);
-  final Set<DateTime> _manualRestDays = {};
 
+  int get taskGoal => _taskGoal;
   int get focusGoal => _focusGoal;
-  Set<int> get restWeekdays => Set<int>.unmodifiable(_restWeekdays);
 
-  int get manualRestCreditsUsedThisMonth => _manualRestDaysUsedInMonth(
-        DateTime.now(),
-      );
-
-  int get manualRestCreditsRemaining =>
-      manualRestCreditsPerMonth - manualRestCreditsUsedThisMonth;
-
-  void setFocusGoal(int focusGoal) {
+  void setGoals({
+    required int taskGoal,
+    required int focusGoal,
+  }) {
+    final nextTaskGoal = taskGoal.clamp(1, 50);
     final nextFocusGoal = focusGoal.clamp(15, 720);
-    if (_focusGoal == nextFocusGoal) return;
+    if (_taskGoal == nextTaskGoal && _focusGoal == nextFocusGoal) return;
+
+    _taskGoal = nextTaskGoal;
     _focusGoal = nextFocusGoal;
     notifyListeners();
-  }
-
-  void setRestWeekdays(Set<int> weekdays) {
-    final next = weekdays.where((day) => day >= 1 && day <= 7).toSet();
-    if (setEquals(_restWeekdays, next)) return;
-    _restWeekdays = next;
-    notifyListeners();
-  }
-
-  bool isScheduledRestDay(DateTime day) =>
-      _restWeekdays.contains(_normalizeDay(day).weekday);
-
-  bool isManualRestDay(DateTime day) =>
-      _manualRestDays.contains(_normalizeDay(day));
-
-  bool isRestDay(DateTime day) =>
-      isScheduledRestDay(day) || isManualRestDay(day);
-
-  bool get isTodayRestDay => isRestDay(DateTime.now());
-
-  bool get isTodayScheduledRestDay => isScheduledRestDay(DateTime.now());
-
-  bool get isTodayManualRestDay => isManualRestDay(DateTime.now());
-
-  bool get canUseManualRestCreditToday {
-    final today = _normalizeDay(DateTime.now());
-    if (isScheduledRestDay(today)) return false;
-    if (isManualRestDay(today)) return false;
-    if (_isNaturalStreakValid(today)) return false;
-    return manualRestCreditsRemaining > 0;
-  }
-
-  bool get shouldShowFreezeDaySection {
-    final today = _normalizeDay(DateTime.now());
-    return !isTodayRestDay && !_isNaturalStreakValid(today);
-  }
-
-  ManualRestResult markTodayAsManualRest() {
-    final today = _normalizeDay(DateTime.now());
-    if (isScheduledRestDay(today)) {
-      return ManualRestResult.scheduledRestDay;
-    }
-    if (isManualRestDay(today)) {
-      return ManualRestResult.alreadyManualRest;
-    }
-    if (_isNaturalStreakValid(today)) {
-      return ManualRestResult.streakAlreadyMet;
-    }
-    if (manualRestCreditsRemaining <= 0) {
-      return ManualRestResult.noCreditsRemaining;
-    }
-    _manualRestDays.add(today);
-    notifyListeners();
-    return ManualRestResult.success;
-  }
-
-  int _manualRestDaysUsedInMonth(DateTime monthAnchor) {
-    return _manualRestDays
-        .where(
-          (day) =>
-              day.year == monthAnchor.year && day.month == monthAnchor.month,
-        )
-        .length;
   }
 
   void updateSources(TaskProvider taskProvider, FocusProvider focusProvider) {
@@ -239,40 +131,29 @@ class GoalsProvider with ChangeNotifier {
   }
 
   DailyGoalData get taskDailyGoal {
-    final today = _normalizeDay(DateTime.now());
     return DailyGoalData(
-      current: _tasksCompletedDueOn(today),
-      goal: _taskGoalFor(today),
+      current: tasksCompletedToday,
+      goal: _taskGoal,
       unit: 'tasks',
     );
   }
 
-  int taskGoalFor(DateTime day) => _taskGoalFor(_normalizeDay(day));
-
   int get tasksCompletedToday {
-    return _tasksCompletedDueOn(_normalizeDay(DateTime.now()));
+    return _tasksCompletedOn(_normalizeDay(DateTime.now()));
   }
 
   int get focusMinutesToday {
     return _focusMinutesOn(_normalizeDay(DateTime.now()));
   }
 
-  bool get taskGoalMetToday {
-    final today = _normalizeDay(DateTime.now());
-    return _isTaskGoalMet(today, _tasksCompletedDueOn(today));
-  }
-
+  bool get taskGoalMetToday => tasksCompletedToday >= _taskGoal;
   bool get focusGoalMetToday => focusMinutesToday >= _focusGoal;
-
-  bool get isTodayComplete =>
-      _isDayStreakValid(_normalizeDay(DateTime.now())) || isTodayRestDay;
+  bool get isTodayComplete => taskGoalMetToday && focusGoalMetToday;
 
   int get totalSessions => _focusProvider?.completedSessionsCount ?? 0;
   int get totalFocusMinutes => _focusProvider?.totalFocusMinutes ?? 0;
   int get completedTasksAllTime =>
-      (_taskProvider?.tasks ?? const <Task>[])
-          .where((task) => task.isCompleted)
-          .length;
+      (_taskProvider?.tasks ?? const <Task>[]).where((task) => task.isCompleted).length;
 
   List<GoalDayData> get currentWeekGoalDays {
     final now = DateTime.now();
@@ -300,7 +181,7 @@ class GoalsProvider with ChangeNotifier {
     final now = DateTime.now();
     final today = _normalizeDay(now);
     final firstDay = DateTime(anchorMonth.year, anchorMonth.month, 1);
-
+    
     final firstWeekday = firstDay.weekday;
     final startDate = firstDay.subtract(Duration(days: firstWeekday - 1));
 
@@ -310,73 +191,47 @@ class GoalsProvider with ChangeNotifier {
     });
   }
 
-  /// Goal snapshots for each day in [startInclusive, endExclusive), excluding future days.
-  List<GoalDayData> goalDaysInStatisticsRange(
-    DateTime startInclusive,
-    DateTime endExclusive,
-  ) {
-    final today = _normalizeDay(DateTime.now());
-    final days = <GoalDayData>[];
-    var cursor = _normalizeDay(startInclusive);
-    final lastDay = _normalizeDay(endExclusive.subtract(const Duration(days: 1)));
-
-    while (!cursor.isAfter(lastDay)) {
-      if (!cursor.isAfter(today)) {
-        days.add(_buildGoalDay(cursor, today));
-      }
-      cursor = cursor.add(const Duration(days: 1));
-    }
-
-    return days;
-  }
-
   int get completeDaysCount => _completeDaysSet().length;
 
   int get currentStreak {
+    final completeDays = _completeDaysSet();
+    if (completeDays.isEmpty) return 0;
+
     final today = _normalizeDay(DateTime.now());
     var cursor = today;
     var streak = 0;
 
-    if (!_countsTowardStreak(cursor) && !_isStreakBridgeDay(cursor)) {
+    if (!completeDays.contains(today)) {
       cursor = today.subtract(const Duration(days: 1));
     }
 
-    while (true) {
-      if (_countsTowardStreak(cursor)) {
-        streak++;
-        cursor = cursor.subtract(const Duration(days: 1));
-      } else if (_isStreakBridgeDay(cursor)) {
-        cursor = cursor.subtract(const Duration(days: 1));
-      } else {
-        break;
-      }
+    while (completeDays.contains(cursor)) {
+      streak++;
+      cursor = cursor.subtract(const Duration(days: 1));
     }
 
     return streak;
   }
 
   int get bestStreak {
-    final bounds = _activityDateBounds();
-    if (bounds.$1 == null) return 0;
+    final completeDays = _completeDaysSet().toList()..sort();
+    if (completeDays.isEmpty) return 0;
 
-    var cursor = bounds.$1!;
-    final latest = bounds.$2;
-    var best = 0;
-    var current = 0;
+    var best = 1;
+    var current = 1;
 
-    while (!cursor.isAfter(latest)) {
-      if (_countsTowardStreak(cursor)) {
+    for (var index = 1; index < completeDays.length; index++) {
+      final previous = completeDays[index - 1];
+      final currentDay = completeDays[index];
+      if (currentDay.difference(previous).inDays == 1) {
         current++;
-        if (current > best) best = current;
-      } else if (_isStreakBridgeDay(cursor)) {
-        // Preserve the run without adding a day.
       } else {
-        current = 0;
+        best = current > best ? current : best;
+        current = 1;
       }
-      cursor = cursor.add(const Duration(days: 1));
     }
 
-    return best;
+    return current > best ? current : best;
   }
 
   Achievement? get nextStreakAchievement {
@@ -391,36 +246,22 @@ class GoalsProvider with ChangeNotifier {
     return streakAchievements.isEmpty ? null : streakAchievements.last;
   }
 
-  String get streakHeroTitle {
+  String get streakMotivation {
     final streak = currentStreak;
-    if (isTodayRestDay) return 'Freeze day activated';
-    if (streak == 0) return 'Light your first flame';
-    return 'You are on a roll!';
-  }
-
-  String get streakHeroSubtitle {
-    final streak = currentStreak;
-    final todayTaskGoal = taskDailyGoal.goal;
-
-    if (isTodayRestDay) {
-      if (streak == 0) {
-        return 'Everyone needs a reset sometimes. Recharge today — your comeback starts tomorrow.';
-      }
-      return 'Your $streak-day streak won\'t break, but today won\'t '
-          'increase your streak number.';
-    }
-    if (todayTaskGoal == 0) {
-      return streak == 0
-          ? 'No tasks planned — focus goal only.'
-          : 'No tasks planned — focus goal only to keep your streak.';
-    }
     if (streak == 0) {
-      return 'Complete today\'s tasks and your focus goal.';
+      return 'Set your pace today. Complete both goals to start your streak.';
     }
-    return '$streak-day streak. Keep today\'s tasks and focus goal on track.';
+    if (streak < 3) {
+      return 'Great start. Keep completing both goals to build momentum.';
+    }
+    if (streak < 7) {
+      return 'Consistency is forming. Protect your streak again today.';
+    }
+    if (streak < 14) {
+      return 'Strong rhythm. Your daily discipline is paying off.';
+    }
+    return 'Excellent consistency. Keep both goals green and stay unstoppable.';
   }
-
-  String get streakMotivation => streakHeroSubtitle;
 
   List<Achievement> get achievements {
     final sessionCount = totalSessions;
@@ -481,133 +322,51 @@ class GoalsProvider with ChangeNotifier {
 
   GoalDayData _buildGoalDay(DateTime day, DateTime today) {
     final normalizedDay = _normalizeDay(day);
-    final tasksCompleted = _tasksCompletedDueOn(normalizedDay);
-    final taskGoal = _taskGoalFor(normalizedDay);
-    final scheduled = isScheduledRestDay(normalizedDay);
-    final manual = isManualRestDay(normalizedDay);
     return GoalDayData(
       date: normalizedDay,
-      tasksCompleted: tasksCompleted,
+      tasksCompleted: _tasksCompletedOn(normalizedDay),
       focusMinutes: _focusMinutesOn(normalizedDay),
-      taskGoal: taskGoal,
+      taskGoal: _taskGoal,
       focusGoal: _focusGoal,
       isToday: normalizedDay == today,
-      isScheduledRestDay: scheduled,
-      isManualRestDay: manual,
-      isRestDay: scheduled || manual,
     );
   }
 
   Set<DateTime> _completeDaysSet() {
-    final bounds = _activityDateBounds();
-    final candidateDays = <DateTime>{};
-
-    if (bounds.$1 != null) {
-      var cursor = bounds.$1!;
-      final latest = bounds.$2;
-      while (!cursor.isAfter(latest)) {
-        candidateDays.add(cursor);
-        cursor = cursor.add(const Duration(days: 1));
-      }
-    }
-
-    return candidateDays.where(_isDayStreakValidFromMaps).toSet();
-  }
-
-  (DateTime?, DateTime) _activityDateBounds() {
-    final today = _normalizeDay(DateTime.now());
-    DateTime? earliest;
-
-    void consider(DateTime day) {
-      final normalized = _normalizeDay(day);
-      if (earliest == null || normalized.isBefore(earliest!)) {
-        earliest = normalized;
-      }
-    }
+    final taskDays = <DateTime, int>{};
+    final focusDays = <DateTime, int>{};
 
     final tasks = _taskProvider?.tasks ?? const <Task>[];
     for (final task in tasks) {
-      if (task.dueDate != null) consider(task.dueDate!);
-      if (task.completedAt != null) consider(task.completedAt!);
+      final completedAt = task.completedAt;
+      if (completedAt == null) continue;
+      final day = _normalizeDay(completedAt);
+      taskDays.update(day, (value) => value + 1, ifAbsent: () => 1);
     }
 
     final sessions = _focusProvider?.focusHistory ?? const <FocusSessionLog>[];
     for (final log in sessions) {
-      consider(log.time);
+      final day = _normalizeDay(log.time);
+      focusDays.update(day, (value) => value + log.durationMinutes,
+          ifAbsent: () => log.durationMinutes);
     }
 
-    for (final manualRestDay in _manualRestDays) {
-      consider(manualRestDay);
-    }
-
-    consider(today);
-
-    return (earliest, today);
+    final candidateDays = {...taskDays.keys, ...focusDays.keys};
+    return candidateDays.where((day) {
+      final tasksMet = (taskDays[day] ?? 0) >= _taskGoal;
+      final focusMet = (focusDays[day] ?? 0) >= _focusGoal;
+      return tasksMet && focusMet;
+    }).toSet();
   }
 
-  bool _countsTowardStreak(DateTime day) => _isDayStreakValidFromMaps(day);
-
-  bool _isStreakBridgeDay(DateTime day) {
-    final normalizedDay = _normalizeDay(day);
-    final today = _normalizeDay(DateTime.now());
-    if (normalizedDay.isAfter(today)) return false;
-    return isRestDay(normalizedDay);
-  }
-
-  bool _isDayStreakValidFromMaps(DateTime day) {
-    final normalizedDay = _normalizeDay(day);
-    final today = _normalizeDay(DateTime.now());
-    if (normalizedDay.isAfter(today)) return false;
-    if (isRestDay(normalizedDay)) return false;
-
-    final taskGoal = _taskGoalFor(normalizedDay);
-    final tasksCompleted = _tasksCompletedDueOn(normalizedDay);
-    final focusMinutes = _focusMinutesOn(normalizedDay);
-    final taskMet =
-        _isTaskGoalMet(normalizedDay, tasksCompleted, taskGoal: taskGoal);
-
-    return taskMet && _focusGoalMet(focusMinutes);
-  }
-
-  bool _isNaturalStreakValid(DateTime day) {
-    final normalizedDay = _normalizeDay(day);
-    if (isRestDay(normalizedDay)) return false;
-
-    final taskGoal = _taskGoalFor(normalizedDay);
-    final tasksCompleted = _tasksCompletedDueOn(normalizedDay);
-    final focusMinutes = _focusMinutesOn(normalizedDay);
-    final taskMet =
-        _isTaskGoalMet(normalizedDay, tasksCompleted, taskGoal: taskGoal);
-
-    return taskMet && _focusGoalMet(focusMinutes);
-  }
-
-  bool _isDayStreakValid(DateTime day) =>
-      _isDayStreakValidFromMaps(_normalizeDay(day));
-
-  bool _isTaskGoalMet(
-    DateTime day,
-    int tasksCompleted, {
-    int? taskGoal,
-  }) {
-    final goal = taskGoal ?? _taskGoalFor(day);
-    return goal == 0 || tasksCompleted >= goal;
-  }
-
-  bool _focusGoalMet(int focusMinutes) => focusMinutes >= _focusGoal;
-
-  int _taskGoalFor(DateTime day) {
-    return _taskProvider?.totalTasksDueOn(day) ?? 0;
-  }
-
-  int _tasksCompletedDueOn(DateTime day) {
+  int _tasksCompletedOn(DateTime day) {
+    final nextDay = day.add(const Duration(days: 1));
     final tasks = _taskProvider?.tasks ?? const <Task>[];
-    return tasks.where((task) {
-      if (task.dueDate == null || task.completedAt == null) return false;
-      final dueDay = _normalizeDay(task.dueDate!);
-      final completedDay = _normalizeDay(task.completedAt!);
-      return dueDay == day && completedDay == day;
-    }).length;
+    return tasks
+        .where(
+          (task) => task.completedAt != null && _isInRange(task.completedAt!, day, nextDay),
+        )
+        .length;
   }
 
   int _focusMinutesOn(DateTime day) {
@@ -622,26 +381,17 @@ class GoalsProvider with ChangeNotifier {
     return DateTime(value.year, value.month, value.day);
   }
 
-  bool _isInRange(
-    DateTime value,
-    DateTime startInclusive,
-    DateTime endExclusive,
-  ) {
-    return (value.isAtSameMomentAs(startInclusive) ||
-            value.isAfter(startInclusive)) &&
+  bool _isInRange(DateTime value, DateTime startInclusive, DateTime endExclusive) {
+    return (value.isAtSameMomentAs(startInclusive) || value.isAfter(startInclusive)) &&
         value.isBefore(endExclusive);
   }
 
   void _onSourceUpdated() {
-    _sourceNotifyDebounce?.cancel();
-    _sourceNotifyDebounce = Timer(const Duration(milliseconds: 250), () {
-      notifyListeners();
-    });
+    notifyListeners();
   }
 
   @override
   void dispose() {
-    _sourceNotifyDebounce?.cancel();
     _taskProvider?.removeListener(_onSourceUpdated);
     _focusProvider?.removeListener(_onSourceUpdated);
     super.dispose();

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 
-/// Focus-goal editor reserved for Settings (Phase 2).
-/// Task goals are derived automatically from tasks due each day.
 class EditGoalsSheet extends StatefulWidget {
+  final int initialTaskGoal;
   final int initialFocusGoal;
-  final void Function(int focusGoal) onSave;
+  final void Function(int taskGoal, int focusGoal) onSave;
 
   const EditGoalsSheet({
     super.key,
+    required this.initialTaskGoal,
     required this.initialFocusGoal,
     required this.onSave,
   });
@@ -19,12 +19,22 @@ class EditGoalsSheet extends StatefulWidget {
 }
 
 class _EditGoalsSheetState extends State<EditGoalsSheet> {
+  late int _taskGoal;
   late int _focusGoal;
 
   @override
   void initState() {
     super.initState();
+    _taskGoal = widget.initialTaskGoal;
     _focusGoal = widget.initialFocusGoal;
+  }
+
+  void _adjustTaskGoal(int delta) {
+    final next = (_taskGoal + delta).clamp(1, 20);
+    if (next == _taskGoal) return;
+    setState(() {
+      _taskGoal = next;
+    });
   }
 
   void _adjustFocusGoal(int delta) {
@@ -57,7 +67,7 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
                   children: [
                     const Expanded(
                       child: Text(
-                        'Edit Focus Goal',
+                        'Edit Daily Goals',
                         style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 20,
@@ -73,7 +83,7 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Task goals follow your daily plan. Weekly freeze days preserve your streak without counting toward it. A streak day requires today\'s tasks plus your focus goal.',
+                  'A day counts as streak only when both goals are completed.',
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
@@ -81,6 +91,15 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
                   ),
                 ),
                 const SizedBox(height: 18),
+                _GoalStepper(
+                  label: 'Task goal',
+                  helper: 'Tasks completed per day',
+                  value: _taskGoal,
+                  unit: 'tasks',
+                  onDecrease: () => _adjustTaskGoal(-1),
+                  onIncrease: () => _adjustTaskGoal(1),
+                ),
+                const SizedBox(height: 12),
                 _GoalStepper(
                   label: 'Focus goal',
                   helper: 'Focus minutes per day',
@@ -115,7 +134,7 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          widget.onSave(_focusGoal);
+                          widget.onSave(_taskGoal, _focusGoal);
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
@@ -127,7 +146,7 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
                           ),
                         ),
                         child: const Text(
-                          'Save Goal',
+                          'Save Goals',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),

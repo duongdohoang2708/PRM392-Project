@@ -67,7 +67,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               .textTheme
                               .headlineMedium
                               ?.copyWith(
-                                color: AppColors.textPrimary,
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -76,12 +75,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         const SizedBox(height: 20),
                         if (history.isEmpty)
                           StatPanel(
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 'No notifications in this view yet.',
                                 style: TextStyle(
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.textSecondaryOf(context),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -127,7 +126,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         );
 
         return AppScaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop
               ? null
               : const AppDrawer(
@@ -183,7 +182,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: Text(
                   filter,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : AppColors.textSecondaryOf(context),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -200,9 +199,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     required bool isDesktop,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      iconTheme: IconThemeData(color: AppColors.textPrimaryOf(context)),
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -16,7 +17,7 @@ import '../providers/focus_provider.dart';
 import '../screens/task/task_detail_screen.dart';
 import '../utils/reminder/insight_notification_ids.dart';
 import '../utils/reminder/reminder_scheduler.dart';
-import '../main.dart';
+import '../navigation/app_navigator.dart';
 
 typedef NotificationDeliveredCallback = void Function({
   required String title,
@@ -43,6 +44,7 @@ class NotificationService {
   static const String _alertChannelDescription =
       'Alerts when focus or break sessions finish';
   static const int _alertNotificationId = 1002;
+  static const int _focusPhaseCompleteNotificationId = 1003;
 
   static const String _taskChannelId = 'task_reminders';
   static const String _taskChannelName = 'Task Reminders';
@@ -316,28 +318,148 @@ class NotificationService {
     await _plugin.cancel(id: _notificationId);
   }
 
-  static Future<void> showSessionCompleteNotification({
+  static Future<void> schedulePhaseAlarm(Map<String, dynamic> payload) async {
+    if (!Platform.isAndroid) return;
+    await ensureExactAlarmPermission();
+    await _pomodoroChannel.invokeMethod<void>('schedulePhaseAlarm', payload);
+  }
+
+  static Future<void> ensureExactAlarmPermission() async {
+    if (!Platform.isAndroid) return;
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.requestExactAlarmsPermission();
+  }
+
+  static Future<void> cancelPhaseAlarm() async {
+    if (!Platform.isAndroid) return;
+    await _pomodoroChannel.invokeMethod<void>('cancelPhaseAlarm');
+  }
+
+  static Future<Map<String, dynamic>?> getPomodoroRuntimeState() async {
+    if (!Platform.isAndroid) return null;
+    final result = await _pomodoroChannel.invokeMethod<Object?>(
+      'getPomodoroRuntimeState',
+    );
+    if (result is! Map) return null;
+    return Map<String, dynamic>.from(result);
+  }
+
+  static Future<void> scheduleFocusPhaseComplete({
+    required DateTime scheduledAt,
     required String title,
     required String body,
+    required bool playSound,
+    required bool enableVibration,
+    String? soundId,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      _alertChannelId,
+    await _ensureTimezone();
+
+    AndroidNotificationSound? androidSound;
+    if (playSound && soundId != null && soundId.isNotEmpty) {
+      androidSound = RawResourceAndroidNotificationSound(soundId);
+    }
+
+    // Channel id encodes sound + vibration; bump the version suffix whenever
+    // these settings change, since Android locks a channel after first creation.
+    final soundPart = (playSound && soundId != null && soundId.isNotEmpty)
+        ? soundId
+        : 'silent';
+    final vibPart = enableVibration ? 'vib' : 'novib';
+    final channelId = '${_alertChannelId}_v3_${soundPart}_$vibPart';
+
+    final androidDetails = AndroidNotificationDetails(
+      channelId,
       _alertChannelName,
       channelDescription: _alertChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
+      playSound: playSound,
+      sound: androidSound,
+      enableVibration: enableVibration,
+      vibrationPattern: enableVibration
+          ? Int64List.fromList([0, 350, 150, 350])
+          : null,
       category: AndroidNotificationCategory.alarm,
     );
 
-    const darwinDetails = DarwinNotificationDetails(
+    final darwinDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: playSound,
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+    );
+
+    final tzScheduled = tz.TZDateTime.from(scheduledAt, tz.local);
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    final canExact = await androidPlugin?.canScheduleExactNotifications() ?? false;
+    final scheduleMode = canExact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
+
+    await _plugin.zonedSchedule(
+      id: _focusPhaseCompleteNotificationId,
+      title: title,
+      body: body,
+      scheduledDate: tzScheduled,
+      notificationDetails: details,
+      androidScheduleMode: scheduleMode,
+      payload: _encodePayload({'type': 'focus'}),
+    );
+  }
+
+  static Future<void> cancelFocusPhaseComplete() async {
+    await _plugin.cancel(id: _focusPhaseCompleteNotificationId);
+    await cancelPhaseAlarm();
+  }
+
+  static Future<void> showSessionCompleteNotification({
+    required String title,
+    required String body,
+    bool playSound = true,
+    bool enableVibration = true,
+    String? soundId,
+  }) async {
+    AndroidNotificationSound? androidSound;
+    if (playSound && soundId != null && soundId.isNotEmpty) {
+      androidSound = RawResourceAndroidNotificationSound(soundId);
+    }
+
+    // Channel id encodes sound + vibration; bump the version suffix whenever
+    // these settings change, since Android locks a channel after first creation.
+    final soundPart = (playSound && soundId != null && soundId.isNotEmpty)
+        ? soundId
+        : 'silent';
+    final vibPart = enableVibration ? 'vib' : 'novib';
+    final channelId = '${_alertChannelId}_v3_${soundPart}_$vibPart';
+
+    final androidDetails = AndroidNotificationDetails(
+      channelId,
+      _alertChannelName,
+      channelDescription: _alertChannelDescription,
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: playSound,
+      sound: androidSound,
+      enableVibration: enableVibration,
+      vibrationPattern: enableVibration
+          ? Int64List.fromList([0, 350, 150, 350])
+          : null,
+      category: AndroidNotificationCategory.alarm,
+    );
+
+    final darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+    );
+
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
     );

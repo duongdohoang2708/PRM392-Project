@@ -7,10 +7,9 @@ import '../../providers/statistics_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/custom_snackbar.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
-import '../../widgets/common/notification_bell_button.dart';
-import '../../widgets/common/app_scaffold.dart';
 
 class FocusHistoryScreen extends StatelessWidget {
   const FocusHistoryScreen({super.key});
@@ -79,7 +78,7 @@ class FocusHistoryScreen extends StatelessWidget {
           ],
         );
 
-        return AppScaffold(
+        return Scaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop
               ? null
@@ -184,7 +183,15 @@ class FocusHistoryScreen extends StatelessWidget {
         ],
       ),
       actions: [
-        const NotificationBellButton(),
+        IconButton(
+          icon: const Icon(
+            Icons.notifications_outlined,
+            color: AppColors.textPrimary,
+          ),
+          onPressed: () {
+            AppNotification.showInfo(context, 'Notifications coming soon!');
+          },
+        ),
         const SizedBox(width: 8),
       ],
     );

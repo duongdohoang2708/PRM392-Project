@@ -20,10 +20,7 @@ class AchievementsScreen extends StatelessWidget {
         final isDesktop = constraints.maxWidth >= 768;
         final goalsProvider = context.watch<GoalsProvider>();
 
-        // Lọc bỏ các achievement thuộc danh mục perfectDays
-        final achievements = goalsProvider.achievements
-            .where((a) => a.category != AchievementCategory.perfectDays)
-            .toList();
+        final achievements = goalsProvider.achievements;
         final unlocked = achievements.where((a) => a.isUnlocked).length;
         final total = achievements.length;
 
@@ -49,7 +46,7 @@ class AchievementsScreen extends StatelessWidget {
                           'Achievements',
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
-                                color: AppColors.textPrimary,
+                                color: AppColors.textPrimaryOf(context),
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -97,7 +94,7 @@ class AchievementsScreen extends StatelessWidget {
         );
 
         return AppScaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop
               ? null
               : const AppDrawer(isPermanent: false, activeRoute: '/goals'),
@@ -125,7 +122,7 @@ class AchievementsScreen extends StatelessWidget {
     required bool isDesktop,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
       leadingWidth: 96,
       leading: Row(
@@ -133,7 +130,7 @@ class AchievementsScreen extends StatelessWidget {
         children: [
           Builder(
             builder: (context) => IconButton(
-              icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+              icon: Icon(Icons.menu, color: AppColors.textPrimaryOf(context)),
               onPressed: () {
                 if (isDesktop) {
                   context.read<DrawerProvider>().toggleDesktopCollapse();
@@ -144,10 +141,10 @@ class AchievementsScreen extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.chevron_left,
               size: 28,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
             onPressed: () => Navigator.pop(context),
           ),
@@ -211,10 +208,15 @@ class _UnlockedSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
     final progress = total == 0
         ? 0.0
         : (unlocked / total).clamp(0, 1).toDouble();
     final progressPercent = (progress * 100).round();
+    final percentBadgeBg = isDark
+        ? AppColors.primary.withValues(alpha: 0.28)
+        : AppColors.primaryLight.withValues(alpha: 0.45);
+    final percentBadgeText = isDark ? AppColors.primary : AppColors.primaryDark;
 
     return StatPanel(
       child: Column(
@@ -226,12 +228,16 @@ class _UnlockedSummaryCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.accentYellow.withValues(alpha: 0.2),
+                  color: AppColors.accentYellow.withValues(
+                    alpha: isDark ? 0.28 : 0.2,
+                  ),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.emoji_events,
-                  color: AppColors.accentYellow,
+                  color: isDark
+                      ? const Color(0xFFFFD54F)
+                      : AppColors.accentYellow,
                   size: 24,
                 ),
               ),
@@ -242,8 +248,8 @@ class _UnlockedSummaryCard extends StatelessWidget {
                   children: [
                     Text(
                       '$unlocked/$total unlocked',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: AppColors.textPrimaryOf(context),
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
@@ -251,8 +257,9 @@ class _UnlockedSummaryCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '$progressPercent% of all achievements completed',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: AppColors.textPrimaryOf(context)
+                            .withValues(alpha: isDark ? 0.82 : 0.72),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -266,16 +273,18 @@ class _UnlockedSummaryCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight.withValues(alpha: 0.45),
+                  color: percentBadgeBg,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.35),
+                    color: AppColors.primary.withValues(
+                      alpha: isDark ? 0.55 : 0.35,
+                    ),
                   ),
                 ),
                 child: Text(
                   '$progressPercent%',
-                  style: const TextStyle(
-                    color: AppColors.primaryDark,
+                  style: TextStyle(
+                    color: percentBadgeText,
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                   ),
@@ -289,9 +298,9 @@ class _UnlockedSummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: AppColors.border.withValues(alpha: 0.6),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primaryDark,
+              backgroundColor: AppColors.borderOf(context).withValues(alpha: 0.6),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isDark ? AppColors.primary : AppColors.primaryDark,
               ),
             ),
           ),
@@ -319,6 +328,7 @@ class _AchievementGroupSection extends StatelessWidget {
     final unlocked = achievements
         .where((achievement) => achievement.isUnlocked)
         .length;
+    final isDark = AppColors.isDark(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,10 +339,16 @@ class _AchievementGroupSection extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: AppColors.primaryLight.withValues(alpha: 0.45),
+                color: isDark
+                    ? AppColors.primary.withValues(alpha: 0.28)
+                    : AppColors.primaryLight.withValues(alpha: 0.45),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: AppColors.primaryDark, size: 18),
+              child: Icon(
+                icon,
+                color: isDark ? AppColors.primary : AppColors.primaryDark,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -341,8 +357,8 @@ class _AchievementGroupSection extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: AppColors.textPrimaryOf(context),
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                     ),
@@ -352,8 +368,8 @@ class _AchievementGroupSection extends StatelessWidget {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: AppColors.textSecondaryOf(context),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -364,14 +380,20 @@ class _AchievementGroupSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isDark
+                    ? AppColors.primary.withValues(alpha: 0.22)
+                    : AppColors.cardOf(context),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.primary.withValues(alpha: 0.45)
+                      : AppColors.borderOf(context),
+                ),
               ),
               child: Text(
                 '$unlocked/${achievements.length}',
-                style: const TextStyle(
-                  color: AppColors.primaryDark,
+                style: TextStyle(
+                  color: isDark ? AppColors.primary : AppColors.primaryDark,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
@@ -427,8 +449,6 @@ class _AchievementCard extends StatelessWidget {
         return Icons.timer_outlined;
       case AchievementCategory.streak:
         return Icons.local_fire_department;
-      case AchievementCategory.perfectDays:
-        return Icons.verified_rounded;
       case AchievementCategory.tasksCompleted:
         return Icons.task_alt;
     }
@@ -437,10 +457,21 @@ class _AchievementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final unlocked = achievement.isUnlocked;
-    final accent = unlocked ? AppColors.primaryDark : AppColors.textSecondary;
+    final isDark = AppColors.isDark(context);
+    final accent = unlocked
+        ? (isDark ? AppColors.primary : AppColors.primaryDark)
+        : AppColors.textSecondaryOf(context);
     final bgColor = unlocked
-        ? AppColors.primaryLight.withValues(alpha: 0.35)
-        : AppColors.surface;
+        ? AppColors.primaryLightTintOf(context, alpha: isDark ? 0.35 : 0.45)
+        : AppColors.cardOf(context);
+    final iconContainerColor = unlocked
+        ? (isDark
+              ? AppColors.primary.withValues(alpha: 0.32)
+              : Colors.white.withValues(alpha: 0.8))
+        : AppColors.insetSurfaceOf(context);
+    final iconColor = unlocked
+        ? (isDark ? const Color(0xFF9AE8A0) : AppColors.primaryDark)
+        : AppColors.textSecondaryOf(context);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -450,7 +481,7 @@ class _AchievementCard extends StatelessWidget {
         border: Border.all(
           color: unlocked
               ? AppColors.primary.withValues(alpha: 0.5)
-              : AppColors.border,
+              : AppColors.borderOf(context),
           width: unlocked ? 1.5 : 1,
         ),
       ),
@@ -464,18 +495,16 @@ class _AchievementCard extends StatelessWidget {
                 width: 35,
                 height: 35,
                 decoration: BoxDecoration(
-                  color: unlocked
-                      ? Colors.white.withValues(alpha: 0.8)
-                      : AppColors.background,
+                  color: iconContainerColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(_icon, color: accent, size: 16),
+                child: Icon(_icon, color: iconColor, size: 16),
               ),
               Icon(
                 unlocked ? Icons.check_circle : Icons.lock_outline,
                 color: unlocked
-                    ? AppColors.primaryDark
-                    : AppColors.textSecondary,
+                    ? (isDark ? AppColors.primary : AppColors.primaryDark)
+                    : AppColors.textSecondaryOf(context),
                 size: 17,
               ),
             ],
@@ -485,8 +514,8 @@ class _AchievementCard extends StatelessWidget {
             achievement.title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: AppColors.textPrimaryOf(context),
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
@@ -494,10 +523,12 @@ class _AchievementCard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             '${_displayCurrent()}/${achievement.target}',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: unlocked
+                  ? AppColors.textPrimaryOf(context)
+                  : AppColors.textSecondaryOf(context),
               fontSize: 10,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 5),
@@ -506,7 +537,7 @@ class _AchievementCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: achievement.progress,
               minHeight: 5,
-              backgroundColor: AppColors.border.withValues(alpha: 0.6),
+              backgroundColor: AppColors.borderOf(context).withValues(alpha: 0.6),
               valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../providers/goals_provider.dart';
+import '../../utils/calendar_week_config.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../statistics/statistics_widgets.dart';
@@ -40,34 +41,43 @@ class WeeklyStreakRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: days
-          .map((day) => Expanded(child: WeekDayTile(day: day)))
-          .toList(),
+      children: List.generate(days.length, (index) {
+        return Expanded(
+          child: WeekDayTile(day: days[index], labelIndex: index),
+        );
+      }),
     );
   }
 }
 
 class WeekDayTile extends StatelessWidget {
   final GoalDayData day;
+  final int labelIndex;
 
-  const WeekDayTile({super.key, required this.day});
+  const WeekDayTile({
+    super.key,
+    required this.day,
+    required this.labelIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final label = labels[day.date.weekday - 1];
+    final labels = CalendarWeekConfig.weekdayLabels;
+    final label = labels[labelIndex.clamp(0, labels.length - 1)];
     final missed = day.isMissed;
     final isRestDay = day.isRestDay;
 
     final borderColor = day.isToday
-        ? AppColors.primaryDark
+        ? AppColors.streakTodayAccentOf(context)
+        : missed
+        ? AppColors.borderOf(context)
         : day.isComplete
-        ? AppColors.streakRed.withValues(alpha: 0.55)
+        ? AppColors.streakCompleteBorderOf(context)
         : isRestDay
-        ? AppColors.freezeBlue.withValues(alpha: 0.4)
+        ? AppColors.streakFreezeBorderOf(context)
         : day.isPartial
         ? AppColors.accentYellow.withValues(alpha: 0.55)
-        : AppColors.border;
+        : AppColors.borderOf(context);
 
     return Column(
       children: [
@@ -76,10 +86,10 @@ class WeekDayTile extends StatelessWidget {
           height: 36,
           decoration: BoxDecoration(
             color: day.isComplete
-                ? AppColors.streakRed.withValues(alpha: 0.18)
+                ? AppColors.streakCompleteFillOf(context)
                 : isRestDay
-                ? AppColors.freezeBlue.withValues(alpha: 0.1)
-                : AppColors.background,
+                ? AppColors.streakFreezeFillOf(context)
+                : AppColors.insetSurfaceOf(context),
             shape: BoxShape.circle,
             border: Border.all(
               color: borderColor,
@@ -91,8 +101,8 @@ class WeekDayTile extends StatelessWidget {
               '${day.date.day}',
               style: TextStyle(
                 color: day.isToday
-                    ? AppColors.primaryDark
-                    : AppColors.textSecondary,
+                    ? AppColors.streakTodayAccentOf(context)
+                    : AppColors.textSecondaryOf(context),
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),
@@ -104,33 +114,33 @@ class WeekDayTile extends StatelessWidget {
           label,
           style: TextStyle(
             color: day.isToday
-                ? AppColors.primaryDark
-                : AppColors.textSecondary,
+                ? AppColors.streakTodayAccentOf(context)
+                : AppColors.textSecondaryOf(context),
             fontSize: 11,
             fontWeight: day.isToday ? FontWeight.w800 : FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
         if (missed)
-          const Text(
+          Text(
             'x',
             style: TextStyle(
-              color: Color(0xFFE53935),
+              color: AppColors.streakMissedMarkOf(context),
               fontSize: 20,
               fontWeight: FontWeight.w800,
               height: 1,
             ),
           )
         else if (day.isComplete)
-          const Icon(
+          Icon(
             Icons.local_fire_department,
-            color: AppColors.streakFlame,
+            color: AppColors.streakFlameOf(context),
             size: 22,
           )
         else if (isRestDay)
-          const Icon(
+          Icon(
             AppIcons.freezeDay,
-            color: AppIcons.freezeDayColor,
+            color: AppColors.streakFreezeIconOf(context),
             size: 22,
           )
         else

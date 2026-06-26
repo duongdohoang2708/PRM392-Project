@@ -23,8 +23,6 @@ class StatPanel extends StatelessWidget {
   final Widget? trailing;
   final Widget child;
   final EdgeInsetsGeometry padding;
-  final double? height;
-  final AlignmentGeometry? alignment;
 
   const StatPanel({
     super.key,
@@ -32,8 +30,6 @@ class StatPanel extends StatelessWidget {
     this.trailing,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.height,
-    this.alignment,
   });
 
   @override
@@ -59,9 +55,7 @@ class StatPanel extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      height: height,
       padding: padding,
-      alignment: alignment,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -88,12 +82,11 @@ class StatPanel extends StatelessWidget {
   }
 }
 
-class StatBarChart extends StatefulWidget {
+class StatBarChart extends StatelessWidget {
   final List<StatisticsBarPoint> points;
   final Color activeColor;
   final Color idleColor;
   final String unitSuffix;
-  final String? periodKey;
 
   const StatBarChart({
     super.key,
@@ -101,79 +94,11 @@ class StatBarChart extends StatefulWidget {
     required this.activeColor,
     required this.idleColor,
     this.unitSuffix = '',
-    this.periodKey,
   });
 
   @override
-  State<StatBarChart> createState() => _StatBarChartState();
-}
-
-class _StatBarChartState extends State<StatBarChart> {
-  static const double _scrollBarWidth = 16;
-  static const double _scrollCellGap = 2;
-  static const double _scrollCellWidth = 42;
-  static const double _scrollCellStride = _scrollCellWidth + _scrollCellGap;
-
-  final ScrollController _scrollController = ScrollController();
-  String? _lastScrolledPeriodKey;
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _scheduleScrollToHighlight();
-  }
-
-  @override
-  void didUpdateWidget(covariant StatBarChart oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.periodKey != widget.periodKey ||
-        oldWidget.points.length != widget.points.length) {
-      _lastScrolledPeriodKey = null;
-      _scheduleScrollToHighlight();
-    }
-  }
-
-  void _scheduleScrollToHighlight() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (_scrollController.hasClients) {
-        _scrollToHighlight();
-        return;
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _scrollToHighlight();
-      });
-    });
-  }
-
-  void _scrollToHighlight() {
-    if (!mounted || !_scrollController.hasClients) return;
-
-    final periodKey = widget.periodKey;
-    if (periodKey != null && periodKey == _lastScrolledPeriodKey) return;
-
-    final highlightIndex =
-        widget.points.indexWhere((point) => point.isHighlighted);
-    if (highlightIndex < 0) return;
-
-    final viewport = _scrollController.position.viewportDimension;
-    final target =
-        (highlightIndex * _scrollCellStride) - (viewport / 2) + (_scrollCellStride / 2);
-    final maxExtent = _scrollController.position.maxScrollExtent;
-
-    _scrollController.jumpTo(target.clamp(0.0, maxExtent));
-    _lastScrolledPeriodKey = periodKey;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (widget.points.isEmpty) {
+    if (points.isEmpty) {
       return const SizedBox(
         height: 140,
         child: Center(
@@ -190,49 +115,36 @@ class _StatBarChartState extends State<StatBarChart> {
 
     final maxValue = math.max(
       1,
-      widget.points
-          .map((point) => point.value)
-          .fold<int>(0, (a, b) => math.max(a, b)),
+      points.map((point) => point.value).fold<int>(0, (a, b) => math.max(a, b)),
     );
 
-    const double maxBarHeight = 160;
-    const double valueLabelHeight = 18;
-    const double axisLabelBlockHeight = 30;
-    const double chartVerticalGaps = 14;
-    const double chartBottomInset = 6;
-    final double chartHeight = valueLabelHeight +
-        chartVerticalGaps +
-        (14 + maxBarHeight) +
-        axisLabelBlockHeight +
-        chartBottomInset;
-    final bool scrollable = widget.points.length > 8;
+    const double maxBarHeight = 104;
+    const double chartHeight = 168;
+    final bool scrollable = points.length > 8;
+    final double barWidth = scrollable ? 16 : 22;
+    final bool showValueLabels = !scrollable;
 
-    Widget buildCell(
-      StatisticsBarPoint point, {
-      required double barWidth,
-      double labelWidth = 0,
-    }) {
+    Widget buildCell(StatisticsBarPoint point) {
       final ratio = point.value / maxValue;
       final barHeight = point.value == 0 ? 6.0 : 14 + (ratio * maxBarHeight);
-      final barColor = point.isHighlighted ? widget.activeColor : widget.idleColor;
+      final barColor = point.isHighlighted ? activeColor : idleColor;
       final labelColor =
           point.isHighlighted ? AppColors.primaryDark : AppColors.textSecondary;
-      final effectiveLabelWidth = labelWidth > 0
-          ? labelWidth
-          : math.max(barWidth + 14, 28).toDouble();
 
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '${point.value}${widget.unitSuffix}',
-            style: TextStyle(
-              color: labelColor,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+          if (showValueLabels) ...[
+            Text(
+              '${point.value}$unitSuffix',
+              style: TextStyle(
+                color: labelColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
+            const SizedBox(height: 6),
+          ],
           Container(
             width: barWidth,
             height: barHeight,
@@ -243,57 +155,21 @@ class _StatBarChartState extends State<StatBarChart> {
           ),
           const SizedBox(height: 8),
           SizedBox(
-            width: effectiveLabelWidth,
-            child: point.subLabel == null
-                ? Text(
-                    point.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: point.isHighlighted
-                          ? AppColors.primaryDark
-                          : AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: point.isHighlighted
-                          ? FontWeight.w700
-                          : FontWeight.w600,
-                    ),
-                  )
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        point.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: point.isHighlighted
-                              ? AppColors.primaryDark
-                              : AppColors.textSecondary,
-                          fontSize: 11,
-                          fontWeight: point.isHighlighted
-                              ? FontWeight.w700
-                              : FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        point.subLabel!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: point.isHighlighted
-                              ? AppColors.primaryDark
-                              : AppColors.textSecondary,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          height: 1.1,
-                        ),
-                      ),
-                    ],
-                  ),
+            width: barWidth + 14,
+            child: Text(
+              point.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: point.isHighlighted
+                    ? AppColors.primaryDark
+                    : AppColors.textSecondary,
+                fontSize: 11,
+                fontWeight:
+                    point.isHighlighted ? FontWeight.w700 : FontWeight.w600,
+              ),
+            ),
           ),
         ],
       );
@@ -302,68 +178,31 @@ class _StatBarChartState extends State<StatBarChart> {
     if (scrollable) {
       return SizedBox(
         height: chartHeight,
-        child: ListView.builder(
-          controller: _scrollController,
+        child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.zero,
-          clipBehavior: Clip.none,
-          itemCount: widget.points.length,
-          itemBuilder: (context, index) {
-            final point = widget.points[index];
-            return Padding(
-              padding: EdgeInsets.only(
-                right: index == widget.points.length - 1 ? 0 : _scrollCellGap,
-              ),
-              child: SizedBox(
-                height: chartHeight,
-                width: _scrollCellWidth,
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: buildCell(point, barWidth: _scrollBarWidth),
-                ),
-              ),
-            );
-          },
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: points
+                .map(
+                  (point) => Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: buildCell(point),
+                  ),
+                )
+                .toList(),
+          ),
         ),
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availableWidth = constraints.maxWidth;
-        const spacing = 5.0;
-        final totalSpacing = spacing * math.max(0, widget.points.length - 1);
-        final cellWidth =
-            ((availableWidth - totalSpacing) / math.max(widget.points.length, 1))
-                .toDouble();
-        final barWidth =
-            math.min(48.0, math.max(22.0, cellWidth * 0.55)).toDouble();
-
-        return SizedBox(
-          height: chartHeight,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var index = 0; index < widget.points.length; index++) ...[
-                if (index > 0) const SizedBox(width: spacing),
-                SizedBox(
-                  height: chartHeight,
-                  width: cellWidth,
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: buildCell(
-                      widget.points[index],
-                      barWidth: barWidth,
-                      labelWidth: cellWidth,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
+    return SizedBox(
+      height: chartHeight,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: points
+            .map((point) => Expanded(child: buildCell(point)))
+            .toList(),
+      ),
     );
   }
 }
@@ -449,257 +288,6 @@ class DailyGoalCard extends StatelessWidget {
               minHeight: 10,
               backgroundColor: AppColors.border.withValues(alpha: 0.6),
               valueColor: AlwaysStoppedAnimation<Color>(accent),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class FocusGoalProgressPanel extends StatelessWidget {
-  final FocusGoalPeriodData data;
-
-  const FocusGoalProgressPanel({super.key, required this.data});
-
-  String get _valueText {
-    if (data.isSingleDay) {
-      if (data.isRestDay) {
-        return 'Freeze day';
-      }
-      return '${data.periodMinutes}/${data.focusGoalMinutes} min';
-    }
-    return '${data.daysMet}/${data.eligibleDays} days';
-  }
-
-  String get _captionText {
-    if (data.isSingleDay) {
-      if (data.isRestDay) {
-        return 'Focus goal waived on freeze days.';
-      }
-      if (data.focusGoalMinutes == 0) {
-        return 'No focus goal configured.';
-      }
-      if (data.periodMinutes >= data.focusGoalMinutes) {
-        return 'Focus goal met for this day.';
-      }
-      final remaining = data.focusGoalMinutes - data.periodMinutes;
-      return '$remaining min remaining to reach goal.';
-    }
-
-    if (data.eligibleDays == 0) {
-      return 'No tracked days in this period yet.';
-    }
-
-    final buffer = StringBuffer(
-      '${data.daysMet} of ${data.eligibleDays} days met the focus goal',
-    );
-    if (data.restDays > 0) {
-      buffer.write(
-        ' (${data.restDays} freeze day${data.restDays == 1 ? '' : 's'} waived)',
-      );
-    }
-    buffer.write('.');
-    return buffer.toString();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DailyGoalCard(
-      titleText: 'Focus Goal Progress',
-      valueText: _valueText,
-      captionText: _captionText,
-      progress: data.isSingleDay && data.isRestDay ? 1 : data.progress,
-      accent: AppColors.primaryDark,
-      icon: Icons.flag_rounded,
-    );
-  }
-}
-
-class TaskDueInsightPanel extends StatelessWidget {
-  final TaskDueSummaryData data;
-
-  const TaskDueInsightPanel({super.key, required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final dueProgress = data.dueCount == 0
-        ? 0.0
-        : (data.completedCount / data.dueCount).clamp(0, 1).toDouble();
-
-    return StatPanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Due vs Completed',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _DueMetricTile(
-                  label: 'Due',
-                  value: '${data.dueCount}',
-                  color: AppColors.accentYellow,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _DueMetricTile(
-                  label: 'Completed',
-                  value: '${data.completedCount}',
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _DueMetricTile(
-                  label: 'Pending',
-                  value: '${data.pendingCount}',
-                  color: AppColors.accentPeach,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: dueProgress,
-              minHeight: 10,
-              backgroundColor: AppColors.border.withValues(alpha: 0.6),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primaryDark,
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            data.dueCount == 0
-                ? 'No tasks were due in this period.'
-                : '${data.dueCompletionRate}% of due tasks completed',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'On-time Summary',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _DueMetricTile(
-                  label: 'On-time rate',
-                  value: '${data.onTimeRate}%',
-                  color: AppColors.primaryDark,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _DueMetricTile(
-                  label: 'On-time',
-                  value: '${data.onTimeCount}',
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _DueMetricTile(
-                  label: 'Late',
-                  value: '${data.lateCount}',
-                  color: AppColors.accentPeach,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _DueMetricTile(
-                  label: 'Missed',
-                  value: '${data.missedCount}',
-                  color: AppColors.accentPink,
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(child: SizedBox()),
-              const SizedBox(width: 10),
-              const Expanded(child: SizedBox()),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            data.completedCount == 0
-                ? 'Complete due tasks to build on-time stats.'
-                : 'On-time counts tasks finished by their due date.',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DueMetricTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-
-  const _DueMetricTile({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],
