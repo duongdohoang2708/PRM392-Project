@@ -10,6 +10,7 @@ import 'providers/project_provider.dart';
 import 'providers/focus_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/goals_provider.dart';
+import 'providers/notification_provider.dart';
 import 'services/notification_service.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
@@ -36,15 +37,31 @@ class MyApp extends StatelessWidget {
               projectProvider!..update(taskProvider),
         ),
         ChangeNotifierProvider(create: (_) => FocusProvider(navigatorKey)),
-        ChangeNotifierProxyProvider2<TaskProvider, FocusProvider, StatisticsProvider>(
-          create: (_) => StatisticsProvider(),
-          update: (_, taskProvider, focusProvider, statisticsProvider) =>
-              statisticsProvider!..updateSources(taskProvider, focusProvider),
-        ),
         ChangeNotifierProxyProvider2<TaskProvider, FocusProvider, GoalsProvider>(
           create: (_) => GoalsProvider(),
           update: (_, taskProvider, focusProvider, goalsProvider) =>
               goalsProvider!..updateSources(taskProvider, focusProvider),
+        ),
+        ChangeNotifierProxyProvider3<TaskProvider, FocusProvider, GoalsProvider,
+            StatisticsProvider>(
+          create: (_) => StatisticsProvider(),
+          update: (_, taskProvider, focusProvider, goalsProvider,
+                  statisticsProvider) =>
+              statisticsProvider!
+                ..updateSources(taskProvider, focusProvider, goalsProvider),
+        ),
+        ChangeNotifierProxyProvider3<TaskProvider, FocusProvider, GoalsProvider,
+            NotificationProvider>(
+          create: (_) => NotificationProvider(),
+          update: (_, taskProvider, focusProvider, goalsProvider,
+                  notificationProvider) {
+            notificationProvider!.bindSources(
+              taskProvider: taskProvider,
+              focusProvider: focusProvider,
+              goalsProvider: goalsProvider,
+            );
+            return notificationProvider;
+          },
         ),
       ],
       child: SlidableAutoCloseBehavior(

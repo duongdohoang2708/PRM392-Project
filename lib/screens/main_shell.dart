@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/common/app_scaffold.dart';
 import '../widgets/app_drawer.dart';
 import 'home/home_screen.dart';
 import 'task/task_list_screen.dart';
@@ -13,6 +14,7 @@ import 'statistics/statistics_screen.dart';
 import 'goals/achievements_screen.dart';
 import 'statistics/focus_history_screen.dart';
 import 'goals/goals_screen.dart';
+import 'notifications/notifications_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -55,8 +57,7 @@ class _MainShellState extends State<MainShell> {
         builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 768;
 
-          return Scaffold(
-            resizeToAvoidBottomInset: false,
+          return AppScaffold(
             body: Row(
               children: [
                 if (isDesktop)
@@ -69,7 +70,7 @@ class _MainShellState extends State<MainShell> {
                         if (route == '/home') {
                           nav.pushNamedAndRemoveUntil('/home', (r) => false);
                         } else {
-                          nav.pushNamed(route);
+                          nav.pushReplacementNamed(route);
                         }
                       }
                     },
@@ -165,6 +166,9 @@ class _MainShellState extends State<MainShell> {
         break;
       case '/focus-history':
         page = const FocusHistoryScreen();
+        break;
+      case '/notifications':
+        page = const NotificationsScreen();
         break;
       default:
         page = const HomeScreen();

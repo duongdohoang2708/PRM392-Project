@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
+import '../../widgets/common/app_scaffold.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
@@ -45,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
@@ -55,7 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
           // Main Content
           SafeArea(
             child: Center(
-              child: SingleChildScrollView(
+              child: KeyboardAwareSingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 32,

@@ -13,6 +13,8 @@ import '../../widgets/home/projects_section.dart';
 import '../../widgets/home/quick_actions_section.dart';
 
 import '../../widgets/background_pattern.dart';
+import '../../widgets/common/notification_bell_button.dart';
+import '../../widgets/common/app_scaffold.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -102,7 +104,7 @@ class HomeScreen extends StatelessWidget {
           ],
         );
 
-        return Scaffold(
+        return AppScaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop ? null : const AppDrawer(isPermanent: false),
           appBar: _buildAppBar(context, showMenuIcon: !isDesktop),
@@ -144,14 +146,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notifications coming soon!')),
-            );
-          },
-        ),
+        const NotificationBellButton(),
         const SizedBox(width: 8),
       ],
     );

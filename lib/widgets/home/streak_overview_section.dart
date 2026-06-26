@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../../providers/goals_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
 import '../goals/weekly_streak_panel.dart';
 import '../statistics/statistics_widgets.dart';
+import '../common/section_action_button.dart';
 
 class StreakOverviewSection extends StatelessWidget {
   const StreakOverviewSection({super.key});
@@ -12,7 +14,6 @@ class StreakOverviewSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final goalsProvider = context.watch<GoalsProvider>();
-    final currentStreak = goalsProvider.currentStreak;
     final weekDays = goalsProvider.currentWeekGoalDays;
 
     return Column(
@@ -29,15 +30,10 @@ class StreakOverviewSection extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            TextButton(
+            SectionActionButton(
+              label: 'View goals',
               onPressed: () => Navigator.pushNamed(context, '/goals'),
-              child: const Text(
-                'View goals',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              foregroundColor: AppColors.primaryDark,
             ),
           ],
         ),
@@ -51,7 +47,7 @@ class StreakOverviewSection extends StatelessWidget {
                 final isWide = constraints.maxWidth >= 640;
 
                 final streakBlock = _StreakSummary(
-                  currentStreak: currentStreak,
+                  goalsProvider: goalsProvider,
                   isCompact: !isWide,
                 );
 
@@ -101,40 +97,18 @@ class StreakOverviewSection extends StatelessWidget {
 }
 
 class _StreakSummary extends StatelessWidget {
-  final int currentStreak;
+  final GoalsProvider goalsProvider;
   final bool isCompact;
 
   const _StreakSummary({
-    required this.currentStreak,
+    required this.goalsProvider,
     required this.isCompact,
   });
 
-  String get _headline {
-    if (currentStreak == 0) return 'Light the flame today!';
-    if (currentStreak < 3) return 'The fire is catching!';
-    if (currentStreak < 7) return '$currentStreak days on fire!';
-    if (currentStreak < 14) return '$currentStreak days strong!';
-    return '$currentStreak days — unstoppable!';
-  }
-
-  String get _tagline {
-    if (currentStreak == 0) {
-      return 'One bold day is all it takes to spark something great.';
-    }
-    if (currentStreak < 3) {
-      return 'Momentum is building — ride the wave while it\'s hot.';
-    }
-    if (currentStreak < 7) {
-      return 'You\'re heating up. Stay locked in and keep the streak alive.';
-    }
-    if (currentStreak < 14) {
-      return 'Discipline is paying off. Don\'t cool down now.';
-    }
-    return 'This is elite consistency. Keep burning bright.';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final isRestDay = goalsProvider.isTodayRestDay;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -142,16 +116,22 @@ class _StreakSummary extends StatelessWidget {
           width: isCompact ? 56 : 64,
           height: isCompact ? 56 : 64,
           decoration: BoxDecoration(
-            color: AppColors.accentPeach.withValues(alpha: 0.18),
+            color: isRestDay
+                ? AppColors.freezeBlue.withValues(alpha: 0.14)
+                : AppColors.accentPeach.withValues(alpha: 0.18),
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.accentPeach.withValues(alpha: 0.35),
+              color: isRestDay
+                  ? AppColors.freezeBlue.withValues(alpha: 0.35)
+                  : AppColors.accentPeach.withValues(alpha: 0.35),
               width: 1.5,
             ),
           ),
           child: Icon(
-            Icons.local_fire_department,
-            color: AppColors.accentPeach,
+            isRestDay
+                ? AppIcons.freezeDay
+                : Icons.local_fire_department,
+            color: isRestDay ? AppIcons.freezeDayColor : AppColors.accentPeach,
             size: isCompact ? 30 : 34,
           ),
         ),
@@ -162,7 +142,7 @@ class _StreakSummary extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _headline,
+                goalsProvider.streakHeroTitle,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 18,
@@ -171,7 +151,7 @@ class _StreakSummary extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                _tagline,
+                goalsProvider.streakHeroSubtitle,
                 maxLines: isCompact ? 2 : 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(

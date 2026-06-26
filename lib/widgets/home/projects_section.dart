@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/project_provider.dart';
+import '../common/section_action_button.dart';
 
 class ProjectsSection extends StatelessWidget {
   const ProjectsSection({super.key});
@@ -27,17 +28,9 @@ class ProjectsSection extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/projects');
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primaryDark,
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(0, 0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: const Text('View All'),
+            SectionActionButton(
+              label: 'View All',
+              onPressed: () => Navigator.pushNamed(context, '/projects'),
             ),
           ],
         ),

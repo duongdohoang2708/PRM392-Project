@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/task_provider.dart';
 import '../task/task_list_item.dart';
+import '../common/section_action_button.dart';
 
 class UpNextTasksSection extends StatelessWidget {
   const UpNextTasksSection({super.key});
@@ -43,17 +44,10 @@ class UpNextTasksSection extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/task-list');
-              },
-              child: const Text(
-                'View All',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            SectionActionButton(
+              label: 'View All',
+              onPressed: () => Navigator.pushNamed(context, '/task-list'),
+              foregroundColor: AppColors.primaryDark,
             ),
           ],
         ),
