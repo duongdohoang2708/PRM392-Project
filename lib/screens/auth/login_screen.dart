@@ -5,6 +5,7 @@ import '../../widgets/common/app_scaffold.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/common/google_logo_icon.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -48,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       body: Stack(
         children: [
           // Background Pattern
@@ -78,11 +79,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Small steps, calm days, better focus.',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -93,12 +94,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       constraints: const BoxConstraints(maxWidth: 480),
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: AppColors.cardOf(context),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: AppColors.borderOf(context)),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.textPrimary.withAlpha(
+                            color: AppColors.textPrimaryOf(context).withAlpha(
                               (255 * 0.08).round(),
                             ),
                             blurRadius: 20,
@@ -109,33 +110,33 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Text(
+                          Text(
                             'Welcome back',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'Log in to continue your peaceful planner.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppColors.textSecondary,
+                              color: AppColors.textSecondaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 32),
 
                           // Email Input
-                          const Text(
+                          Text(
                             'Email address',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -151,12 +152,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 'Password',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.textPrimaryOf(context),
                                 ),
                               ),
                               GestureDetector(
@@ -206,8 +207,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 24),
                             child: Row(
                               children: [
-                                const Expanded(
-                                  child: Divider(color: AppColors.border),
+                                Expanded(
+                                  child: Divider(color: AppColors.borderOf(context)),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -218,13 +219,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
+                                      color: AppColors.textSecondaryOf(context),
                                       letterSpacing: 1,
                                     ),
                                   ),
                                 ),
-                                const Expanded(
-                                  child: Divider(color: AppColors.border),
+                                Expanded(
+                                  child: Divider(color: AppColors.borderOf(context)),
                                 ),
                               ],
                             ),
@@ -235,12 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             text: 'Continue with Google',
                             onPressed: () {},
                             isPrimary: false,
-                            // Use basic Material icon for Google for now, or text character
-                            icon: const Icon(
-                              Icons.g_mobiledata,
-                              size: 32,
-                              color: AppColors.textPrimary,
-                            ),
+                            icon: const GoogleLogoIcon(),
                           ),
                         ],
                       ),
@@ -251,11 +247,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Don't have an account? ",
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryOf(context),
                           ),
                         ),
                         GestureDetector(

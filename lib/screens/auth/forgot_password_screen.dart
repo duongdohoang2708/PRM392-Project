@@ -48,7 +48,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       body: Stack(
         children: [
           // Background Pattern
@@ -78,11 +78,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Don\'t worry, we\'ll get you back on track.',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -94,12 +94,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       constraints: const BoxConstraints(maxWidth: 480),
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: AppColors.cardOf(context),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: AppColors.borderOf(context)),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.textPrimary.withAlpha(
+                            color: AppColors.textPrimaryOf(context).withAlpha(
                               (255 * 0.08).round(),
                             ),
                             blurRadius: 20,
@@ -110,33 +110,33 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Text(
+                          Text(
                             'Reset Password',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'Enter your email address and we will send you a link to reset your password.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppColors.textSecondary,
+                              color: AppColors.textSecondaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 32),
 
                           // Email Input
-                          const Text(
+                          Text(
                             'Email address',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 8),

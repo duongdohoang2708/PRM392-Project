@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/background_pattern.dart';
-import '../../widgets/common/app_scaffold.dart';
 import '../../widgets/common/animations/app_fade_transition.dart';
 import 'login_screen.dart';
 
@@ -45,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
+    return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [

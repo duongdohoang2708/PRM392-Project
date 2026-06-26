@@ -5,6 +5,7 @@ import '../../widgets/common/app_scaffold.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/common/google_logo_icon.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -54,7 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       body: Stack(
         children: [
           // Background Pattern
@@ -84,11 +85,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Start managing your time and focus today.',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -100,12 +101,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       constraints: const BoxConstraints(maxWidth: 480),
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: AppColors.cardOf(context),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: AppColors.borderOf(context)),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.textPrimary.withAlpha(
+                            color: AppColors.textPrimaryOf(context).withAlpha(
                               (255 * 0.08).round(),
                             ),
                             blurRadius: 20,
@@ -116,24 +117,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Text(
+                          Text(
                             'Create Account',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 32),
 
                           // Name Input
-                          const Text(
+                          Text(
                             'Full Name',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -146,12 +147,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
 
                           // Email Input
-                          const Text(
+                          Text(
                             'Email address',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -164,12 +165,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
 
                           // Password Input
-                          const Text(
+                          Text(
                             'Password',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -186,12 +187,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
 
                           // Confirm Password Input
-                          const Text(
+                          Text(
                             'Confirm Password',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -231,7 +232,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
+                                      color: AppColors.textSecondaryOf(context),
                                       letterSpacing: 1,
                                     ),
                                   ),
@@ -248,11 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             text: 'Sign up with Google',
                             onPressed: () {},
                             isPrimary: false,
-                            icon: const Icon(
-                              Icons.g_mobiledata,
-                              size: 32,
-                              color: AppColors.textPrimary,
-                            ),
+                            icon: const GoogleLogoIcon(),
                           ),
                         ],
                       ),
@@ -263,11 +260,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Already have an account? ",
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryOf(context),
                           ),
                         ),
                         GestureDetector(
