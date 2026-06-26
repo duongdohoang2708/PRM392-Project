@@ -8,13 +8,15 @@ import '../../providers/focus_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
-import '../../widgets/custom_snackbar.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/focus/pomodoro_settings_popup.dart';
 import '../../widgets/focus/pomodoro_session_progress_card.dart';
 import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/focus/pomodoro_timer_carousel.dart';
 import '../../widgets/focus/task_selector_sheet.dart';
+import '../../widgets/common/section_action_button.dart';
+import '../../widgets/common/notification_bell_button.dart';
+import '../../widgets/common/app_scaffold.dart';
 import 'pomodoro_fullscreen_timer_screen.dart';
 
 class PomodoroScreen extends StatefulWidget {
@@ -159,6 +161,20 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   }
 
   @override
+  void deactivate() {
+    _liveTicker?.stop();
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    if (mounted) {
+      _syncLiveTicker(context.read<FocusProvider>());
+    }
+  }
+
+  @override
   void dispose() {
     _liveTicker?.dispose();
     super.dispose();
@@ -207,7 +223,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = MediaQuery.of(context).size.width >= 768;
+        final bool isDesktop = MediaQuery.sizeOf(context).width >= 768;
         final bool useTwoColumns = constraints.maxWidth >= 1024;
 
         final titleWidget = Padding(
@@ -295,7 +311,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           ],
         );
 
-        return Scaffold(
+        return AppScaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop
               ? null
@@ -344,15 +360,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_outlined,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
+        const NotificationBellButton(),
         const SizedBox(width: 8),
       ],
     );
@@ -880,6 +888,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             ],
           ),
           child: Row(
+            crossAxisAlignment: selectedTask == null
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: selectedTask == null
@@ -901,8 +912,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 8),
                           Wrap(
@@ -1034,11 +1043,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 color: AppColors.textPrimary,
               ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/focus-history');
-              },
-              child: const Text('View history'),
+            SectionActionButton(
+              label: 'View history',
+              onPressed: () => Navigator.pushNamed(context, '/focus-history'),
             ),
           ],
         ),

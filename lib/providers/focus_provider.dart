@@ -179,6 +179,7 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
       timeString: _getTimeString(),
       isRunning: _timerState == TimerState.running,
       remainingSeconds: remaining,
+      deadlineEpochMs: _expectedEndTime?.millisecondsSinceEpoch,
       taskName: _selectedTask?.title,
     );
   }
@@ -255,9 +256,6 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
     if (nextRemaining > 0) {
       final changed = nextRemaining != _remainingSeconds;
       _remainingSeconds = nextRemaining;
-      if (_timerState == TimerState.running) {
-        _updateNotification();
-      }
       if (changed) {
         notifyListeners();
       }
@@ -275,7 +273,6 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
 
     _timer?.cancel();
     _timerState = TimerState.running;
-    _updateNotification();
 
     _expectedEndTime = _deadlineFromRemainingSeconds(_remainingSeconds);
     _onTimerTick();
@@ -424,13 +421,13 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
         title: 'Prepare slides for presentation',
         taskId: '20',
         time: now.subtract(const Duration(days: 3, hours: 4)),
-        durationMinutes: 10,
+        durationMinutes: 35,
       ),
       FocusSessionLog(
         title: 'Polish dashboard cards',
         taskId: '2',
         time: now.subtract(const Duration(days: 3, hours: 7)),
-        durationMinutes: 20,
+        durationMinutes: 30,
       ),
       FocusSessionLog(
         title: 'Write test scenarios',
