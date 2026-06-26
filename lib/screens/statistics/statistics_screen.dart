@@ -7,10 +7,13 @@ import '../../providers/statistics_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
-import '../../widgets/custom_snackbar.dart';
 import '../../widgets/common/animations/app_horizontal_slide_transition.dart';
+import '../../widgets/common/animations/app_popup_transition.dart';
+import '../../widgets/common/app_date_picker.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
+import '../../widgets/common/notification_bell_button.dart';
+import '../../widgets/common/app_scaffold.dart';
 
 class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({super.key});
@@ -42,7 +45,7 @@ class StatisticsScreen extends StatelessWidget {
                               .textTheme
                               .headlineMedium
                               ?.copyWith(
-                                color: AppColors.textPrimary,
+                                color: AppColors.textPrimaryOf(context),
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -66,8 +69,8 @@ class StatisticsScreen extends StatelessWidget {
           ],
         );
 
-        return Scaffold(
-          backgroundColor: AppColors.background,
+        return AppScaffold(
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop
               ? null
               : const AppDrawer(
@@ -98,9 +101,9 @@ class StatisticsScreen extends StatelessWidget {
     required bool showMenuIcon,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      iconTheme: IconThemeData(color: AppColors.textPrimaryOf(context)),
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu),
@@ -113,14 +116,9 @@ class StatisticsScreen extends StatelessWidget {
           },
         ),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
-        const SizedBox(width: 8),
+      actions: const [
+        NotificationBellButton(),
+        SizedBox(width: 8),
       ],
     );
   }
@@ -140,9 +138,9 @@ class _StatisticsSegmentedControl extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Row(
         children: [
@@ -242,7 +240,7 @@ class _SegmentButton extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textSecondary,
+            color: selected ? Colors.white : AppColors.textSecondaryOf(context),
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -309,16 +307,16 @@ class _RangeChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryDark : AppColors.background,
+          color: selected ? AppColors.primaryDark : AppColors.backgroundOf(context),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: selected ? AppColors.primaryDark : AppColors.border,
+            color: selected ? AppColors.primaryDark : AppColors.borderOf(context),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textSecondary,
+            color: selected ? Colors.white : AppColors.textSecondaryOf(context),
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -342,18 +340,183 @@ class _OverviewCluster extends StatelessWidget {
   Widget build(BuildContext context) {
     return StatPanel(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          _RangeSelector(
-            activeRange: statsProvider.activeRange,
-            onChanged: statsProvider.setActiveRange,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 44),
+                child: _RangeSelector(
+                  activeRange: statsProvider.activeRange,
+                  onChanged: statsProvider.setActiveRange,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _PeriodNavigator(
+                label: statsProvider.periodLabel,
+                canGoForward: statsProvider.canShiftForward,
+                onPrevious: () => statsProvider.shiftPeriod(-1),
+                onNext: () => statsProvider.shiftPeriod(1),
+                onPick: () => _pickStatisticsPeriod(context, statsProvider),
+              ),
+              const SizedBox(height: 16),
+              ...children,
+            ],
           ),
-          const SizedBox(height: 16),
-          ...children,
+          Positioned(
+            top: 0,
+            right: 0,
+            child: _PeriodNavButton(
+              icon: Icons.today_outlined,
+              tooltip: 'Jump to current period',
+              onPressed: statsProvider.resetToCurrentPeriod,
+            ),
+          ),
         ],
       ),
     );
+  }
+}
+
+class _PeriodNavigator extends StatelessWidget {
+  final String label;
+  final bool canGoForward;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final VoidCallback onPick;
+
+  const _PeriodNavigator({
+    required this.label,
+    required this.canGoForward,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _PeriodNavButton(
+          icon: Icons.chevron_left,
+          onPressed: onPrevious,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: InkWell(
+            onTap: onPick,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundOf(context),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.borderOf(context)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 16,
+                    color: AppColors.primaryDark,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textPrimaryOf(context),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        _PeriodNavButton(
+          icon: Icons.chevron_right,
+          onPressed: canGoForward ? onNext : null,
+        ),
+      ],
+    );
+  }
+}
+
+class _PeriodNavButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+
+  const _PeriodNavButton({
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    final button = InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.backgroundOf(context),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderOf(context)),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: enabled
+              ? AppColors.primaryDark
+              : AppColors.textSecondaryOf(context).withValues(alpha: 0.4),
+        ),
+      ),
+    );
+
+    if (tooltip == null) return button;
+    return Tooltip(message: tooltip!, child: button);
+  }
+}
+
+Future<void> _pickStatisticsPeriod(
+  BuildContext context,
+  StatisticsProvider provider,
+) async {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final initialDate =
+      provider.anchorDate.isAfter(today) ? today : provider.anchorDate;
+
+  final title = switch (provider.activeRange) {
+    StatisticsRange.today => 'Select a day',
+    StatisticsRange.week => 'Select a day in the week',
+    StatisticsRange.month => 'Select a day in the month',
+  };
+
+  final picked = await showAppDatePicker(
+    context,
+    anchor: popupAnchorFromContext(context),
+    initialDate: initialDate,
+    firstDate: DateTime(2020, 1, 1),
+    lastDate: today,
+    title: title,
+  );
+
+  if (picked != null && context.mounted) {
+    provider.setAnchorDate(picked);
   }
 }
 
@@ -365,7 +528,8 @@ class _FocusStatisticsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = statsProvider.focusStats;
-    final recent = statsProvider.recentSessions(limit: 5);
+    final recent = statsProvider.recentSessionsInRange(limit: 5);
+    final granularity = statsProvider.chartGranularityLabel;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +562,7 @@ class _FocusStatisticsContent extends StatelessWidget {
                 ),
                 _StatCardModel(
                   title: 'Longest',
-                  value: '${statsProvider.longestSessionMinutes}m',
+                  value: '${data.longestMinutes}m',
                   icon: Icons.emoji_events_outlined,
                   color: AppColors.accentPink,
                   bgColor: AppColors.accentPink.withValues(alpha: 0.15),
@@ -406,20 +570,24 @@ class _FocusStatisticsContent extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const _ClusterChartHeader(title: 'Focus Minutes by Day'),
+            _ClusterChartHeader(title: 'Focus Minutes by $granularity'),
             const SizedBox(height: 12),
             StatBarChart(
+              key: ValueKey('focus-chart-${statsProvider.chartPeriodKey}'),
               points: data.minutesBars,
-              activeColor: AppColors.primaryDark,
-              idleColor: AppColors.primaryLight,
+              activeColor: AppColors.chartBarActiveOf(context),
+              idleColor: AppColors.chartBarIdleOf(context),
               unitSuffix: 'm',
+              periodKey: statsProvider.chartPeriodKey,
             ),
           ],
         ),
         const SizedBox(height: 16),
+        FocusGoalProgressPanel(data: data.goalProgress),
+        const SizedBox(height: 16),
         _SessionsSection(
-          totalSessions: statsProvider.totalSessions,
-          averageMinutes: statsProvider.averageSessionMinutes,
+          totalSessions: statsProvider.totalSessionsInRange,
+          averageMinutes: statsProvider.averageSessionMinutesInRange,
           recentSessions: recent,
           onViewAll: () => Navigator.pushNamed(context, '/focus-history'),
         ),
@@ -436,6 +604,7 @@ class _TaskStatisticsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = statsProvider.taskStats;
+    final granularity = statsProvider.chartGranularityLabel;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,7 +646,7 @@ class _TaskStatisticsContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _ClusterChartHeader(
-              title: 'Task Completion by Day',
+              title: 'Task Completion by $granularity',
               trailing: Text(
                 '${data.completionRate}%',
                 style: const TextStyle(
@@ -489,9 +658,11 @@ class _TaskStatisticsContent extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             StatBarChart(
+              key: ValueKey('task-chart-${statsProvider.chartPeriodKey}'),
               points: data.completionBars,
-              activeColor: AppColors.primaryDark,
-              idleColor: AppColors.primaryLight,
+              activeColor: AppColors.chartBarActiveOf(context),
+              idleColor: AppColors.chartBarIdleOf(context),
+              periodKey: statsProvider.chartPeriodKey,
             ),
             const SizedBox(height: 20),
             const _ClusterChartHeader(title: 'Priority Breakdown'),
@@ -499,6 +670,8 @@ class _TaskStatisticsContent extends StatelessWidget {
             PriorityBreakdownChart(data: data.priorityBreakdown),
           ],
         ),
+        const SizedBox(height: 16),
+        TaskDueInsightPanel(data: data.dueSummary),
       ],
     );
   }
@@ -517,8 +690,8 @@ class _ClusterChartHeader extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: AppColors.textPrimaryOf(context),
               fontSize: 15,
               fontWeight: FontWeight.w700,
             ),
@@ -581,22 +754,22 @@ class _SessionsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Recent completed sessions',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: AppColors.textSecondaryOf(context),
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 12),
           if (recentSessions.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                'No focus sessions yet.',
+                'No focus sessions in this range.',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondaryOf(context),
                   fontWeight: FontWeight.w500,
                   fontSize: 13,
                 ),
@@ -641,9 +814,9 @@ class _SessionMetric extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.backgroundOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -657,8 +830,8 @@ class _SessionMetric extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -669,8 +842,8 @@ class _SessionMetric extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: AppColors.textPrimaryOf(context),
               fontSize: 18,
               fontWeight: FontWeight.w800,
             ),
@@ -734,6 +907,7 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -747,7 +921,9 @@ class _StatCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: isDark
+                  ? AppColors.cardOf(context)
+                  : Colors.white.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(card.icon, color: card.color, size: 22),
@@ -762,8 +938,8 @@ class _StatCard extends StatelessWidget {
                   card.value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: AppColors.textPrimaryOf(context),
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
@@ -773,8 +949,8 @@ class _StatCard extends StatelessWidget {
                   card.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),

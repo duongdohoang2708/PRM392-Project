@@ -11,6 +11,7 @@ import '../../widgets/task/task_list_item.dart';
 import '../../widgets/project/project_create_task_popup.dart';
 import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/custom_snackbar.dart';
+import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/staggered_list_entry.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
@@ -45,27 +46,27 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       context: parentContext,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.surface,
+          backgroundColor: AppColors.surfaceOf(parentContext),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: const Text(
+          title: Text(
             'Delete Project',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(parentContext),
             ),
           ),
           content: Text(
             'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColors.textSecondaryOf(parentContext)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text(
+              child: Text(
                 'Cancel',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: AppColors.textSecondaryOf(parentContext)),
               ),
             ),
             TextButton(
@@ -117,19 +118,19 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
     if (project.id.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.backgroundOf(context),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary),
+            icon: Icon(Icons.chevron_left, color: AppColors.textPrimaryOf(context)),
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        body: const Center(
+        body: Center(
           child: Text(
             'Project not found',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 16),
           ),
         ),
       );
@@ -169,7 +170,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+        color: Color.alphaBlend(
+            projectColor.withValues(alpha: 0.08), AppColors.surfaceOf(context)),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
@@ -202,7 +204,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     Text(
                       project.name,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -236,7 +238,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               project.description,
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
                 height: 1.4,
               ),
             ),
@@ -249,7 +251,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+        color: Color.alphaBlend(
+            projectColor.withValues(alpha: 0.08), AppColors.surfaceOf(context)),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
@@ -266,12 +269,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Project Progress',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
               AnimatedSwitcher(
@@ -301,7 +304,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 width: double.infinity,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: AppColors.backgroundOf(context),
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Align(
@@ -325,16 +328,18 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildStatItem(
+                context,
                 'Tasks completed',
                 '$doneCount/$totalCount',
                 Icons.check_circle_outline,
                 projectColor,
               ),
               _buildStatItem(
+                context,
                 'Active tasks',
                 '${activeTasks.length}',
                 Icons.hourglass_empty,
-                AppColors.textSecondary,
+                AppColors.textSecondaryOf(context),
               ),
             ],
           ),
@@ -350,10 +355,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           alignment: Alignment.centerLeft,
           child: Text(
             'Tasks (${activeTasks.length})',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
           ),
         ),
@@ -363,7 +368,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
             decoration: BoxDecoration(
-              color: Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+              color: Color.alphaBlend(
+            projectColor.withValues(alpha: 0.08), AppColors.surfaceOf(context)),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
             ),
@@ -375,10 +381,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   color: projectColor.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'No active tasks',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 14,
                   ),
                 ),
@@ -417,14 +423,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondaryOf(context),
                   ),
                 ),
                 Icon(
                   _showCompleted
                       ? Icons.keyboard_arrow_up
                       : Icons.keyboard_arrow_down,
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondaryOf(context),
                 ),
               ],
             ),
@@ -480,7 +486,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             'Project Details',
                             style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.textPrimaryOf(context),
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -498,12 +504,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                         Container(
                                           height: 40,
                                           alignment: Alignment.centerLeft,
-                                          child: const Text(
+                                          child: Text(
                                             'Overview',
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: AppColors.textPrimary,
+                                              color: AppColors.textPrimaryOf(context),
                                             ),
                                           ),
                                         ),
@@ -561,7 +567,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             'Project Details',
                             style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.textPrimaryOf(context),
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -583,7 +589,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         }
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop
               ? null
               : const AppDrawer(isPermanent: false, activeRoute: '/projects'),
@@ -619,9 +625,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     required bool isDesktop,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      iconTheme: IconThemeData(color: AppColors.textPrimaryOf(context)),
       leadingWidth: 96,
       leading: Row(
         mainAxisSize: MainAxisSize.min,
@@ -661,19 +667,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           tooltip: 'Delete Project',
           onPressed: () => _confirmDeleteProject(context, project),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          tooltip: 'Notifications',
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
+        const NotificationBellButton(),
         const SizedBox(width: 8),
       ],
     );
   }
 
   Widget _buildStatItem(
+    BuildContext context,
     String title,
     String value,
     IconData icon,
@@ -688,17 +689,17 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           children: [
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
               ),
             ),
           ],

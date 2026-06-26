@@ -10,6 +10,7 @@ Future<String?> showCustomReminderPopup(
   required bool isAllDay,
   String? initialReminder,
   Offset? anchor,
+  Color accentColor = AppColors.primaryDark,
 }) {
   return showAppPopup<String>(
     context: context,
@@ -17,6 +18,7 @@ Future<String?> showCustomReminderPopup(
     child: CustomReminderPopup(
       isAllDay: isAllDay,
       initialReminder: initialReminder,
+      accentColor: accentColor,
     ),
   );
 }
@@ -24,11 +26,13 @@ Future<String?> showCustomReminderPopup(
 class CustomReminderPopup extends StatefulWidget {
   final bool isAllDay;
   final String? initialReminder;
+  final Color accentColor;
 
   const CustomReminderPopup({
     super.key,
     required this.isAllDay,
     this.initialReminder,
+    this.accentColor = AppColors.primaryDark,
   });
 
   @override
@@ -105,19 +109,16 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
+    final onAccent = ThemeData.estimateBrightnessForColor(widget.accentColor) ==
+            Brightness.dark
+        ? Colors.white
+        : AppColors.textPrimaryOf(context);
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: isMobile
-          ? const EdgeInsets.all(16)
-          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          width: isMobile ? double.infinity : 400,
-          decoration: BoxDecoration(
-            color: AppColors.background,
+    return AppPopupShell(
+      alignment: Alignment.centerRight,
+      child: Container(
+        decoration: BoxDecoration(
+            color: AppColors.backgroundOf(context),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -142,35 +143,35 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Custom reminder',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: AppColors.textPrimaryOf(context),
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.close,
-                          color: AppColors.textSecondary,
+                          color: AppColors.textSecondaryOf(context),
                         ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
                   ),
                 ),
-                const Divider(color: AppColors.border, height: 1),
+                Divider(color: AppColors.borderOf(context), height: 1),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       _previewLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primaryDark,
+                        color: widget.accentColor,
                       ),
                     ),
                   ),
@@ -192,9 +193,9 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                             (index) => Center(
                               child: Text(
                                 '${index + 1}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 20,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.textPrimaryOf(context),
                                 ),
                               ),
                             ),
@@ -214,9 +215,9 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                                 (unit) => Center(
                                   child: Text(
                                     TaskReminder.unitPickerLabel(unit, _value),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 20,
-                                      color: AppColors.textPrimary,
+                                      color: AppColors.textPrimaryOf(context),
                                     ),
                                   ),
                                 ),
@@ -228,7 +229,7 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                   ),
                 ),
                 if (widget.isAllDay) ...[
-                  const Divider(color: AppColors.border, height: 1),
+                  Divider(color: AppColors.borderOf(context), height: 1),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
                     child: Align(
@@ -238,13 +239,14 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary.withValues(alpha: 0.9),
+                          color: AppColors.textSecondaryOf(context).withValues(alpha: 0.9),
                         ),
                       ),
                     ),
                   ),
                   AppCupertinoTimePicker(
                     time: _notificationTime,
+                    accentColor: widget.accentColor,
                     onTimeChanged: (time) {
                       setState(() => _notificationTime = time);
                     },
@@ -256,8 +258,8 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
                     onPressed: _save,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
-                      backgroundColor: AppColors.primaryDark,
-                      foregroundColor: Colors.white,
+                      backgroundColor: widget.accentColor,
+                      foregroundColor: onAccent,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
                       ),
@@ -272,7 +274,6 @@ class _CustomReminderPopupState extends State<CustomReminderPopup> {
             ),
           ),
         ),
-      ),
     );
   }
 }

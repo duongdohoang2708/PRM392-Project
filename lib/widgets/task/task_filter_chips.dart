@@ -43,7 +43,7 @@ class TaskFilterChips extends StatelessWidget {
               : Colors.transparent;
           Color borderColor = isSelected
               ? Colors.transparent
-              : AppColors.border;
+              : AppColors.borderOf(context);
           Color textColor = isSelected
               ? Colors.white
               : AppColors.textSecondaryOf(context);

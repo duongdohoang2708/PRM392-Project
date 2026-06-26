@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../providers/drawer_provider.dart';
-import 'custom_snackbar.dart';
 
 class AppDrawer extends StatelessWidget {
   final bool isPermanent;
@@ -42,7 +41,7 @@ class AppDrawer extends StatelessWidget {
             left: 24,
             right: 24,
           ),
-          decoration: const BoxDecoration(color: AppColors.primaryLight),
+          decoration: BoxDecoration(color: AppColors.drawerHeaderOf(context)),
           child: Row(
             children: [
               const CircleAvatar(
@@ -60,15 +59,15 @@ class AppDrawer extends StatelessWidget {
                     children: [
                       Text(
                         greeting,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
                           fontSize: 14,
                         ),
                       ),
-                      const Text(
+                      Text(
                         'Dương',
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: AppColors.textPrimaryOf(context),
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -186,7 +185,7 @@ class AppDrawer extends StatelessWidget {
                   }
                 },
               ),
-              const Divider(height: 32, color: AppColors.border),
+              Divider(height: 32, color: AppColors.borderOf(context)),
               _buildMenuItem(
                 context,
                 icon: Icons.timer,
@@ -257,20 +256,52 @@ class AppDrawer extends StatelessWidget {
                   }
                 },
               ),
-              const Divider(height: 32, color: AppColors.border),
+              Divider(height: 32, color: AppColors.borderOf(context)),
               _buildMenuItem(
                 context,
                 icon: Icons.notifications_outlined,
                 title: 'Notifications',
+                isActive: activeRoute == '/notifications',
                 isCollapsed: isDesktopCollapsed,
-                onTap: () => _showComingSoon(context),
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context);
+                  }
+                  if (activeRoute != '/notifications') {
+                    if (onNavigate != null) {
+                      onNavigate!('/notifications');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamed(context, '/notifications');
+                        }
+                      });
+                    }
+                  }
+                },
               ),
               _buildMenuItem(
                 context,
                 icon: Icons.settings_outlined,
                 title: 'Settings',
+                isActive: activeRoute.startsWith('/settings'),
                 isCollapsed: isDesktopCollapsed,
-                onTap: () => _showComingSoon(context),
+                onTap: () {
+                  if (!isPermanent) {
+                    Navigator.pop(context);
+                  }
+                  if (activeRoute != '/settings') {
+                    if (onNavigate != null) {
+                      onNavigate!('/settings');
+                    } else {
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        if (context.mounted) {
+                          Navigator.pushNamed(context, '/settings');
+                        }
+                      });
+                    }
+                  }
+                },
               ),
             ],
           ),
@@ -283,9 +314,11 @@ class AppDrawer extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         width: width,
         clipBehavior: Clip.hardEdge,
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(right: BorderSide(color: AppColors.border, width: 1)),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          border: Border(
+            right: BorderSide(color: AppColors.borderOf(context), width: 1),
+          ),
         ),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -299,7 +332,7 @@ class AppDrawer extends StatelessWidget {
     }
 
     return Drawer(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.surfaceOf(context),
       child: drawerContent,
     );
   }
@@ -312,9 +345,11 @@ class AppDrawer extends StatelessWidget {
     bool isCollapsed = false,
     required VoidCallback onTap,
   }) {
-    final color = isActive ? AppColors.primaryDark : AppColors.textSecondary;
+    final activeColor =
+        AppColors.isDark(context) ? AppColors.primary : AppColors.primaryDark;
+    final color = isActive ? activeColor : AppColors.textSecondaryOf(context);
     final bgColor = isActive
-        ? AppColors.primaryLight.withAlpha((255 * 0.3).round())
+        ? AppColors.primaryLightTintOf(context)
         : Colors.transparent;
 
     return Padding(
@@ -343,7 +378,7 @@ class AppDrawer extends StatelessWidget {
                     child: Text(
                       title,
                       style: TextStyle(
-                        color: isActive ? AppColors.primaryDark : AppColors.textPrimary,
+                        color: isActive ? activeColor : AppColors.textPrimaryOf(context),
                         fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                       ),
                     ),
@@ -357,11 +392,5 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  void _showComingSoon(BuildContext context) {
-    if (!isPermanent) {
-      Navigator.pop(context); // close drawer first
-    }
-    AppNotification.showInfo(context, 'Feature coming soon!');
-  }
 }
 

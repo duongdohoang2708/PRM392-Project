@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../common/app_popup_transition.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
 import '../custom_snackbar.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
 
 class CreateProjectPopup extends StatefulWidget {
   const CreateProjectPopup({super.key});
@@ -132,22 +133,11 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
-
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: isMobile
-          ? const EdgeInsets.all(16)
-          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          width: isMobile ? double.infinity : 400,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.background,
+    return AppPopupShell(
+      alignment: Alignment.centerRight,
+      child: Container(
+        decoration: BoxDecoration(
+            color: AppColors.backgroundOf(context),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -174,27 +164,29 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Create Project',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.close,
-                              color: AppColors.textSecondary,
+                              color: AppColors.textSecondaryOf(context),
                             ),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
                     ),
-                    const Divider(color: AppColors.border, height: 1),
+                    Divider(color: AppColors.borderOf(context), height: 1),
                     Flexible(
-                      child: SingleChildScrollView(
+                      child: KeyboardAwareSingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,7 +250,6 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -266,9 +257,16 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(_accentColor.withValues(alpha: 0.08), AppColors.surface),
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _accentColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(color: AppColors.borderOf(context)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: child,
     );
@@ -281,14 +279,14 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
         children: [
           Row(
             children: [
-              Icon(Icons.edit_outlined, color: _accentColor, size: 20),
+              Icon(Icons.edit_outlined, color: AppColors.primaryDark, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Project Name',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -297,15 +295,15 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
           TextField(
             controller: _nameController,
             onChanged: (_) => setState(() {}),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Enter project name...',
               hintStyle: TextStyle(
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
                 fontWeight: FontWeight.normal,
               ),
               border: InputBorder.none,
@@ -327,14 +325,14 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
         children: [
           Row(
             children: [
-              Icon(Icons.description_outlined, color: _accentColor, size: 20),
+              Icon(Icons.description_outlined, color: AppColors.primaryDark, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Description',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -344,14 +342,14 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
             controller: _descriptionController,
             onChanged: (_) => setState(() {}),
             maxLines: 3,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               height: 1.5,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Describe your project...',
-              hintStyle: TextStyle(color: AppColors.textSecondary),
+              hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
@@ -375,14 +373,14 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
         children: [
           Row(
             children: [
-              Icon(Icons.emoji_emotions_outlined, color: _accentColor, size: 20),
+              Icon(Icons.emoji_emotions_outlined, color: AppColors.primaryDark, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Project Icon',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -399,24 +397,27 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedIconIndex == index;
+              final accent = AppColors.projectAccentOf(context, _accentColor);
               return GestureDetector(
                 onTap: () => setState(() => _selectedIconIndex = index),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? _accentColor.withValues(alpha: 0.2)
-                        : AppColors.background,
+                        ? accent.withValues(alpha: 0.2)
+                        : AppColors.insetSurfaceOf(context),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isSelected ? _accentColor : AppColors.border,
+                      color: isSelected ? accent : AppColors.borderOf(context),
                       width: isSelected ? 2 : 1,
                     ),
                   ),
                   child: Center(
                     child: Icon(
                       CreateProjectPopup.projectIcons[index],
-                      color: isSelected ? _accentColor : AppColors.textSecondary,
+                      color: isSelected
+                          ? accent
+                          : AppColors.textSecondaryOf(context),
                       size: 22,
                     ),
                   ),
@@ -432,13 +433,13 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
                   onPressed: () => setState(() => _showAllIcons = !_showAllIcons),
                   icon: Icon(
                     _showAllIcons ? Icons.expand_less : Icons.expand_more,
-                    color: _accentColor,
+                    color: AppColors.primaryDark,
                     size: 20,
                   ),
                   label: Text(
                     _showAllIcons ? 'Show Less' : 'Show More',
-                    style: TextStyle(
-                      color: _accentColor,
+                    style: const TextStyle(
+                      color: AppColors.primaryDark,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -462,14 +463,14 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
         children: [
           Row(
             children: [
-              Icon(Icons.palette_outlined, color: _accentColor, size: 20),
+              Icon(Icons.palette_outlined, color: AppColors.primaryDark, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Project Color',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -486,22 +487,24 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedColorIndex == index;
-              final color = CreateProjectPopup.projectColors[index];
+              final raw = CreateProjectPopup.projectColors[index];
+              final color = AppColors.projectAccentOf(context, raw);
+              final isDark = AppColors.isDark(context);
               return GestureDetector(
                 onTap: () => setState(() => _selectedColorIndex = index),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: isSelected ? 1.0 : 0.6),
+                    color: color.withValues(alpha: isSelected ? 1.0 : (isDark ? 0.65 : 0.6)),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected ? AppColors.textPrimary : Colors.transparent,
+                      color: isSelected ? AppColors.textPrimaryOf(context) : Colors.transparent,
                       width: 2.5,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: color.withValues(alpha: 0.4),
+                              color: AppColors.projectGlowOf(context, raw),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -525,13 +528,13 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
                   onPressed: () => setState(() => _showAllColors = !_showAllColors),
                   icon: Icon(
                     _showAllColors ? Icons.expand_less : Icons.expand_more,
-                    color: _accentColor,
+                    color: AppColors.primaryDark,
                     size: 20,
                   ),
                   label: Text(
                     _showAllColors ? 'Show Less' : 'Show More',
-                    style: TextStyle(
-                      color: _accentColor,
+                    style: const TextStyle(
+                      color: AppColors.primaryDark,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -549,11 +552,8 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
       onPressed: _createProject,
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 48),
-        backgroundColor: _accentColor,
-        foregroundColor:
-            ThemeData.estimateBrightnessForColor(_accentColor) == Brightness.dark
-            ? Colors.white
-            : AppColors.textPrimary,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),

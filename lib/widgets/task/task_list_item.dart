@@ -360,16 +360,18 @@ class _TaskListItemState extends State<TaskListItem>
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.surface,
-          title: const Text('Timer is running', style: TextStyle(color: AppColors.textPrimary)),
-          content: const Text(
+          backgroundColor: AppColors.surfaceOf(context),
+          title: Text('Timer is running',
+              style: TextStyle(color: AppColors.textPrimaryOf(context))),
+          content: Text(
             'You currently have an active focus session. Starting this task will reset the current timer. Do you want to proceed?',
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColors.textSecondaryOf(context)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text('Cancel',
+                  style: TextStyle(color: AppColors.textSecondaryOf(context))),
             ),
             ElevatedButton(
               onPressed: () {
@@ -423,8 +425,11 @@ class _TaskListItemState extends State<TaskListItem>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _isCompletedLocal
-            ? AppColors.background
-            : Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+            ? AppColors.backgroundOf(context)
+            : Color.alphaBlend(
+                projectColor.withValues(alpha: 0.08),
+                AppColors.surfaceOf(context),
+              ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: _isCompletedLocal
@@ -547,7 +552,7 @@ class _TaskListItemState extends State<TaskListItem>
                                           ? AppColors.primaryDark
                                           : (isOverdue
                                                 ? const Color(0xFFE57373)
-                                                : AppColors.textPrimary),
+                                                : AppColors.textPrimaryOf(context)),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -557,7 +562,7 @@ class _TaskListItemState extends State<TaskListItem>
                                             ? AppColors.primaryDark
                                             : (isOverdue
                                                   ? const Color(0xFFE57373)
-                                                  : AppColors.textPrimary),
+                                                  : AppColors.textPrimaryOf(context)),
                                         fontWeight: isOverdue || _isCompletedLocal
                                             ? FontWeight.bold
                                             : FontWeight.w600,
@@ -586,7 +591,7 @@ class _TaskListItemState extends State<TaskListItem>
                     widget.task.isImportant ? Icons.star : Icons.star_border,
                     color: widget.task.isImportant
                         ? AppColors.accentYellow
-                        : AppColors.textSecondary.withValues(alpha: 0.5),
+                        : AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -597,7 +602,7 @@ class _TaskListItemState extends State<TaskListItem>
                     Icons.play_circle_fill,
                     size: 28,
                     color: _isCompletedLocal
-                        ? AppColors.textSecondary.withValues(alpha: 0.5)
+                        ? AppColors.textSecondaryOf(context).withValues(alpha: 0.5)
                         : projectColor,
                   ),
                 ),
@@ -610,7 +615,7 @@ class _TaskListItemState extends State<TaskListItem>
                   },
                   child: Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondaryOf(context),
                   ),
                 ),
               ],
@@ -628,7 +633,7 @@ class _TaskListItemState extends State<TaskListItem>
                       children: [
                         const SizedBox(height: 12),
                         if (widget.task.subTasks.isNotEmpty) ...[
-                          const Divider(color: AppColors.border, height: 1),
+                          Divider(color: AppColors.borderOf(context), height: 1),
                           const SizedBox(height: 12),
                           ...widget.task.subTasks.map((subTask) {
                             return Padding(
@@ -744,11 +749,14 @@ class _TaskListItemState extends State<TaskListItem>
   }
 
   Widget _buildTitleText(ThemeData theme) {
+    final bool isDark = theme.brightness == Brightness.dark;
+    final Color primaryColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final Color secondaryColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
     final style = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
-      color: _isCompletedLocal
-          ? AppColors.textSecondary
-          : AppColors.textPrimary,
+      color: _isCompletedLocal ? secondaryColor : primaryColor,
     );
 
     if (_strikeAnimation == null) {
@@ -757,7 +765,7 @@ class _TaskListItemState extends State<TaskListItem>
         style: style?.copyWith(
           decoration:
               _isCompletedLocal ? TextDecoration.lineThrough : TextDecoration.none,
-          decorationColor: AppColors.textSecondary,
+          decorationColor: secondaryColor,
         ),
       );
     }
@@ -769,7 +777,7 @@ class _TaskListItemState extends State<TaskListItem>
           text: widget.task.title,
           style: style!,
           progress: _strikeAnimation!.value,
-          lineColor: AppColors.textSecondary,
+          lineColor: secondaryColor,
         );
       },
     );
@@ -835,9 +843,9 @@ class _EditableSubTaskRowState extends State<_EditableSubTaskRow> {
           child: TextField(
             controller: _controller,
             autofocus: widget.autofocus,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
             decoration: const InputDecoration(
               hintText: 'Enter subtask...',
@@ -853,10 +861,10 @@ class _EditableSubTaskRowState extends State<_EditableSubTaskRow> {
           ),
         ),
         IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.close,
             size: 18,
-            color: AppColors.textSecondary,
+            color: AppColors.textSecondaryOf(context),
           ),
           onPressed: widget.onDelete,
           padding: EdgeInsets.zero,

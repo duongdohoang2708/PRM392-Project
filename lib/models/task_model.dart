@@ -28,6 +28,7 @@ class Task {
   final bool isImportant;
   final bool isAllDay;
   final String notes;
+  final String reminder;
   final List<SubTask> subTasks;
 
   Task({
@@ -42,6 +43,7 @@ class Task {
     this.isImportant = false,
     this.isAllDay = false,
     this.notes = '',
+    this.reminder = 'None',
     this.subTasks = const [],
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -56,6 +58,7 @@ class Task {
     bool? isImportant,
     bool? isAllDay,
     String? notes,
+    String? reminder,
     List<SubTask>? subTasks,
   }) {
     return Task(
@@ -70,6 +73,7 @@ class Task {
       isImportant: isImportant ?? this.isImportant,
       isAllDay: isAllDay ?? this.isAllDay,
       notes: notes ?? this.notes,
+      reminder: reminder ?? this.reminder,
       subTasks: subTasks ?? this.subTasks,
     );
   }

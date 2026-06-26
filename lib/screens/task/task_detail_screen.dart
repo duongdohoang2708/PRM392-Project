@@ -13,10 +13,15 @@ import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/project/create_project_popup.dart';
 import '../../widgets/task/reminder_selector.dart';
+import '../../widgets/task/subtask_title_field.dart';
 import '../../widgets/common/app_time_picker.dart';
 import '../../widgets/common/app_date_picker.dart';
+import '../../widgets/common/app_dropdown.dart';
 import '../../widgets/common/app_popup_transition.dart';
+import '../../widgets/common/notification_bell_button.dart';
 import '../../utils/reminder/task_reminder.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
+import '../../widgets/common/app_scaffold.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final String taskId;
@@ -67,7 +72,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     _isImportant = task.isImportant;
     _isAllDay = task.isAllDay;
     _subTasks = List.from(task.subTasks);
-    _reminder = TaskReminder.coerceForMode('1 hour before', _isAllDay);
+    _reminder = TaskReminder.coerceForMode(task.reminder, _isAllDay);
 
     final focusProvider = Provider.of<FocusProvider>(context, listen: false);
     _focusMinutes = focusProvider.focusMinutes;
@@ -105,6 +110,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
+      reminder: _reminder,
     );
 
     taskProvider.updateTask(updatedTask);
@@ -128,20 +134,27 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       context: parentContext,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.surface,
+          backgroundColor: AppColors.cardOf(dialogContext),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: const Text('Delete Task'),
-          content: const Text(
+          title: Text(
+            'Delete Task',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimaryOf(dialogContext),
+            ),
+          ),
+          content: Text(
             'Are you sure you want to delete this task? This action cannot be undone.',
+            style: TextStyle(color: AppColors.textSecondaryOf(dialogContext)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text(
+              child: Text(
                 'Cancel',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: AppColors.textSecondaryOf(dialogContext)),
               ),
             ),
             TextButton(
@@ -177,9 +190,21 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     if (pickedDate != null) {
       setState(() {
         if (_dueDate == null) {
-          _dueDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, 12, 0);
+          _dueDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            12,
+            0,
+          );
         } else {
-          _dueDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, _dueDate!.hour, _dueDate!.minute);
+          _dueDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            _dueDate!.hour,
+            _dueDate!.minute,
+          );
         }
       });
     }
@@ -197,7 +222,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     if (pickedTime != null) {
       setState(() {
         final date = _dueDate ?? DateTime.now();
-        _dueDate = DateTime(date.year, date.month, date.day, pickedTime.hour, pickedTime.minute);
+        _dueDate = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
       });
     }
   }
@@ -236,11 +267,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         colorValue: AppColors.primary.toARGB32(),
       ),
     );
-    final Color projectColor = Color(projectObj.colorValue);
+    final Color rawProjectColor = Color(projectObj.colorValue);
 
     final projects = provider.availableProjects
         .where((p) => p != 'All Projects')
         .toList();
+    if (!projects.contains('None')) {
+      projects.insert(0, 'None');
+    }
     if (!projects.contains(_project)) {
       projects.add(_project);
     }
@@ -250,7 +284,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       child: Text(
         'Task Details',
         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-          color: AppColors.textPrimary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -258,49 +291,49 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = MediaQuery.of(context).size.width >= 768;
+        final bool isDesktop = MediaQuery.sizeOf(context).width >= 768;
         final bool useTwoColumns = constraints.maxWidth >= 1024;
 
         // Main Columns
         final leftColumnWidgets = [
           // Title card
-          _buildTitleCard(projectColor),
+          _buildTitleCard(rawProjectColor),
           const SizedBox(height: 16),
 
           // Task details info for Mobile/Tablet only
           if (!useTwoColumns) ...[
-            _buildInfoCard(projects, projectColor),
+            _buildInfoCard(projects, rawProjectColor),
             const SizedBox(height: 16),
           ],
 
           // Pomodoro focus card
-          _buildPomodoroCard(projectColor),
+          _buildPomodoroCard(rawProjectColor),
           const SizedBox(height: 16),
 
           // Subtasks card for Mobile/Tablet only
           if (!useTwoColumns) ...[
-            _buildSubtasksCard(projectColor),
+            _buildSubtasksCard(rawProjectColor),
             const SizedBox(height: 16),
           ],
 
           // Notes card
-          _buildNotesCard(projectColor),
+          _buildNotesCard(rawProjectColor),
 
           // Bottom actions for Mobile/Tablet only
           if (!useTwoColumns) ...[
             const SizedBox(height: 24),
-            _buildActionButtons(projectColor),
+            _buildActionButtons(rawProjectColor),
           ],
         ];
 
         final rightColumnWidgets = [
           // Task details info for Desktop only
           if (useTwoColumns) ...[
-            _buildInfoCard(projects, projectColor),
+            _buildInfoCard(projects, rawProjectColor),
             const SizedBox(height: 16),
-            _buildSubtasksCard(projectColor),
+            _buildSubtasksCard(rawProjectColor),
             const SizedBox(height: 16),
-            _buildActionButtons(projectColor),
+            _buildActionButtons(rawProjectColor),
           ],
         ];
 
@@ -312,7 +345,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
-                  child: SingleChildScrollView(
+                  child: KeyboardAwareSingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,8 +389,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ],
         );
 
-        return Scaffold(
-          backgroundColor: AppColors.background,
+        return AppScaffold(
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop
               ? null
               : const AppDrawer(isPermanent: false, activeRoute: '/task-list'),
@@ -383,7 +418,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     required bool isDesktop,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
       leadingWidth: 96,
       leading: Row(
@@ -391,7 +426,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         children: [
           Builder(
             builder: (context) => IconButton(
-              icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+              icon: Icon(Icons.menu, color: AppColors.textPrimaryOf(context)),
               onPressed: () {
                 if (isDesktop) {
                   context.read<DrawerProvider>().toggleDesktopCollapse();
@@ -402,10 +437,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.chevron_left,
               size: 28,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
             onPressed: () => Navigator.pop(context),
           ),
@@ -413,34 +448,27 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(
-            Icons.delete_outline,
-            color: AppColors.textPrimary,
-          ),
+          icon: Icon(Icons.delete_outline, color: AppColors.textPrimaryOf(context)),
           tooltip: 'Delete Task',
           onPressed: () => _confirmDeleteTask(context),
         ),
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_outlined,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
+        const NotificationBellButton(),
         const SizedBox(width: 8),
       ],
     );
   }
 
   Widget _buildTitleCard(Color projectColor) {
+    final accent = AppColors.projectAccentOf(context, projectColor);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+        color: AppColors.taskCardOf(context, projectColor),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(
+          color: AppColors.projectBorderOf(context, projectColor),
+          width: 1.5,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,13 +486,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _isCompleted
-                    ? projectColor
-                    : Colors.transparent,
+                color: _isCompleted ? accent : Colors.transparent,
                 border: Border.all(
                   color: _isCompleted
-                      ? projectColor
-                      : AppColors.textSecondary.withValues(alpha: 0.5),
+                      ? accent
+                      : AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
@@ -481,10 +507,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               children: [
                 TextField(
                   controller: _titleController,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryOf(context),
                   ),
                   decoration: const InputDecoration(
                     hintText: 'Task title...',
@@ -507,7 +533,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: projectColor.withValues(alpha: 0.2),
+                        color: AppColors.projectTintOf(context, projectColor),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Row(
@@ -518,16 +544,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                             height: 8,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: projectColor,
+                              color: accent,
                             ),
                           ),
                           const SizedBox(width: 6),
                           Text(
                             _project,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                         ],
@@ -568,7 +594,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               _isImportant ? Icons.star : Icons.star_border,
               color: _isImportant
                   ? AppColors.accentYellow
-                  : AppColors.textSecondary.withValues(alpha: 0.5),
+                  : AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
               size: 28,
             ),
             onPressed: () {
@@ -586,9 +612,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+        color: AppColors.taskCardOf(context, projectColor),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(
+          color: AppColors.projectBorderOf(context, projectColor),
+          width: 1.5,
+        ),
       ),
       child: Column(
         children: [
@@ -596,20 +625,22 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildInfoRow(
             icon: Icons.calendar_today,
             label: 'Date',
-            projectColor: projectColor,
             child: Builder(
               builder: (tapContext) => InkWell(
                 onTap: () => _selectDate(tapContext),
                 borderRadius: BorderRadius.circular(8),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 8,
+                  ),
                   child: Text(
                     _dueDate == null
                         ? 'Set date'
                         : AppDateTimeFormat.date(_dueDate!),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textPrimary,
+                      color: AppColors.textPrimaryOf(context),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -617,28 +648,32 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
 
           // Time Row
           _buildInfoRow(
             icon: Icons.access_time,
             label: 'Time',
-            projectColor: projectColor,
             child: Builder(
               builder: (tapContext) => InkWell(
                 onTap: () => _selectTime(tapContext),
                 borderRadius: BorderRadius.circular(8),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 8,
+                  ),
                   child: Text(
                     _isAllDay
                         ? 'All Day'
                         : (_dueDate == null
-                            ? 'Set time'
-                            : AppDateTimeFormat.time(_dueDate!)),
+                              ? 'Set time'
+                              : AppDateTimeFormat.time(_dueDate!)),
                     style: TextStyle(
                       fontSize: 14,
-                      color: _isAllDay ? AppColors.textSecondary : AppColors.textPrimary,
+                      color: _isAllDay
+                          ? AppColors.textSecondaryOf(context)
+                          : AppColors.textPrimaryOf(context),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -646,17 +681,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
 
           // All Day Row
           _buildInfoRow(
             icon: Icons.all_inclusive,
             label: 'All Day',
-            projectColor: projectColor,
             child: Switch(
               value: _isAllDay,
-              activeTrackColor: projectColor.withValues(alpha: 0.5),
-              activeThumbColor: projectColor,
+              activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
+              activeThumbColor: AppColors.primaryDark,
               onChanged: (val) {
                 setState(() {
                   _isAllDay = val;
@@ -665,38 +699,24 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               },
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
 
           // Status Row
           _buildInfoRow(
             icon: Icons.pending_actions,
             label: 'Status',
-            projectColor: projectColor,
-            child: DropdownButton<bool>(
+            child: AppDropdown<bool>(
               value: _isCompleted,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items: const [
+              items: [
                 DropdownMenuItem(
                   value: false,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('In Progress'),
-                  ),
+                  child: AppDropdown.menuChild(Text('In Progress')),
                 ),
                 DropdownMenuItem(
                   value: true,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('Completed'),
-                  ),
+                  child: AppDropdown.menuChild(Text('Completed')),
                 ),
               ],
               onChanged: (val) {
@@ -708,40 +728,28 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               },
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
 
           // Project Row
           _buildInfoRow(
             icon: Icons.folder_open,
             label: 'Project',
-            projectColor: projectColor,
             child: Builder(
-              builder: (tapContext) => DropdownButton<String>(
+              builder: (tapContext) => AppDropdown<String>(
                 value: _project,
                 isExpanded: true,
                 alignment: AlignmentDirectional.centerEnd,
-                dropdownColor: AppColors.surface,
-                underline: const SizedBox(),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
                 items: [
                   ...projects.map(
                     (p) => DropdownMenuItem(
                       value: p,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(p),
-                      ),
+                      child: AppDropdown.menuChild(Text(p)),
                     ),
                   ),
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: '__add_new__',
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
+                    child: AppDropdown.menuChild(
+                      Text(
                         '+ Add Project',
                         style: TextStyle(
                           color: AppColors.primaryDark,
@@ -763,45 +771,28 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
 
           // Priority Row
           _buildInfoRow(
             icon: Icons.flag_outlined,
             label: 'Priority',
-            projectColor: projectColor,
-            child: DropdownButton<String>(
+            child: AppDropdown<String>(
               value: _priority,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              items: const [
+              items: [
                 DropdownMenuItem(
                   value: 'High',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('High'),
-                  ),
+                  child: AppDropdown.menuChild(Text('High')),
                 ),
                 DropdownMenuItem(
                   value: 'Medium',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('Medium'),
-                  ),
+                  child: AppDropdown.menuChild(Text('Medium')),
                 ),
                 DropdownMenuItem(
                   value: 'Low',
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('Low'),
-                  ),
+                  child: AppDropdown.menuChild(Text('Low')),
                 ),
               ],
               onChanged: (val) {
@@ -813,13 +804,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               },
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
 
           // Reminder Row
           _buildInfoRow(
             icon: Icons.notifications,
             label: 'Reminder',
-            projectColor: projectColor,
             child: ReminderSelector(
               value: _reminder,
               isAllDay: _isAllDay,
@@ -835,17 +825,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     required IconData icon,
     required String label,
     required Widget child,
-    required Color projectColor,
   }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: projectColor),
+        Icon(icon, size: 20, color: AppColors.primaryDark),
         const SizedBox(width: 12),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: AppColors.textSecondaryOf(context),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -858,16 +847,22 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildPomodoroCard(Color projectColor) {
+    final accent = AppColors.projectAccentOf(context, projectColor);
     final focusProvider = context.watch<FocusProvider>();
-    final isCurrentTaskActive = focusProvider.selectedTask?.id == widget.taskId && 
-        (focusProvider.timerState == TimerState.running || focusProvider.timerState == TimerState.paused);
+    final isCurrentTaskActive =
+        focusProvider.selectedTask?.id == widget.taskId &&
+        (focusProvider.timerState == TimerState.running ||
+            focusProvider.timerState == TimerState.paused);
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+        color: AppColors.taskCardOf(context, projectColor),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(
+          color: AppColors.projectBorderOf(context, projectColor),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -877,14 +872,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.timer, color: projectColor),
+                  Icon(Icons.timer, color: accent),
                   const SizedBox(width: 8),
                   Text(
-                    'Pomodoro Focus',
+                    'Focus Session',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.textPrimaryOf(context),
                     ),
                   ),
                 ],
@@ -895,10 +890,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: projectColor.withValues(alpha: 0.1),
+                  color: AppColors.projectTintOf(context, projectColor, darkAlpha: 0.22),
                   borderRadius: BorderRadius.circular(100),
                   border: Border.all(
-                    color: projectColor.withValues(alpha: 0.2),
+                    color: AppColors.projectBorderOf(context, projectColor).withValues(alpha: 0.55),
                   ),
                 ),
                 child: Text(
@@ -906,7 +901,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: projectColor,
+                    color: accent,
                   ),
                 ),
               ),
@@ -925,7 +920,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   min: 5,
                   max: 120,
                   step: 5,
-                  projectColor: projectColor,
+                  projectColor: accent,
                 ),
               ),
               const SizedBox(width: 8),
@@ -937,7 +932,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   min: 1,
                   max: 60,
                   step: 1,
-                  projectColor: projectColor,
+                  projectColor: accent,
                 ),
               ),
               const SizedBox(width: 8),
@@ -949,7 +944,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   min: 5,
                   max: 60,
                   step: 5,
-                  projectColor: projectColor,
+                  projectColor: accent,
                 ),
               ),
             ],
@@ -965,7 +960,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   min: 1,
                   max: 10,
                   step: 1,
-                  projectColor: projectColor,
+                  projectColor: accent,
                 ),
               ),
               const SizedBox(width: 8),
@@ -977,92 +972,113 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   min: 1,
                   max: 10,
                   step: 1,
-                  projectColor: projectColor,
+                  projectColor: accent,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: _isCompleted ? null : () {
-              final focusProvider = context.read<FocusProvider>();
-              bool settingsChanged = focusProvider.focusMinutes != _focusMinutes ||
-                  focusProvider.shortBreakMinutes != _breakMinutes ||
-                  focusProvider.longBreakMinutes != _longBreakMinutes ||
-                  focusProvider.rounds != _sessions ||
-                  focusProvider.longBreakInterval != _longBreakInterval;
-              
-              if ((focusProvider.timerState == TimerState.running || focusProvider.timerState == TimerState.paused) && 
-                  (focusProvider.selectedTask?.id != widget.taskId || settingsChanged)) {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    backgroundColor: AppColors.surface,
-                    title: const Text('Timer is running', style: TextStyle(color: AppColors.textPrimary)),
-                    content: const Text(
-                      'You currently have an active focus session. Starting this will reset the current timer. Do you want to proceed?',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          focusProvider.resetEntireCycle();
-                          Navigator.pushNamed(
-                            context,
-                            '/focus',
-                            arguments: {
-                              'taskId': widget.taskId,
-                              'focusMinutes': _focusMinutes,
-                              'breakMinutes': _breakMinutes,
-                              'longBreakMinutes': _longBreakMinutes,
-                              'sessions': _sessions,
-                              'longBreakInterval': _longBreakInterval,
-                              'autoStart': true,
-                            },
-                          );
+            onPressed: _isCompleted
+                ? null
+                : () {
+                    final focusProvider = context.read<FocusProvider>();
+                    bool settingsChanged =
+                        focusProvider.focusMinutes != _focusMinutes ||
+                        focusProvider.shortBreakMinutes != _breakMinutes ||
+                        focusProvider.longBreakMinutes != _longBreakMinutes ||
+                        focusProvider.rounds != _sessions ||
+                        focusProvider.longBreakInterval != _longBreakInterval;
+
+                    if ((focusProvider.timerState == TimerState.running ||
+                            focusProvider.timerState == TimerState.paused) &&
+                        (focusProvider.selectedTask?.id != widget.taskId ||
+                            settingsChanged)) {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: AppColors.cardOf(context),
+                          title: Text(
+                            'Timer is running',
+                            style: TextStyle(color: AppColors.textPrimaryOf(context)),
+                          ),
+                          content: Text(
+                            'You currently have an active focus session. Starting this will reset the current timer. Do you want to proceed?',
+                            style: TextStyle(color: AppColors.textSecondaryOf(context)),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: AppColors.textSecondaryOf(context),
+                                ),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                focusProvider.resetEntireCycle();
+                                Navigator.pushNamed(
+                                  context,
+                                  '/focus',
+                                  arguments: {
+                                    'taskId': widget.taskId,
+                                    'focusMinutes': _focusMinutes,
+                                    'breakMinutes': _breakMinutes,
+                                    'longBreakMinutes': _longBreakMinutes,
+                                    'sessions': _sessions,
+                                    'longBreakInterval': _longBreakInterval,
+                                    'autoStart': true,
+                                  },
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accentPeach,
+                              ),
+                              child: const Text(
+                                'Reset & Proceed',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      Navigator.pushNamed(
+                        context,
+                        '/focus',
+                        arguments: {
+                          'taskId': widget.taskId,
+                          'focusMinutes': _focusMinutes,
+                          'breakMinutes': _breakMinutes,
+                          'longBreakMinutes': _longBreakMinutes,
+                          'sessions': _sessions,
+                          'longBreakInterval': _longBreakInterval,
+                          'autoStart': true,
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentPeach),
-                        child: const Text('Reset & Proceed', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                Navigator.pushNamed(
-                  context,
-                  '/focus',
-                  arguments: {
-                    'taskId': widget.taskId,
-                    'focusMinutes': _focusMinutes,
-                    'breakMinutes': _breakMinutes,
-                    'longBreakMinutes': _longBreakMinutes,
-                    'sessions': _sessions,
-                    'longBreakInterval': _longBreakInterval,
-                    'autoStart': true,
+                      );
+                    }
                   },
-                );
-              }
-            },
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),
-              backgroundColor: isCurrentTaskActive ? AppColors.accentYellow : projectColor,
-              foregroundColor: isCurrentTaskActive 
-                  ? AppColors.textPrimary 
-                  : (ThemeData.estimateBrightnessForColor(projectColor) == Brightness.dark
-                      ? Colors.white
-                      : AppColors.textPrimary),
+              backgroundColor: isCurrentTaskActive
+                  ? AppColors.accentYellow
+                  : accent,
+              foregroundColor: isCurrentTaskActive
+                  ? AppColors.textPrimaryOf(context)
+                  : (ThemeData.estimateBrightnessForColor(accent) ==
+                            Brightness.dark
+                        ? Colors.white
+                        : AppColors.textPrimaryOf(context)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(isCurrentTaskActive ? Icons.play_arrow : Icons.play_arrow),
                 const SizedBox(width: 8),
-                Text(isCurrentTaskActive ? 'Continue Pomodoro' : 'Start Pomodoro'),
+                Text(isCurrentTaskActive ? 'Continue Focus' : 'Start Focus'),
               ],
             ),
           ),
@@ -1085,19 +1101,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: AppColors.textSecondaryOf(context),
           ),
         ),
         const SizedBox(height: 6),
         Container(
           height: 36,
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: AppColors.backgroundOf(context),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1111,10 +1127,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
               Text(
                 '$value',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
               IconButton(
@@ -1132,26 +1148,30 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildSubtasksCard(Color projectColor) {
+    final accent = AppColors.projectAccentOf(context, projectColor);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+        color: AppColors.taskCardOf(context, projectColor),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(
+          color: AppColors.projectBorderOf(context, projectColor),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.checklist, color: projectColor),
+              Icon(Icons.checklist, color: accent),
               const SizedBox(width: 8),
               Text(
                 'Subtasks',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -1182,12 +1202,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: subtask.isCompleted
-                              ? projectColor
+                              ? accent
                               : Colors.transparent,
-                          border: Border.all(
-                            color: subtask.isCompleted
-                                ? projectColor
-                                : AppColors.textSecondary.withValues(
+                            border: Border.all(
+                              color: subtask.isCompleted
+                                ? accent
+                                : AppColors.textSecondaryOf(context).withValues(
                                     alpha: 0.5,
                                   ),
                             width: 1.5,
@@ -1205,28 +1225,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     const SizedBox(width: 12),
                     // Subtask input
                     Expanded(
-                      child: TextField(
-                        controller: TextEditingController(text: subtask.title)
-                          ..selection = TextSelection.fromPosition(
-                            TextPosition(offset: subtask.title.length),
-                          ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: subtask.isCompleted
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
-                          decoration: subtask.isCompleted
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'Enter subtask...',
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                          fillColor: Colors.transparent,
-                        ),
+                      child: SubtaskTitleField(
+                        title: subtask.title,
+                        isCompleted: subtask.isCompleted,
                         onChanged: (val) {
                           _subTasks[index] = subtask.copyWith(title: val);
                         },
@@ -1234,10 +1235,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     ),
                     // Delete subtask button
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.close,
                         size: 18,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                       onPressed: () {
                         setState(() {
@@ -1255,7 +1256,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             onPressed: _addNewSubTask,
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Add subtask'),
-            style: TextButton.styleFrom(foregroundColor: projectColor),
+            style: TextButton.styleFrom(foregroundColor: accent),
           ),
         ],
       ),
@@ -1263,11 +1264,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildNotesCard(Color projectColor) {
+    final accent = AppColors.projectAccentOf(context, projectColor);
     return Container(
       decoration: BoxDecoration(
-        color: Color.alphaBlend(projectColor.withValues(alpha: 0.08), AppColors.surface),
+        color: AppColors.taskCardOf(context, projectColor),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(
+          color: AppColors.projectBorderOf(context, projectColor),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1276,14 +1281,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             padding: const EdgeInsets.only(left: 20, top: 20, bottom: 8),
             child: Row(
               children: [
-                Icon(Icons.edit_note, color: projectColor),
+                Icon(Icons.edit_note, color: accent),
                 const SizedBox(width: 8),
                 Text(
                   'Notes',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryOf(context),
                   ),
                 ),
               ],
@@ -1293,15 +1298,17 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: CustomPaint(
-              painter: PlannerLinesPainter(),
+              painter: PlannerLinesPainter(
+                lineColor: AppColors.borderOf(context),
+              ),
               child: TextField(
                 controller: _notesController,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   height: 2.0, // exactly 28 logical pixels tall per line
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
                 decoration: const InputDecoration(
                   hintText: 'Note down your thoughts here...',
@@ -1320,6 +1327,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildActionButtons(Color projectColor) {
+    final accent = AppColors.projectAccentOf(context, projectColor);
     return Column(
       children: [
         ElevatedButton.icon(
@@ -1328,10 +1336,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           label: const Text('Save Changes'),
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 52),
-            backgroundColor: projectColor,
-            foregroundColor: ThemeData.estimateBrightnessForColor(projectColor) == Brightness.dark
+            backgroundColor: accent,
+            foregroundColor:
+                ThemeData.estimateBrightnessForColor(accent) ==
+                    Brightness.dark
                 ? Colors.white
-                : AppColors.textPrimary,
+                : AppColors.textPrimaryOf(context),
           ),
         ),
       ],

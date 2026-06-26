@@ -3,16 +3,21 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
+import '../../providers/project_provider.dart';
 import '../../utils/validation/task_deadline_rules.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../custom_snackbar.dart';
 import '../../theme/app_colors.dart';
 import '../common/app_time_picker.dart';
+import '../common/app_dropdown.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
 import '../common/app_popup_transition.dart';
 import '../../widgets/project/create_project_popup.dart';
 import '../../widgets/task/reminder_selector.dart';
+import '../task/subtask_title_field.dart';
 import '../../utils/reminder/task_reminder.dart';
+import '../../utils/project_accent_color.dart';
+import '../../utils/keyboard/keyboard_insets.dart';
 
 class CalendarCreateTaskPopup extends StatefulWidget {
   final DateTime selectedDate;
@@ -78,6 +83,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
       }
     });
   }
+
 
   Future<void> _selectTime(BuildContext tapContext) async {
     final pickedTime = await showAppTimePicker(
@@ -160,6 +166,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
       isAllDay: _isAllDay,
       notes: _notesController.text.trim(),
       subTasks: _subTasks,
+      reminder: _reminder,
     );
 
     if (!taskProvider.addTask(newTask)) {
@@ -175,6 +182,9 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TaskProvider>(context);
+    final projectProvider = Provider.of<ProjectProvider>(context);
+    final accentColor =
+        ProjectAccentColor.resolve(context, projectProvider, _project);
     final projects = provider.availableProjects
         .where((p) => p != 'All Projects')
         .toList();
@@ -182,22 +192,14 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
       projects.add(_project);
     }
 
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
-
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: isMobile
-          ? const EdgeInsets.all(16)
-          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          width: isMobile ? double.infinity : 400,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.background,
+    return AppPopupShell(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        ),
+        decoration: BoxDecoration(
+            color: AppColors.backgroundOf(context),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -227,34 +229,36 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                         children: [
                           Text(
                             'Task for ${AppDateTimeFormat.shortDate(widget.selectedDate)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.close,
-                              color: AppColors.textSecondary,
+                              color: AppColors.textSecondaryOf(context),
                             ),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
                     ),
-                    const Divider(color: AppColors.border, height: 1),
+                    Divider(color: AppColors.borderOf(context), height: 1),
 
                     // Scrollable Content
                     Flexible(
-                      child: SingleChildScrollView(
+                      child: KeyboardAwareSingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildTitleCard(),
                             const SizedBox(height: 16),
-                            _buildInfoCard(projects),
+                            _buildInfoCard(projects, accentColor),
                             const SizedBox(height: 16),
                             _buildSubtasksCard(),
                             const SizedBox(height: 16),
@@ -305,7 +309,6 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -313,9 +316,9 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -326,7 +329,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.textSecondary.withValues(alpha: 0.5),
+                color: AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -335,10 +338,10 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           Expanded(
             child: TextField(
               controller: _titleController,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
               ),
               decoration: const InputDecoration(
                 hintText: 'Task title...',
@@ -356,7 +359,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
               _isImportant ? Icons.star : Icons.star_border,
               color: _isImportant
                   ? AppColors.accentYellow
-                  : AppColors.textSecondary.withValues(alpha: 0.5),
+                  : AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
             ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -371,13 +374,13 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     );
   }
 
-  Widget _buildInfoCard(List<String> projects) {
+  Widget _buildInfoCard(List<String> projects, Color accentColor) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Column(
         children: [
@@ -397,8 +400,8 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                     style: TextStyle(
                       fontSize: 14,
                       color: _isAllDay
-                          ? AppColors.textSecondary.withValues(alpha: 0.5)
-                          : AppColors.textPrimary,
+                          ? AppColors.textSecondaryOf(context).withValues(alpha: 0.5)
+                          : AppColors.textPrimaryOf(context),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -406,7 +409,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
               ),
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
           _buildInfoRow(
             icon: Icons.all_inclusive,
             label: 'All Day',
@@ -425,37 +428,26 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
               activeThumbColor: AppColors.primaryDark,
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
           _buildInfoRow(
             icon: Icons.folder_open,
             label: 'Project',
             child: Builder(
-              builder: (tapContext) => DropdownButton<String>(
+              builder: (tapContext) => AppDropdown<String>(
                 value: _project,
                 isExpanded: true,
                 alignment: AlignmentDirectional.centerEnd,
-                dropdownColor: AppColors.surface,
-                underline: const SizedBox(),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
                 items: [
                   ...projects.map(
                     (p) => DropdownMenuItem(
                       value: p,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(p),
-                      ),
+                      child: AppDropdown.menuChild(Text(p)),
                     ),
                   ),
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: '__add_new__',
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
+                    child: AppDropdown.menuChild(
+                      Text(
                         '+ Add Project',
                         style: TextStyle(
                           color: AppColors.primaryDark,
@@ -475,29 +467,19 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
               ),
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
           _buildInfoRow(
             icon: Icons.flag_outlined,
             label: 'Priority',
-            child: DropdownButton<String>(
+            child: AppDropdown<String>(
               value: _priority,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
               items: ['High', 'Medium', 'Low']
                   .map(
                     (p) => DropdownMenuItem(
                       value: p,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(p),
-                      ),
+                      child: AppDropdown.menuChild(Text(p)),
                     ),
                   )
                   .toList(),
@@ -506,7 +488,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
               },
             ),
           ),
-          const Divider(color: AppColors.border, height: 24),
+          Divider(color: AppColors.borderOf(context), height: 24),
           _buildInfoRow(
             icon: Icons.notifications,
             label: 'Reminder',
@@ -528,13 +510,13 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppColors.textSecondary),
+        Icon(icon, size: 20, color: AppColors.textSecondaryOf(context)),
         const SizedBox(width: 12),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: AppColors.textSecondaryOf(context),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -550,23 +532,23 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.checklist, color: AppColors.primaryDark, size: 20),
-              SizedBox(width: 8),
+              const Icon(Icons.checklist, color: AppColors.primaryDark, size: 20),
+              const SizedBox(width: 8),
               Text(
                 'Subtasks',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -599,7 +581,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                           border: Border.all(
                             color: subtask.isCompleted
                                 ? AppColors.primaryDark
-                                : AppColors.textSecondary.withValues(
+                                : AppColors.textSecondaryOf(context).withValues(
                                     alpha: 0.5,
                                   ),
                           ),
@@ -615,38 +597,19 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: TextField(
-                        controller: TextEditingController(text: subtask.title)
-                          ..selection = TextSelection.fromPosition(
-                            TextPosition(offset: subtask.title.length),
-                          ),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: subtask.isCompleted
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
-                          decoration: subtask.isCompleted
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'Enter subtask...',
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          fillColor: Colors.transparent,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        onChanged: (val) =>
-                            _subTasks[index] = subtask.copyWith(title: val),
+                      child: SubtaskTitleField(
+                        title: subtask.title,
+                        isCompleted: subtask.isCompleted,
+                        onChanged: (val) {
+                          _subTasks[index] = subtask.copyWith(title: val);
+                        },
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.close,
                         size: 16,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -678,25 +641,25 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   Widget _buildNotesCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 16, top: 16, bottom: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
             child: Row(
               children: [
-                Icon(Icons.edit_note, color: AppColors.primaryDark, size: 20),
-                SizedBox(width: 8),
+                const Icon(Icons.edit_note, color: AppColors.primaryDark, size: 20),
+                const SizedBox(width: 8),
                 Text(
                   'Notes',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryOf(context),
                   ),
                 ),
               ],
@@ -711,10 +674,10 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                 maxLines: null,
                 minLines: 3,
                 keyboardType: TextInputType.multiline,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   height: 2.0,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
                 decoration: const InputDecoration(
                   hintText: 'Note down your thoughts here...',
@@ -740,7 +703,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 48),
             backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.textPrimary,
+            foregroundColor: AppColors.textPrimaryOf(context),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(100),
             ),

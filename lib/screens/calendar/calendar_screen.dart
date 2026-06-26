@@ -11,6 +11,7 @@ import '../../widgets/calendar/calendar_create_task_popup.dart';
 import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/common/animations/app_page_transition.dart';
 import '../../widgets/custom_snackbar.dart';
+import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/staggered_list_entry.dart';
 import '../../utils/validation/task_deadline_rules.dart';
 import '../../utils/formatters/app_date_time_format.dart';
@@ -143,8 +144,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         final bool isDesktop = MediaQuery.of(context).size.width >= 768;
         final bool useTwoColumns = constraints.maxWidth >= 1024;
 
-        Widget calendarHeader = _buildCalendarHeader();
-        Widget tasksHeader = _buildTasksHeader();
+        Widget calendarHeader = _buildCalendarHeader(context);
+        Widget tasksHeader = _buildTasksHeader(context);
 
         Widget calendarWidgetWithGesture = PageView.builder(
           controller: _monthPageController,
@@ -157,7 +158,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           itemBuilder: (context, index) {
             final offset = index - _initialPage;
             final displayMonth = DateTime(_baseDate.year, _baseDate.month + offset, 1);
-            return _buildMonthView(allTasks, displayMonth);
+            return _buildMonthView(context, allTasks, displayMonth);
           },
         );
 
@@ -180,11 +181,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
             final offset = index - _initialPage;
             final displayDay = _baseDate.add(Duration(days: offset));
             final tasksForDay = _getTasksForDay(allTasks, displayDay);
-            return _buildSelectedTasksList(tasksForDay, newTasks, isMobile: false);
+            return _buildSelectedTasksList(context, tasksForDay, newTasks, isMobile: false);
           },
         );
 
         Widget tasksListForMobile = _buildSelectedTasksList(
+          context,
           _getTasksForDay(allTasks, _selectedDate),
           newTasks,
           isMobile: true,
@@ -193,7 +195,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         Widget pageTitle = Text(
           'Calendar',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
                 fontWeight: FontWeight.bold,
               ),
         );
@@ -281,7 +283,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         return Scaffold(
           key: _scaffoldKey,
           resizeToAvoidBottomInset: false,
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop ? null : const AppDrawer(
             isPermanent: false,
             activeRoute: '/calendar',
@@ -310,11 +312,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
     required bool isDesktop,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
       leading: Builder(
         builder: (context) => IconButton(
-          icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+          icon: Icon(Icons.menu, color: AppColors.textPrimaryOf(context)),
           onPressed: () {
             if (isDesktop) {
               context.read<DrawerProvider>().toggleDesktopCollapse();
@@ -324,24 +326,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
           },
         ),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_outlined,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notifications coming soon!')),
-            );
-          },
-        ),
-        const SizedBox(width: 8),
+      actions: const [
+        NotificationBellButton(),
+        SizedBox(width: 8),
       ],
     );
   }
 
-  Widget _buildCalendarHeader() {
+  Widget _buildCalendarHeader(BuildContext context) {
     String headerText = AppDateTimeFormat.monthYear(_focusedDate);
 
     return Row(
@@ -349,16 +341,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
       children: [
         Text(
           headerText,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
           ),
         ),
         Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary),
+              icon: Icon(Icons.chevron_left, color: AppColors.textPrimaryOf(context)),
               onPressed: _navigateToPrevious,
             ),
             TextButton(
@@ -370,7 +362,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: const Text('Today'),
             ),
             IconButton(
-              icon: const Icon(Icons.chevron_right, color: AppColors.textPrimary),
+              icon: Icon(Icons.chevron_right, color: AppColors.textPrimaryOf(context)),
               onPressed: _navigateToNext,
             ),
           ],
@@ -379,33 +371,34 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildTasksHeader() {
+  Widget _buildTasksHeader(BuildContext context) {
     return Row(
       children: [
         const Icon(Icons.today, color: AppColors.primaryDark),
         const SizedBox(width: 8),
         Text(
           'Tasks for ${AppDateTimeFormat.weekdayMonthDay(_selectedDate)}',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMonthView(List<Task> allTasks, DateTime displayMonth) {
+  Widget _buildMonthView(
+      BuildContext context, List<Task> allTasks, DateTime displayMonth) {
     final gridDates = _generateMonthlyGridDates(displayMonth);
     final weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Column(
         children: [
@@ -417,10 +410,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 child: Center(
                   child: Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryOf(context),
                     ),
                   ),
                 ),
@@ -428,7 +421,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             }).toList(),
           ),
           const SizedBox(height: 12),
-          const Divider(color: AppColors.border, height: 1),
+          Divider(color: AppColors.borderOf(context), height: 1),
           const SizedBox(height: 12),
           // Day grid
           Expanded(
@@ -485,11 +478,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.primary
+                          ? AppColors.calendarSelectedDayFillOf(context)
                           : Colors.transparent,
                       shape: BoxShape.circle,
                       border: isToday && !isSelected
-                          ? Border.all(color: AppColors.primaryDark, width: 2)
+                          ? Border.all(
+                              color: AppColors.calendarTodayRingOf(context),
+                              width: 2)
                           : null,
                     ),
                     child: SingleChildScrollView(
@@ -503,10 +498,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               fontSize: 14,
                               fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
                               color: isSelected
-                                  ? AppColors.textPrimary
+                                  ? AppColors.calendarSelectedDayTextOf(context)
                                   : (isCurrentMonth
-                                      ? AppColors.textPrimary
-                                      : AppColors.textSecondary.withValues(alpha: 0.4)),
+                                      ? AppColors.textPrimaryOf(context)
+                                      : AppColors.textSecondaryOf(context)
+                                          .withValues(alpha: 0.4)),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -526,7 +522,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   height: 5,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: isSelected ? AppColors.textPrimary : dotColor,
+                                    color: isSelected
+                                        ? AppColors.calendarSelectedDayTextOf(context)
+                                        : dotColor,
                                   ),
                                 );
                               }).toList(),
@@ -548,7 +546,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildSelectedTasksList(List<Task> selectedDayTasks, Set<String> newTasks, {bool isMobile = false}) {
+  Widget _buildSelectedTasksList(BuildContext context, List<Task> selectedDayTasks, Set<String> newTasks, {bool isMobile = false}) {
     final sortedTasks = List<Task>.from(selectedDayTasks);
     sortedTasks.sort((a, b) {
       if (a.isAllDay && !b.isAllDay) return -1;
@@ -562,7 +560,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     Widget listContent;
     if (sortedTasks.isEmpty) {
-      listContent = _buildEmptyState();
+      listContent = _buildEmptyState(context);
     } else {
       listContent = ListView.builder(
         padding: EdgeInsets.zero,
@@ -617,13 +615,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               Positioned(
                                 top: 0,
                                 height: dotY,
-                                child: Container(width: 2, color: AppColors.border),
+                                child: Container(
+                                    width: 2, color: AppColors.borderOf(context)),
                               ),
                             if (index < sortedTasks.length - 1)
                               Positioned(
                                 top: dotY,
                                 bottom: 0,
-                                child: Container(width: 2, color: AppColors.border),
+                                child: Container(
+                                    width: 2, color: AppColors.borderOf(context)),
                               ),
                             if (!isSubsequentAllDay)
                               Positioned(
@@ -653,10 +653,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       alignment: Alignment.center,
                       child: Text(
                         timeStr,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: AppColors.textPrimaryOf(context),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -685,9 +685,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.04),
@@ -700,7 +700,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 32),
@@ -713,20 +713,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
               color: AppColors.primaryDark.withValues(alpha: 0.4),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'No tasks due today!',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Enjoy your peaceful day. ☕',
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
               ),
             ),
           ],

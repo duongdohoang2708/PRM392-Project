@@ -10,6 +10,7 @@ import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_search_bar.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../widgets/custom_snackbar.dart';
+import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/staggered_list_entry.dart';
 import '../../widgets/common/animations/app_fade_transition.dart';
 import '../../widgets/common/animations/app_scale_transition.dart';
@@ -20,27 +21,27 @@ void _confirmDeleteProject(BuildContext parentContext, Project project, VoidCall
     context: parentContext,
     builder: (BuildContext dialogContext) {
       return AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.surfaceOf(parentContext),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
+        title: Text(
           'Delete Project',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(parentContext),
           ),
         ),
         content: Text(
           'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondaryOf(parentContext)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondaryOf(parentContext)),
             ),
           ),
           TextButton(
@@ -95,7 +96,7 @@ class ProjectsScreen extends StatelessWidget {
                               Text(
                                 'Projects',
                                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                      color: AppColors.textPrimary,
+                                      color: AppColors.textPrimaryOf(context),
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
@@ -109,7 +110,7 @@ class ProjectsScreen extends StatelessWidget {
                         pinned: true,
                         delegate: _StickyHeaderDelegate(
                           height: 60.0,
-                          backgroundColor: AppColors.background,
+                          backgroundColor: AppColors.backgroundOf(context),
                           child: const Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: 24.0,
@@ -141,7 +142,7 @@ class ProjectsScreen extends StatelessWidget {
         );
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop ? null : const AppDrawer(
             isPermanent: false,
             activeRoute: '/projects',
@@ -175,9 +176,9 @@ class ProjectsScreen extends StatelessWidget {
     required bool showMenuIcon,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      iconTheme: IconThemeData(color: AppColors.textPrimaryOf(context)),
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu),
@@ -190,14 +191,9 @@ class ProjectsScreen extends StatelessWidget {
           },
         ),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
-        const SizedBox(width: 8),
+      actions: const [
+        NotificationBellButton(),
+        SizedBox(width: 8),
       ],
     );
   }
@@ -225,9 +221,9 @@ class _SearchBarWithToggle extends StatelessWidget {
           height: 50,
           width: 50,
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.surfaceOf(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -241,7 +237,7 @@ class _SearchBarWithToggle extends StatelessWidget {
               child: Icon(
                 isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded,
                 key: ValueKey(isGrid),
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
                 size: 20,
               ),
             ),
@@ -267,12 +263,12 @@ class _ProjectCollection extends StatelessWidget {
     final isGrid = provider.viewMode == 'grid';
 
     if (projects.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32.0),
+          padding: const EdgeInsets.all(32.0),
           child: Text(
             'No projects found',
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColors.textSecondaryOf(context)),
           ),
         ),
       );
@@ -437,9 +433,9 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
         cursor: SystemMouseCursors.click,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.surfaceOf(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -495,10 +491,10 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
                         widget.project.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: AppColors.textPrimaryOf(context),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -506,13 +502,15 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
                         widget.project.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondaryOf(context)),
                       ),
                       const Spacer(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('$doneCount/$taskCount', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                          Text('$doneCount/$taskCount', style: TextStyle(fontSize: 10, color: AppColors.textSecondaryOf(context))),
                           Text('${(progress.isNaN ? 0 : progress * 100).round()}% completed', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: accentColor)),
                         ],
                       ),
@@ -521,7 +519,7 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
                         width: double.infinity,
                         height: 5,
                         decoration: BoxDecoration(
-                          color: AppColors.border,
+                          color: AppColors.borderOf(context),
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: FractionallySizedBox(
@@ -707,9 +705,9 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
         cursor: SystemMouseCursors.click,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.surfaceOf(context),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
@@ -750,10 +748,10 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
                               widget.project.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                                color: AppColors.textPrimaryOf(context),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -761,7 +759,9 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
                               children: [
                                 Text(
                                   '$doneCount/$taskCount tasks',
-                                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondaryOf(context)),
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
@@ -795,7 +795,7 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
                             CircularProgressIndicator(
                               value: progress.isNaN ? 0.0 : progress,
                               strokeWidth: 3.5,
-                              backgroundColor: AppColors.border,
+                              backgroundColor: AppColors.borderOf(context),
                               valueColor: AlwaysStoppedAnimation<Color>(accentColor),
                             ),
                             Text(
@@ -927,10 +927,10 @@ class _ProjectFilterChips extends StatelessWidget {
               : Colors.transparent;
           Color borderColor = isSelected
               ? Colors.transparent
-              : AppColors.border;
+              : AppColors.borderOf(context);
           Color textColor = isSelected
               ? filter['activeTextColor']
-              : AppColors.textSecondary;
+              : AppColors.textSecondaryOf(context);
 
           return Padding(
             padding: const EdgeInsets.only(right: 12.0),

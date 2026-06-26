@@ -7,7 +7,7 @@ import '../../providers/statistics_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
-import '../../widgets/custom_snackbar.dart';
+import '../../widgets/common/notification_bell_button.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
 
@@ -42,7 +42,7 @@ class FocusHistoryScreen extends StatelessWidget {
                               .textTheme
                               .headlineMedium
                               ?.copyWith(
-                                color: AppColors.textPrimary,
+                                color: AppColors.textPrimaryOf(context),
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -55,12 +55,12 @@ class FocusHistoryScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         if (sessions.isEmpty)
                           StatPanel(
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 'No focus sessions recorded yet. Start a Pomodoro to build your history.',
                                 style: TextStyle(
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.textSecondaryOf(context),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -79,7 +79,7 @@ class FocusHistoryScreen extends StatelessWidget {
         );
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.backgroundOf(context),
           drawer: isDesktop
               ? null
               : const AppDrawer(
@@ -154,7 +154,7 @@ class FocusHistoryScreen extends StatelessWidget {
     required bool isDesktop,
   }) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
       leadingWidth: 96,
       leading: Row(
@@ -162,7 +162,7 @@ class FocusHistoryScreen extends StatelessWidget {
         children: [
           Builder(
             builder: (context) => IconButton(
-              icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+              icon: Icon(Icons.menu, color: AppColors.textPrimaryOf(context)),
               onPressed: () {
                 if (isDesktop) {
                   context.read<DrawerProvider>().toggleDesktopCollapse();
@@ -173,26 +173,18 @@ class FocusHistoryScreen extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.chevron_left,
               size: 28,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
             onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_outlined,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
-        const SizedBox(width: 8),
+      actions: const [
+        NotificationBellButton(),
+        SizedBox(width: 8),
       ],
     );
   }
@@ -221,7 +213,7 @@ class _HistorySummary extends StatelessWidget {
               color: AppColors.primaryDark,
             ),
           ),
-          _divider(),
+          _divider(context),
           Expanded(
             child: _SummaryItem(
               label: 'Total focus',
@@ -229,7 +221,7 @@ class _HistorySummary extends StatelessWidget {
               color: AppColors.accentPeach,
             ),
           ),
-          _divider(),
+          _divider(context),
           Expanded(
             child: _SummaryItem(
               label: 'Average',
@@ -242,11 +234,11 @@ class _HistorySummary extends StatelessWidget {
     );
   }
 
-  Widget _divider() {
+  Widget _divider(BuildContext context) {
     return Container(
       width: 1,
       height: 36,
-      color: AppColors.border,
+      color: AppColors.borderOf(context),
     );
   }
 }
@@ -277,8 +269,8 @@ class _SummaryItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
+          style: TextStyle(
+            color: AppColors.textSecondaryOf(context),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

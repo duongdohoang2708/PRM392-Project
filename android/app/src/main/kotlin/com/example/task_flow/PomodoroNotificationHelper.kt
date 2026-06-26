@@ -167,7 +167,27 @@ object PomodoroNotificationHelper {
         val remoteViews = RemoteViews(context.packageName, layoutId)
 
         val sessionText = if (isRunning) phaseLabel else "$phaseLabel • Paused"
-        remoteViews.setTextViewText(R.id.notification_session_label, sessionText)
+        if (layoutId == R.layout.notification_pomodoro) {
+            if (!taskName.isNullOrBlank()) {
+                remoteViews.setTextViewText(R.id.notification_session_label, taskName)
+                remoteViews.setTextColor(R.id.notification_session_label, 0xDEFFFFFF.toInt())
+                remoteViews.setTextViewTextSize(
+                    R.id.notification_session_label,
+                    android.util.TypedValue.COMPLEX_UNIT_SP,
+                    13f,
+                )
+            } else {
+                remoteViews.setTextViewText(R.id.notification_session_label, sessionText)
+                remoteViews.setTextColor(R.id.notification_session_label, 0xFF9E9E9E.toInt())
+                remoteViews.setTextViewTextSize(
+                    R.id.notification_session_label,
+                    android.util.TypedValue.COMPLEX_UNIT_SP,
+                    12f,
+                )
+            }
+        } else {
+            remoteViews.setTextViewText(R.id.notification_session_label, sessionText)
+        }
 
         if (layoutId == R.layout.notification_pomodoro_expanded) {
             if (!taskName.isNullOrBlank()) {

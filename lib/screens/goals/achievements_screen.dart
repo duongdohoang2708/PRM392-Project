@@ -449,6 +449,8 @@ class _AchievementCard extends StatelessWidget {
         return Icons.timer_outlined;
       case AchievementCategory.streak:
         return Icons.local_fire_department;
+      case AchievementCategory.perfectDays:
+        return Icons.workspace_premium_outlined;
       case AchievementCategory.tasksCompleted:
         return Icons.task_alt;
     }
