@@ -4,4 +4,6 @@
     <string name="notification_stop">Stop timer</string>
     <string name="pomodoro_channel_name">Pomodoro Timer</string>
     <string name="pomodoro_channel_description">Shows ongoing Pomodoro timer with controls</string>
+    <string name="pomodoro_alert_channel_name">Pomodoro Alerts</string>
+    <string name="pomodoro_alert_channel_description">Sounds and vibrations when focus or break sessions finish</string>
 </resources>

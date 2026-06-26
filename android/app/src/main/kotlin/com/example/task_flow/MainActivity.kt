@@ -1,11 +1,11 @@
 package com.example.task_flow
 
 import android.content.Intent
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val channelName = "task_flow/pomodoro_notification"
     private var methodChannel: MethodChannel? = null
 
@@ -31,7 +31,37 @@ class MainActivity : FlutterActivity() {
                         val notificationId =
                             (call.arguments as? Number)?.toInt() ?: 1001
                         PomodoroNotificationHelper.cancel(this, notificationId)
+                        PomodoroPhaseAlarmScheduler.cancel(this)
+                        PomodoroRuntimeStore.clear(this)
                         result.success(null)
+                    }
+
+                    "schedulePhaseAlarm" -> {
+                        @Suppress("UNCHECKED_CAST")
+                        val args = call.arguments as Map<String, Any>
+                        PomodoroPhaseAlarmScheduler.schedule(this, args)
+                        val phaseIndex = (args["phaseIndex"] as? Number)?.toInt() ?: 0
+                        val deadlineMs = (args["deadlineEpochMs"] as? Number)?.toLong() ?: 0L
+                        val remainingSeconds =
+                            (args["remainingSeconds"] as? Number)?.toInt() ?: 0
+                        PomodoroRuntimeStore.save(
+                            context = this,
+                            phaseIndex = phaseIndex,
+                            deadlineMs = deadlineMs,
+                            timerRunning = true,
+                            remainingSeconds = remainingSeconds,
+                        )
+                        result.success(null)
+                    }
+
+                    "cancelPhaseAlarm" -> {
+                        PomodoroPhaseAlarmScheduler.cancel(this)
+                        PomodoroRuntimeStore.clear(this)
+                        result.success(null)
+                    }
+
+                    "getPomodoroRuntimeState" -> {
+                        result.success(PomodoroRuntimeStore.read(this))
                     }
 
                     else -> result.notImplemented()

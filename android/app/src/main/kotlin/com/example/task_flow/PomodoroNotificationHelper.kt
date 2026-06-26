@@ -21,7 +21,7 @@ object PomodoroNotificationHelper {
     const val EXTRA_ACTION_ID = "actionId"
     const val EXTRA_PAYLOAD = "payload"
     private const val EXTRA_CANCEL_NOTIFICATION = "cancelNotification"
-    private const val EXTRA_NOTIFICATION_PAYLOAD = "notification_payload"
+    const val EXTRA_NOTIFICATION_PAYLOAD = "notification_payload"
 
     private var lastArgs: MutableMap<String, Any>? = null
 
@@ -65,8 +65,20 @@ object PomodoroNotificationHelper {
             "remainingSeconds" to remainingSeconds,
         )
 
-        val remoteViews = buildRemoteViews(
+        val collapsedViews = buildRemoteViews(
             context = context,
+            layoutId = R.layout.notification_pomodoro,
+            phaseLabel = phaseLabel,
+            taskName = taskName,
+            timeString = timeString,
+            isRunning = isRunning,
+            notificationId = notificationId,
+            deadlineEpochMs = deadlineEpochMs,
+            remainingSeconds = remainingSeconds,
+        )
+        val expandedViews = buildRemoteViews(
+            context = context,
+            layoutId = R.layout.notification_pomodoro_expanded,
             phaseLabel = phaseLabel,
             taskName = taskName,
             timeString = timeString,
@@ -89,8 +101,8 @@ object PomodoroNotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.launcher_icon)
-            .setCustomContentView(remoteViews)
-            .setCustomBigContentView(remoteViews)
+            .setCustomContentView(collapsedViews)
+            .setCustomBigContentView(expandedViews)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setContentIntent(contentPendingIntent)
             .setOngoing(true)
@@ -143,6 +155,7 @@ object PomodoroNotificationHelper {
 
     private fun buildRemoteViews(
         context: Context,
+        layoutId: Int,
         phaseLabel: String,
         taskName: String?,
         timeString: String,
@@ -151,16 +164,18 @@ object PomodoroNotificationHelper {
         deadlineEpochMs: Long?,
         remainingSeconds: Int,
     ): RemoteViews {
-        val remoteViews = RemoteViews(context.packageName, R.layout.notification_pomodoro)
+        val remoteViews = RemoteViews(context.packageName, layoutId)
 
         val sessionText = if (isRunning) phaseLabel else "$phaseLabel • Paused"
         remoteViews.setTextViewText(R.id.notification_session_label, sessionText)
 
-        if (!taskName.isNullOrBlank()) {
-            remoteViews.setViewVisibility(R.id.notification_task_name, View.VISIBLE)
-            remoteViews.setTextViewText(R.id.notification_task_name, taskName)
-        } else {
-            remoteViews.setViewVisibility(R.id.notification_task_name, View.GONE)
+        if (layoutId == R.layout.notification_pomodoro_expanded) {
+            if (!taskName.isNullOrBlank()) {
+                remoteViews.setViewVisibility(R.id.notification_task_name, View.VISIBLE)
+                remoteViews.setTextViewText(R.id.notification_task_name, taskName)
+            } else {
+                remoteViews.setViewVisibility(R.id.notification_task_name, View.GONE)
+            }
         }
 
         val canUseCountdownChronometer =
