@@ -131,7 +131,7 @@ class AppDrawer extends StatelessWidget {
                     } else {
                       Future.delayed(const Duration(milliseconds: 150), () {
                         if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/task-list');
+                          Navigator.pushNamed(context, '/task-list');
                         }
                       });
                     }
@@ -154,7 +154,7 @@ class AppDrawer extends StatelessWidget {
                     } else {
                       Future.delayed(const Duration(milliseconds: 150), () {
                         if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/calendar');
+                          Navigator.pushNamed(context, '/calendar');
                         }
                       });
                     }
@@ -179,7 +179,7 @@ class AppDrawer extends StatelessWidget {
                     } else {
                       Future.delayed(const Duration(milliseconds: 150), () {
                         if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/projects');
+                          Navigator.pushNamed(context, '/projects');
                         }
                       });
                     }
@@ -203,7 +203,7 @@ class AppDrawer extends StatelessWidget {
                     } else {
                       Future.delayed(const Duration(milliseconds: 150), () {
                         if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/focus');
+                          Navigator.pushNamed(context, '/focus');
                         }
                       });
                     }
@@ -226,10 +226,7 @@ class AppDrawer extends StatelessWidget {
                     } else {
                       Future.delayed(const Duration(milliseconds: 150), () {
                         if (context.mounted) {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            '/statistics',
-                          );
+                          Navigator.pushNamed(context, '/statistics');
                         }
                       });
                     }
@@ -253,7 +250,7 @@ class AppDrawer extends StatelessWidget {
                     } else {
                       Future.delayed(const Duration(milliseconds: 150), () {
                         if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/goals');
+                          Navigator.pushNamed(context, '/goals');
                         }
                       });
                     }
@@ -265,23 +262,8 @@ class AppDrawer extends StatelessWidget {
                 context,
                 icon: Icons.notifications_outlined,
                 title: 'Notifications',
-                isActive: activeRoute == '/notifications',
                 isCollapsed: isDesktopCollapsed,
-                onTap: () {
-                  if (!isPermanent) Navigator.pop(context);
-                  if (onNavigate != null) {
-                    onNavigate!('/notifications');
-                  } else {
-                    Future.delayed(const Duration(milliseconds: 150), () {
-                      if (context.mounted) {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          '/notifications',
-                        );
-                      }
-                    });
-                  }
-                },
+                onTap: () => _showComingSoon(context),
               ),
               _buildMenuItem(
                 context,

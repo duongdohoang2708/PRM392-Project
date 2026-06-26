@@ -47,23 +47,35 @@ class AppDropdown<T> extends StatelessWidget {
     );
   }
 
+  static TextStyle textStyleFor(
+    BuildContext context, {
+    Color? color,
+    FontWeight? fontWeight,
+    double fontSize = 14,
+  }) {
+    return TextStyle(
+      fontSize: fontSize,
+      color: color ?? AppColors.textPrimaryOf(context),
+      fontWeight: fontWeight ?? FontWeight.w500,
+    );
+  }
+
   static Widget menuChild(
     Widget child, {
     Alignment alignment = Alignment.centerRight,
+    Color? textColor,
   }) {
     Widget content = child;
-    if (child is Text) {
+    if (child is Text && textColor != null) {
       final baseStyle = child.style ?? const TextStyle();
-      if (baseStyle.color == null) {
-        content = Text(
-          child.data ?? '',
-          style: baseStyle.copyWith(color: AppColors.textPrimary),
-          overflow: child.overflow,
-          maxLines: child.maxLines,
-          softWrap: child.softWrap,
-          textAlign: child.textAlign,
-        );
-      }
+      content = Text(
+        child.data ?? '',
+        style: baseStyle.copyWith(color: textColor),
+        overflow: child.overflow,
+        maxLines: child.maxLines,
+        softWrap: child.softWrap,
+        textAlign: child.textAlign,
+      );
     }
 
     return Padding(
@@ -92,14 +104,14 @@ class AppDropdown<T> extends StatelessWidget {
           itemHeight: itemHeight ?? 48,
           borderRadius: menuBorderRadius,
           elevation: menuElevation,
-          dropdownColor: AppColors.surface,
+          dropdownColor: AppColors.surfaceOf(context),
           icon: icon ??
               Icon(
                 Icons.expand_more,
                 size: 20,
-                color: accentColor.withValues(alpha: 0.85),
+                color: AppColors.textSecondaryOf(context),
               ),
-          style: style ?? textStyle(color: accentColor),
+          style: style ?? textStyleFor(context, fontWeight: FontWeight.w500),
           selectedItemBuilder: selectedItemBuilder,
         ),
       ),

@@ -20,10 +20,12 @@ class SectionActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = foregroundColor ?? AppColors.primaryDark;
     final bg = backgroundColor ??
-        Color.alphaBlend(
-          AppColors.primary.withValues(alpha: 0.14),
-          AppColors.surface,
-        );
+        (AppColors.isDark(context)
+            ? AppColors.primary.withValues(alpha: 0.16)
+            : Color.alphaBlend(
+                AppColors.primary.withValues(alpha: 0.14),
+                AppColors.surface,
+              ));
 
     return TextButton(
       onPressed: onPressed,
@@ -35,7 +37,11 @@ class SectionActionButton extends StatelessWidget {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.22)),
+          side: BorderSide(
+            color: AppColors.isDark(context)
+                ? AppColors.primary.withValues(alpha: 0.35)
+                : AppColors.primary.withValues(alpha: 0.22),
+          ),
         ),
       ),
       child: Text(

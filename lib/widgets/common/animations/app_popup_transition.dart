@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-export 'app_popup_shell.dart';
-
 const Duration kAppPopupTransitionDuration = Duration(milliseconds: 420);
 
 typedef AppPopupRouteTransitionBuilder = Widget Function(
@@ -62,14 +60,10 @@ Future<T?> showAppPopup<T>({
   Offset? anchor,
   bool barrierDismissible = true,
   bool useRootNavigator = true,
-}) async {
+}) {
   final resolvedAnchor = anchor ?? popupAnchorFromContext(context);
 
-  // Dismiss keyboard before opening so a still-focused field does not reopen it
-  // after the popup closes and the parent rebuilds.
-  FocusManager.instance.primaryFocus?.unfocus();
-
-  final result = await showGeneralDialog<T>(
+  return showGeneralDialog<T>(
     context: context,
     useRootNavigator: useRootNavigator,
     barrierDismissible: barrierDismissible,
@@ -77,28 +71,8 @@ Future<T?> showAppPopup<T>({
     barrierColor: Colors.black.withValues(alpha: 0.5),
     transitionDuration: kAppPopupTransitionDuration,
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
-      return SafeArea(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (barrierDismissible)
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: () => Navigator.of(dialogContext).pop(),
-                  behavior: HitTestBehavior.opaque,
-                ),
-              ),
-            child,
-          ],
-        ),
-      );
+      return SafeArea(child: child);
     },
     transitionBuilder: buildAppPopupTransition(anchor: resolvedAnchor),
   );
-
-  FocusManager.instance.primaryFocus?.unfocus();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    FocusManager.instance.primaryFocus?.unfocus();
-  });
-  return result;
 }

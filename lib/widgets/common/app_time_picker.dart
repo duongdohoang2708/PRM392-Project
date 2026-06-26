@@ -9,14 +9,12 @@ class AppCupertinoTimePicker extends StatelessWidget {
   final TimeOfDay time;
   final ValueChanged<TimeOfDay> onTimeChanged;
   final double height;
-  final Color accentColor;
 
   const AppCupertinoTimePicker({
     super.key,
     required this.time,
     required this.onTimeChanged,
     this.height = 180,
-    this.accentColor = AppColors.primaryDark,
   });
 
   static DateTime _dateTimeFromTime(TimeOfDay value) {
@@ -31,7 +29,6 @@ class AppCupertinoTimePicker extends StatelessWidget {
       child: CupertinoTheme(
         data: CupertinoThemeData(
           brightness: Brightness.light,
-          primaryColor: accentColor,
           textTheme: CupertinoTextThemeData(
             dateTimePickerTextStyle: const TextStyle(
               fontSize: 20,
@@ -97,15 +94,22 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
     final onAccent = ThemeData.estimateBrightnessForColor(widget.accentColor) ==
             Brightness.dark
         ? Colors.white
         : AppColors.textPrimary;
 
-    return AppPopupShell(
-      alignment: Alignment.centerRight,
-      child: Container(
-        decoration: BoxDecoration(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: isMobile
+          ? const EdgeInsets.all(16)
+          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          width: isMobile ? double.infinity : 400,
+          decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -166,7 +170,6 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
                 ),
                 AppCupertinoTimePicker(
                   time: _selectedTime,
-                  accentColor: widget.accentColor,
                   onTimeChanged: (time) => setState(() => _selectedTime = time),
                 ),
                 Padding(
@@ -191,6 +194,7 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
             ),
           ),
         ),
+      ),
     );
   }
 }

@@ -23,7 +23,6 @@ class AppCupertinoDatePicker extends StatelessWidget {
   final DateTime maximumDate;
   final ValueChanged<DateTime> onDateChanged;
   final double height;
-  final Color accentColor;
 
   const AppCupertinoDatePicker({
     super.key,
@@ -32,7 +31,6 @@ class AppCupertinoDatePicker extends StatelessWidget {
     required this.maximumDate,
     required this.onDateChanged,
     this.height = 180,
-    this.accentColor = AppColors.primaryDark,
   });
 
   @override
@@ -44,7 +42,6 @@ class AppCupertinoDatePicker extends StatelessWidget {
       child: CupertinoTheme(
         data: CupertinoThemeData(
           brightness: Brightness.light,
-          primaryColor: accentColor,
           textTheme: CupertinoTextThemeData(
             dateTimePickerTextStyle: const TextStyle(
               fontSize: 20,
@@ -123,15 +120,22 @@ class _AppDatePickerDialogState extends State<_AppDatePickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
     final onAccent = ThemeData.estimateBrightnessForColor(widget.accentColor) ==
             Brightness.dark
         ? Colors.white
         : AppColors.textPrimary;
 
-    return AppPopupShell(
-      alignment: Alignment.centerRight,
-      child: Container(
-        decoration: BoxDecoration(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: isMobile
+          ? const EdgeInsets.all(16)
+          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          width: isMobile ? double.infinity : 400,
+          decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -194,7 +198,6 @@ class _AppDatePickerDialogState extends State<_AppDatePickerDialog> {
                   date: _selectedDate,
                   minimumDate: widget.firstDate,
                   maximumDate: widget.lastDate,
-                  accentColor: widget.accentColor,
                   onDateChanged: (date) => setState(() => _selectedDate = date),
                 ),
                 Padding(
@@ -219,6 +222,7 @@ class _AppDatePickerDialogState extends State<_AppDatePickerDialog> {
             ),
           ),
         ),
+      ),
     );
   }
 }

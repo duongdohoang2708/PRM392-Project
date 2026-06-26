@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 class AppDateTimeFormat {
   AppDateTimeFormat._();
 
-  /// Set to `false` to switch the entire app to 24-hour display (`HH:mm`).
-  static const bool use12HourClock = true;
+  /// When `false`, the app uses 24-hour display (`HH:mm`).
+  static bool use12HourClock = true;
 
   static String get _timePattern => use12HourClock ? 'h:mm a' : 'HH:mm';
 

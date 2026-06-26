@@ -26,13 +26,13 @@ class CustomButton extends StatelessWidget {
           minimumSize: const Size(double.infinity, 56), // Standard touch target
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.textPrimary,
+                    AppColors.textPrimaryOf(context),
                   ),
                 ),
               )
@@ -49,19 +49,19 @@ class CustomButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: isLoading ? null : onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: AppColors.textPrimaryOf(context),
         minimumSize: const Size(double.infinity, 56),
-        side: const BorderSide(color: AppColors.border, width: 2),
+        side: BorderSide(color: AppColors.borderOf(context), width: 2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       ),
       child: isLoading
-          ? const SizedBox(
+          ? SizedBox(
               height: 24,
               width: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  AppColors.textPrimary,
+                  AppColors.textPrimaryOf(context),
                 ),
               ),
             )
