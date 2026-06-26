@@ -3,35 +3,101 @@ import 'package:provider/provider.dart';
 
 import '../../providers/drawer_provider.dart';
 import '../../providers/goals_provider.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_snackbar.dart';
-import '../../widgets/goals/edit_goals_sheet.dart';
 import '../../widgets/goals/weekly_streak_panel.dart';
 import '../../widgets/common/animations/app_horizontal_slide_transition.dart';
 import '../../widgets/common/animations/app_page_transition.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
+import '../../widgets/common/notification_bell_button.dart';
+import '../../widgets/common/app_scaffold.dart';
 
 enum _StreakView { week, month }
 
 class GoalsScreen extends StatelessWidget {
   const GoalsScreen({super.key});
 
-  void _openEditGoalsSheet(BuildContext context, GoalsProvider goalsProvider) {
-    showModalBottomSheet<void>(
+  void _confirmFreezeDay(BuildContext context, GoalsProvider goalsProvider) {
+    final credits = goalsProvider.manualRestCreditsRemaining;
+    final total = GoalsProvider.manualRestCreditsPerMonth;
+
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => EditGoalsSheet(
-        initialTaskGoal: goalsProvider.taskGoal,
-        initialFocusGoal: goalsProvider.focusGoal,
-        onSave: (taskGoal, focusGoal) {
-          goalsProvider.setGoals(taskGoal: taskGoal, focusGoal: focusGoal);
-          AppNotification.showSuccess(context, 'Daily goals updated.');
-        },
-      ),
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Mark freeze day?',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
+          content: Text(
+            'Mark today as a freeze day? Your streak won\'t break, but today '
+            'won\'t increase your streak number.\n\n'
+            'This will use 1 of your $credits remaining freeze days '
+            'this month ($total per month).',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _handleManualRest(context, goalsProvider);
+              },
+              child: const Text(
+                'Confirm',
+                style: TextStyle(
+                  color: AppIcons.freezeDayColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  void _handleManualRest(BuildContext context, GoalsProvider goalsProvider) {
+    switch (goalsProvider.markTodayAsManualRest()) {
+      case ManualRestResult.success:
+        AppNotification.showSuccess(
+          context,
+          'Freeze day marked.',
+        );
+      case ManualRestResult.alreadyManualRest:
+        AppNotification.showInfo(
+          context,
+          'Today is already marked as a freeze day.',
+        );
+      case ManualRestResult.scheduledRestDay:
+        AppNotification.showInfo(
+          context,
+          'Today is already a scheduled weekly freeze day.',
+        );
+      case ManualRestResult.noCreditsRemaining:
+        AppNotification.showInfo(
+          context,
+          'No freeze days left this month.',
+        );
+      case ManualRestResult.streakAlreadyMet:
+        AppNotification.showInfo(
+          context,
+          'Today\'s streak is already secured — no freeze day needed.',
+        );
+    }
   }
 
   @override
@@ -78,15 +144,21 @@ class GoalsScreen extends StatelessWidget {
                                   children: [
                                     _StreakHeroCard(
                                       goalsProvider: goalsProvider,
-                                      onEditGoals: () => _openEditGoalsSheet(
-                                        context,
-                                        goalsProvider,
-                                      ),
+                                      onUseManualRest: goalsProvider
+                                              .canUseManualRestCreditToday
+                                          ? () => _confirmFreezeDay(
+                                              context,
+                                              goalsProvider,
+                                            )
+                                          : null,
                                     ),
                                     const SizedBox(height: 16),
                                     _TodayGoalsSection(
                                       taskGoal: taskGoal,
                                       focusGoal: focusGoal,
+                                      isRestDay: goalsProvider.isTodayRestDay,
+                                      isManualRestDay:
+                                          goalsProvider.isTodayManualRestDay,
                                     ),
                                     const SizedBox(height: 16),
                                     _AchievementsEntryCard(
@@ -114,13 +186,23 @@ class GoalsScreen extends StatelessWidget {
                         else ...[
                           _StreakHeroCard(
                             goalsProvider: goalsProvider,
-                            onEditGoals: () =>
-                                _openEditGoalsSheet(context, goalsProvider),
+                            onUseManualRest:
+                                goalsProvider.canUseManualRestCreditToday
+                                    ? () => _confirmFreezeDay(
+                                        context,
+                                        goalsProvider,
+                                      )
+                                    : null,
                           ),
+                          const SizedBox(height: 16),
+                          const _StreakCalendarWidget(),
                           const SizedBox(height: 16),
                           _TodayGoalsSection(
                             taskGoal: taskGoal,
                             focusGoal: focusGoal,
+                            isRestDay: goalsProvider.isTodayRestDay,
+                            isManualRestDay:
+                                goalsProvider.isTodayManualRestDay,
                           ),
                           const SizedBox(height: 16),
                           _AchievementsEntryCard(
@@ -129,8 +211,6 @@ class GoalsScreen extends StatelessWidget {
                             onTap: () =>
                                 Navigator.pushNamed(context, '/achievements'),
                           ),
-                          const SizedBox(height: 16),
-                          const _StreakCalendarWidget(),
                         ],
                         const SizedBox(height: 40),
                       ],
@@ -142,7 +222,7 @@ class GoalsScreen extends StatelessWidget {
           ],
         );
 
-        return Scaffold(
+        return AppScaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop
               ? null
@@ -187,11 +267,7 @@ class GoalsScreen extends StatelessWidget {
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () =>
-              AppNotification.showInfo(context, 'Notifications coming soon!'),
-        ),
+        const NotificationBellButton(),
         const SizedBox(width: 8),
       ],
     );
@@ -365,12 +441,21 @@ class _StreakCalendarWidgetState extends State<_StreakCalendarWidget> {
 
 class _StreakHeroCard extends StatelessWidget {
   final GoalsProvider goalsProvider;
-  final VoidCallback onEditGoals;
+  final VoidCallback? onUseManualRest;
 
   const _StreakHeroCard({
     required this.goalsProvider,
-    required this.onEditGoals,
+    this.onUseManualRest,
   });
+
+  String _restBannerText() {
+    if (goalsProvider.isTodayManualRestDay) {
+      return 'Freeze day — your streak won\'t break, but today won\'t '
+          'increase your streak number.';
+    }
+    return 'Weekly freeze day — goals waived. Your streak won\'t break, '
+        'but today won\'t increase your streak number.';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -380,6 +465,7 @@ class _StreakHeroCard extends StatelessWidget {
     final nextAchievementValue = nextAchievement == null
         ? 'Done'
         : '${nextAchievement.target} days';
+    final isRestDay = goalsProvider.isTodayRestDay;
 
     return StatPanel(
       child: Column(
@@ -388,22 +474,30 @@ class _StreakHeroCard extends StatelessWidget {
             width: 76,
             height: 76,
             decoration: BoxDecoration(
-              color: AppColors.accentPeach.withValues(alpha: 0.18),
+              color: isRestDay
+                  ? AppColors.freezeBlue.withValues(alpha: 0.14)
+                  : AppColors.accentPeach.withValues(alpha: 0.18),
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.accentPeach.withValues(alpha: 0.35),
+                color: isRestDay
+                    ? AppColors.freezeBlue.withValues(alpha: 0.35)
+                    : AppColors.accentPeach.withValues(alpha: 0.35),
                 width: 1.5,
               ),
             ),
-            child: const Icon(
-              Icons.local_fire_department,
-              color: AppColors.accentPeach,
+            child: Icon(
+              isRestDay
+                  ? AppIcons.freezeDay
+                  : Icons.local_fire_department,
+              color: isRestDay
+                  ? AppIcons.freezeDayColor
+                  : AppColors.streakFlame,
               size: 42,
             ),
           ),
           const SizedBox(height: 14),
           Text(
-            current == 0 ? 'Light your first flame' : 'You are on a roll!',
+            goalsProvider.streakHeroTitle,
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textPrimary,
@@ -413,9 +507,7 @@ class _StreakHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            current == 0
-                ? 'Complete both daily goals today to begin your streak.'
-                : '$current-day streak. Keep both goals completed today.',
+            goalsProvider.streakHeroSubtitle,
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textSecondary,
@@ -449,27 +541,88 @@ class _StreakHeroCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: onEditGoals,
-              icon: const Icon(Icons.tune, color: AppColors.primaryDark),
-              label: const Text(
-                'Edit daily goals',
-                style: TextStyle(
-                  color: AppColors.primaryDark,
-                  fontWeight: FontWeight.w700,
+          if (isRestDay) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.freezeBlue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.freezeBlue.withValues(alpha: 0.28),
                 ),
               ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.primaryDark),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+              child: Row(
+                children: [
+                  const Icon(
+                    AppIcons.freezeDay,
+                    color: AppIcons.freezeDayColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _restBannerText(),
+                      style: const TextStyle(
+                        color: AppColors.freezeBlue,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
+          ] else if (goalsProvider.shouldShowFreezeDaySection) ...[
+            const SizedBox(height: 14),
+            if (onUseManualRest != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: onUseManualRest,
+                  icon: const Icon(
+                    AppIcons.freezeDay,
+                    color: AppIcons.freezeDayColor,
+                  ),
+                  label: const Text(
+                    'Mark today as freeze day',
+                    style: TextStyle(
+                      color: AppIcons.freezeDayColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppIcons.freezeDayColor),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            if (onUseManualRest != null) const SizedBox(height: 6),
+            Text(
+              '${goalsProvider.manualRestCreditsRemaining} of ${GoalsProvider.manualRestCreditsPerMonth} freeze days left this month',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Your streak won\'t break, but today won\'t increase your '
+              'streak number.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                height: 1.35,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -517,33 +670,66 @@ class _HeroMetric extends StatelessWidget {
 class _TodayGoalsSection extends StatelessWidget {
   final DailyGoalData taskGoal;
   final DailyGoalData focusGoal;
+  final bool isRestDay;
+  final bool isManualRestDay;
 
-  const _TodayGoalsSection({required this.taskGoal, required this.focusGoal});
+  const _TodayGoalsSection({
+    required this.taskGoal,
+    required this.focusGoal,
+    required this.isRestDay,
+    required this.isManualRestDay,
+  });
+
+  String get _taskCaption {
+    if (isRestDay) {
+      return isManualRestDay
+          ? 'Task goal waived — freeze day.'
+          : 'Task goal waived — weekly freeze day.';
+    }
+    if (taskGoal.goal == 0) {
+      return 'No tasks planned today.';
+    }
+    if (taskGoal.isCompleted) {
+      return 'All planned tasks completed.';
+    }
+    return '${taskGoal.remaining} tasks remaining today';
+  }
+
+  String get _focusCaption {
+    if (isRestDay) {
+      return isManualRestDay
+          ? 'Focus goal waived — freeze day.'
+          : 'Focus goal waived — weekly freeze day.';
+    }
+    if (focusGoal.isCompleted) {
+      return 'Focus goal met.';
+    }
+    return '${focusGoal.remaining} min remaining today';
+  }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 760;
+        final freezeAccent = AppIcons.freezeDayColor;
         final cards = [
           DailyGoalCard(
             titleText: 'Task Goal',
-            valueText: '${taskGoal.current}/${taskGoal.goal} tasks',
-            captionText: taskGoal.isCompleted
-                ? 'Task goal met.'
-                : '${taskGoal.remaining} tasks remaining today',
+            valueText: taskGoal.goal == 0
+                ? 'No tasks today'
+                : '${taskGoal.current}/${taskGoal.goal} tasks',
+            captionText: _taskCaption,
             progress: taskGoal.progress,
-            accent: AppColors.accentYellow,
+            accent: isRestDay ? freezeAccent : AppColors.accentYellow,
             icon: Icons.task_alt,
           ),
           DailyGoalCard(
             titleText: 'Focus Goal',
             valueText: '${focusGoal.current}/${focusGoal.goal} min',
-            captionText: focusGoal.isCompleted
-                ? 'Focus goal met.'
-                : '${focusGoal.remaining} min remaining today',
+            captionText: _focusCaption,
             progress: focusGoal.progress,
-            accent: AppColors.primaryDark,
+            accent: isRestDay ? freezeAccent : AppColors.primaryDark,
             icon: Icons.timer_outlined,
           ),
         ];
@@ -954,13 +1140,14 @@ class _MonthDayTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final missed = day.isMissed;
+    final isRestDay = day.isRestDay;
 
     final borderColor = day.isToday
         ? AppColors.primaryDark
         : day.isComplete
-        ? AppColors.accentPeach.withValues(alpha: 0.45)
-        : missed
-        ? AppColors.accentPink.withValues(alpha: 0.35)
+        ? AppColors.streakRed.withValues(alpha: 0.5)
+        : isRestDay
+        ? AppColors.freezeBlue.withValues(alpha: 0.4)
         : day.isPartial
         ? AppColors.accentYellow.withValues(alpha: 0.45)
         : AppColors.border;
@@ -970,7 +1157,9 @@ class _MonthDayTile extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: day.isComplete
-              ? AppColors.accentPeach.withValues(alpha: 0.16)
+              ? AppColors.streakRed.withValues(alpha: 0.14)
+              : isRestDay
+              ? AppColors.freezeBlue.withValues(alpha: 0.1)
               : AppColors.background,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: borderColor, width: day.isToday ? 1.5 : 1),
@@ -989,13 +1178,7 @@ class _MonthDayTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            if (day.isComplete)
-              const Icon(
-                Icons.local_fire_department,
-                color: AppColors.accentPeach,
-                size: 20,
-              )
-            else if (missed)
+            if (missed)
               const Text(
                 'x',
                 style: TextStyle(
@@ -1004,6 +1187,18 @@ class _MonthDayTile extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                   height: 1,
                 ),
+              )
+            else if (day.isComplete)
+              const Icon(
+                Icons.local_fire_department,
+                color: AppColors.streakFlame,
+                size: 20,
+              )
+            else if (isRestDay)
+              const Icon(
+                AppIcons.freezeDay,
+                color: AppIcons.freezeDayColor,
+                size: 18,
               )
             else
               const SizedBox(height: 20),

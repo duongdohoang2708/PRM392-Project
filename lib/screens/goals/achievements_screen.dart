@@ -6,8 +6,9 @@ import '../../providers/goals_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
-import '../../widgets/custom_snackbar.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
+import '../../widgets/common/notification_bell_button.dart';
+import '../../widgets/common/app_scaffold.dart';
 
 class AchievementsScreen extends StatelessWidget {
   const AchievementsScreen({super.key});
@@ -95,7 +96,7 @@ class AchievementsScreen extends StatelessWidget {
           ],
         );
 
-        return Scaffold(
+        return AppScaffold(
           backgroundColor: AppColors.background,
           drawer: isDesktop
               ? null
@@ -153,15 +154,7 @@ class AchievementsScreen extends StatelessWidget {
         ],
       ),
       actions: [
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_outlined,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            AppNotification.showInfo(context, 'Notifications coming soon!');
-          },
-        ),
+        const NotificationBellButton(),
         const SizedBox(width: 8),
       ],
     );

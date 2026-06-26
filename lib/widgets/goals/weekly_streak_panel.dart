@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../providers/goals_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
 import '../statistics/statistics_widgets.dart';
 
 class WeeklyStreakPanel extends StatelessWidget {
@@ -56,13 +57,14 @@ class WeekDayTile extends StatelessWidget {
     const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final label = labels[day.date.weekday - 1];
     final missed = day.isMissed;
+    final isRestDay = day.isRestDay;
 
     final borderColor = day.isToday
         ? AppColors.primaryDark
         : day.isComplete
-        ? AppColors.accentPeach.withValues(alpha: 0.55)
-        : missed
-        ? AppColors.accentPink.withValues(alpha: 0.45)
+        ? AppColors.streakRed.withValues(alpha: 0.55)
+        : isRestDay
+        ? AppColors.freezeBlue.withValues(alpha: 0.4)
         : day.isPartial
         ? AppColors.accentYellow.withValues(alpha: 0.55)
         : AppColors.border;
@@ -74,7 +76,9 @@ class WeekDayTile extends StatelessWidget {
           height: 36,
           decoration: BoxDecoration(
             color: day.isComplete
-                ? AppColors.accentPeach.withValues(alpha: 0.18)
+                ? AppColors.streakRed.withValues(alpha: 0.18)
+                : isRestDay
+                ? AppColors.freezeBlue.withValues(alpha: 0.1)
                 : AppColors.background,
             shape: BoxShape.circle,
             border: Border.all(
@@ -107,13 +111,7 @@ class WeekDayTile extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        if (day.isComplete)
-          const Icon(
-            Icons.local_fire_department,
-            color: AppColors.accentPeach,
-            size: 22,
-          )
-        else if (missed)
+        if (missed)
           const Text(
             'x',
             style: TextStyle(
@@ -122,6 +120,18 @@ class WeekDayTile extends StatelessWidget {
               fontWeight: FontWeight.w800,
               height: 1,
             ),
+          )
+        else if (day.isComplete)
+          const Icon(
+            Icons.local_fire_department,
+            color: AppColors.streakFlame,
+            size: 22,
+          )
+        else if (isRestDay)
+          const Icon(
+            AppIcons.freezeDay,
+            color: AppIcons.freezeDayColor,
+            size: 22,
           )
         else
           const SizedBox(height: 22),
