@@ -37,7 +37,7 @@ class QuickActionsSection extends StatelessWidget {
                   icon: Icons.add_task,
                   title: 'Create Task',
                   color: AppColors.primaryDark,
-                  bgColor: AppColors.primaryLight.withAlpha(100),
+                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.39),
                 ),
                 _buildActionButton(
                   context,
@@ -58,7 +58,7 @@ class QuickActionsSection extends StatelessWidget {
                   icon: Icons.calendar_month_outlined,
                   title: 'Calendar',
                   color: AppColors.primary,
-                  bgColor: AppColors.primaryLight.withAlpha(50),
+                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.2),
                 ),
               ],
             );

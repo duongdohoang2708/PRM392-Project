@@ -57,9 +57,10 @@ class ActiveFocusSection extends StatelessWidget {
     final accent = isDark ? AppColors.primary : AppColors.primaryDark;
     final titleColor = AppColors.textPrimaryOf(context);
     final subtitleColor = AppColors.textSecondaryOf(context);
-    final progressTrack = isDark
-        ? AppColors.primary.withValues(alpha: 0.15)
-        : AppColors.primaryLight.withValues(alpha: 0.55);
+    final progressTrack = AppColors.primaryLightTintOf(
+      context,
+      alpha: isDark ? 0.3 : 0.55,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +87,7 @@ class ActiveFocusSection extends StatelessWidget {
               border: Border.all(
                 color: isDark
                     ? AppColors.primary.withValues(alpha: 0.3)
-                    : AppColors.border,
+                    : AppColors.borderOf(context),
               ),
               boxShadow: isDark
                   ? null
@@ -207,7 +208,7 @@ class _FocusControlButton extends StatelessWidget {
     return Material(
       color: isDark
           ? AppColors.insetSurfaceOf(context)
-          : AppColors.primaryLight.withValues(alpha: 0.45),
+          : AppColors.primaryLightTintOf(context, alpha: 0.45),
       shape: const CircleBorder(),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

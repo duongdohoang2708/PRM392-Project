@@ -213,9 +213,10 @@ class _UnlockedSummaryCard extends StatelessWidget {
         ? 0.0
         : (unlocked / total).clamp(0, 1).toDouble();
     final progressPercent = (progress * 100).round();
-    final percentBadgeBg = isDark
-        ? AppColors.primary.withValues(alpha: 0.28)
-        : AppColors.primaryLight.withValues(alpha: 0.45);
+    final percentBadgeBg = AppColors.primaryLightTintOf(
+      context,
+      alpha: isDark ? 0.56 : 0.45,
+    );
     final percentBadgeText = isDark ? AppColors.primary : AppColors.primaryDark;
 
     return StatPanel(
@@ -339,9 +340,10 @@ class _AchievementGroupSection extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.primary.withValues(alpha: 0.28)
-                    : AppColors.primaryLight.withValues(alpha: 0.45),
+                color: AppColors.primaryLightTintOf(
+                  context,
+                  alpha: isDark ? 0.56 : 0.45,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

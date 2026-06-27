@@ -176,7 +176,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   border: Border.all(
                     color: isSelected
                         ? Colors.transparent
-                        : AppColors.border,
+                        : AppColors.borderOf(context),
                   ),
                 ),
                 child: Text(

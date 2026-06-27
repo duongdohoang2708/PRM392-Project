@@ -11,7 +11,7 @@ class AppNotification {
     _show(
       context,
       message: message,
-      backgroundColor: AppColors.primaryDark,
+      backgroundColor: AppColors.notificationSuccessBgOf(context),
       icon: Icons.check_circle_outline,
     );
   }
@@ -20,8 +20,19 @@ class AppNotification {
     _show(
       context,
       message: message,
-      backgroundColor: const Color(0xFFE57373), // Pastel red matching matcha palette
+      backgroundColor: AppColors.notificationErrorBgOf(context),
       icon: Icons.error_outline,
+    );
+  }
+
+  static void showWarning(BuildContext context, String message) {
+    _show(
+      context,
+      message: message,
+      backgroundColor: AppColors.accentYellow.withValues(
+        alpha: AppColors.isDark(context) ? 0.85 : 0.92,
+      ),
+      icon: Icons.warning_amber_rounded,
     );
   }
 
@@ -29,7 +40,7 @@ class AppNotification {
     _show(
       context,
       message: message,
-      backgroundColor: AppColors.textPrimary.withValues(alpha: 0.95),
+      backgroundColor: AppColors.notificationInfoBgOf(context),
       icon: Icons.info_outline,
     );
   }
@@ -145,6 +156,8 @@ class _NotificationToastState extends State<_NotificationToast> {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom + 16;
+    final foreground =
+        AppColors.notificationFgOn(context, widget.backgroundColor);
 
     return Positioned(
       bottom: bottomPadding,
@@ -171,13 +184,13 @@ class _NotificationToastState extends State<_NotificationToast> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  Icon(widget.icon, color: Colors.white, size: 20),
+                  Icon(widget.icon, color: foreground, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       widget.message,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: foreground,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),

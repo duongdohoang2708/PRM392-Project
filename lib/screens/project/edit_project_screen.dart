@@ -563,7 +563,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 52),
         backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),

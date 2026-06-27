@@ -49,11 +49,11 @@ class ReminderSelector extends StatelessWidget {
       value: dropdownValue,
       isExpanded: true,
       alignment: AlignmentDirectional.centerEnd,
-      dropdownColor: AppColors.surface,
+      dropdownColor: AppColors.surfaceOf(context),
       underline: const SizedBox(),
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
-        color: AppColors.textPrimary,
+        color: AppColors.textPrimaryOf(context),
         fontWeight: FontWeight.w500,
       ),
       selectedItemBuilder: (context) {

@@ -246,9 +246,9 @@ class _PomodoroSettingsFormState extends State<PomodoroSettingsForm> {
     final selectedBorder =
         isDark ? AppColors.primary : AppColors.primaryDark;
     final selectedTitleColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.primaryDark;
+        isDark ? AppColors.textPrimaryOf(context) : AppColors.primaryDark;
     final selectedSubtitleColor = isDark
-        ? AppColors.darkTextSecondary
+        ? AppColors.textSecondaryOf(context)
         : AppColors.primaryDark.withValues(alpha: 0.75);
 
     return GestureDetector(

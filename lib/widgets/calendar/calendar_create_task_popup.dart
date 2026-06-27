@@ -668,7 +668,9 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: CustomPaint(
-              painter: PlannerLinesPainter(),
+              painter: PlannerLinesPainter(
+                lineColor: AppColors.borderOf(context),
+              ),
               child: TextField(
                 controller: _notesController,
                 maxLines: null,
@@ -724,7 +726,7 @@ class PlannerLinesPainter extends CustomPainter {
 
   PlannerLinesPainter({
     this.lineHeight = 28.0,
-    this.lineColor = AppColors.border,
+    required this.lineColor,
   });
 
   @override

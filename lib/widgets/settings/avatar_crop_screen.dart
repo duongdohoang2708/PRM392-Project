@@ -174,19 +174,17 @@ class _AvatarCropEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = AppColors.isDark(context);
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: ColoredBox(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: AppColors.surfaceOf(context),
         child: Crop(
           key: ValueKey(imageBytes.lengthInBytes ^ imageBytes.hashCode),
           controller: controller,
           image: imageBytes,
           withCircleUi: true,
           interactive: true,
-          baseColor: isDark ? AppColors.darkSurface : AppColors.surface,
+          baseColor: AppColors.surfaceOf(context),
           maskColor: Colors.black.withValues(alpha: 0.62),
           progressIndicator: const Center(
             child: CircularProgressIndicator(

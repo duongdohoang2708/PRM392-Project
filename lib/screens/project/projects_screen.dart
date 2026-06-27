@@ -160,7 +160,7 @@ class ProjectsScreen extends StatelessWidget {
           ),
           floatingActionButton: FloatingActionButton(
             backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.textPrimary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
             onPressed: () {
               Navigator.pushNamed(context, '/create-project');
             },

@@ -220,8 +220,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 24),
                             child: Row(
                               children: [
-                                const Expanded(
-                                  child: Divider(color: AppColors.border),
+                                Expanded(
+                                  child: Divider(color: AppColors.borderOf(context)),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -237,8 +237,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                   ),
                                 ),
-                                const Expanded(
-                                  child: Divider(color: AppColors.border),
+                                Expanded(
+                                  child: Divider(color: AppColors.borderOf(context)),
                                 ),
                               ],
                             ),

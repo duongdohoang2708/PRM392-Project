@@ -553,7 +553,7 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 48),
         backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),

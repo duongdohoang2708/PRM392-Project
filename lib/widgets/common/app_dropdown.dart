@@ -36,13 +36,13 @@ class AppDropdown<T> extends StatelessWidget {
   static final BorderRadius menuBorderRadius = BorderRadius.circular(16);
 
   static TextStyle textStyle({
-    Color? color,
+    required Color color,
     FontWeight? fontWeight,
     double fontSize = 14,
   }) {
     return TextStyle(
       fontSize: fontSize,
-      color: color ?? AppColors.textPrimary,
+      color: color,
       fontWeight: fontWeight ?? FontWeight.w500,
     );
   }

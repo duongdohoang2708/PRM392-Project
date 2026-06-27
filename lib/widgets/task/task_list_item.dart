@@ -330,7 +330,7 @@ class _TaskListItemState extends State<TaskListItem>
     });
   }
 
-  Color _getPriorityColor() {
+  Color _getPriorityColor(BuildContext context) {
     switch (widget.task.priority) {
       case 'High':
         return const Color(0xFFE57373); // Red
@@ -339,7 +339,7 @@ class _TaskListItemState extends State<TaskListItem>
       case 'Low':
         return AppColors.primaryDark; // Deep green
       default:
-        return AppColors.textSecondary;
+        return AppColors.textSecondaryOf(context);
     }
   }
 
@@ -393,7 +393,7 @@ class _TaskListItemState extends State<TaskListItem>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final priorityColor = _getPriorityColor();
+    final priorityColor = _getPriorityColor(context);
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -749,11 +749,8 @@ class _TaskListItemState extends State<TaskListItem>
   }
 
   Widget _buildTitleText(ThemeData theme) {
-    final bool isDark = theme.brightness == Brightness.dark;
-    final Color primaryColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
-    final Color secondaryColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final secondaryColor = AppColors.textSecondaryOf(context);
+    final primaryColor = AppColors.textPrimaryOf(context);
     final style = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
       color: _isCompletedLocal ? secondaryColor : primaryColor,

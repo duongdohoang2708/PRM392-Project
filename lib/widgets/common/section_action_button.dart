@@ -24,7 +24,7 @@ class SectionActionButton extends StatelessWidget {
             ? AppColors.primary.withValues(alpha: 0.16)
             : Color.alphaBlend(
                 AppColors.primary.withValues(alpha: 0.14),
-                AppColors.surface,
+                AppColors.surfaceOf(context),
               ));
 
     return TextButton(

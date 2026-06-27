@@ -48,7 +48,7 @@ class OverviewSection extends StatelessWidget {
                   value: '${taskProvider.completedTodayCount}',
                   icon: Icons.check_circle_outline,
                   color: AppColors.primaryDark,
-                  bgColor: AppColors.primaryLight.withAlpha(100),
+                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.39),
                 ),
                 _buildStatCard(
                   context,

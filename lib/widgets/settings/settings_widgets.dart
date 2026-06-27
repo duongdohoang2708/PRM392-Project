@@ -362,7 +362,7 @@ class SettingsOptionCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: selected
                   ? AppColors.primaryDark.withValues(alpha: isDark ? 0.22 : 0.12)
-                  : (isDark ? AppColors.darkBackground : AppColors.background),
+                  : AppColors.backgroundOf(context),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: selected

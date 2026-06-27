@@ -33,7 +33,7 @@ class NotificationListItem extends StatelessWidget {
     }
   }
 
-  Color get _accentColor {
+  Color _accentColor(BuildContext context) {
     switch (record.category) {
       case NotificationCategory.taskReminder:
         return AppColors.primaryDark;
@@ -48,7 +48,7 @@ class NotificationListItem extends StatelessWidget {
       case NotificationCategory.statistics:
         return const Color(0xFF0277BD);
       case NotificationCategory.system:
-        return AppColors.textSecondary;
+        return AppColors.textSecondaryOf(context);
     }
   }
 
@@ -69,7 +69,7 @@ class NotificationListItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(_icon, color: _accentColor, size: 22),
+              Icon(_icon, color: _accentColor(context), size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -110,7 +110,7 @@ class NotificationListItem extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _accentColor,
+                        color: _accentColor(context),
                       ),
                     ),
                   ],

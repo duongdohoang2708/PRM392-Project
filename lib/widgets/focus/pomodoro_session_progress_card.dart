@@ -109,7 +109,8 @@ class PomodoroSessionProgressCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.backgroundOf(context),
         borderRadius: BorderRadius.circular(16 * s),
-        border: Border.all(color: AppColors.border.withAlpha(150)),
+        border: Border.all(
+            color: AppColors.borderOf(context).withValues(alpha: 0.59)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

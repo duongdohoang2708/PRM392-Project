@@ -126,7 +126,7 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          const Divider(color: AppColors.border),
+          Divider(color: AppColors.borderOf(context)),
           const SizedBox(height: 8),
           Expanded(
             child: filteredTasks.isEmpty

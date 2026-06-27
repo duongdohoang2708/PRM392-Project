@@ -1356,7 +1356,7 @@ class PlannerLinesPainter extends CustomPainter {
 
   PlannerLinesPainter({
     this.lineHeight = 28.0,
-    this.lineColor = AppColors.border,
+    required this.lineColor,
   });
 
   @override

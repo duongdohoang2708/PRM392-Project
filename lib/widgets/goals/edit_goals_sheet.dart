@@ -51,9 +51,9 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           top: false,
@@ -65,11 +65,11 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Edit Daily Goals',
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: AppColors.textPrimaryOf(context),
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                         ),
@@ -77,15 +77,18 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      icon: Icon(
+                        Icons.close,
+                        color: AppColors.textSecondaryOf(context),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'A day counts as streak only when both goals are completed.',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -116,15 +119,15 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
                         onPressed: () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
-                          side: const BorderSide(color: AppColors.border),
+                          side: BorderSide(color: AppColors.borderOf(context)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Cancel',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryOf(context),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -184,9 +187,9 @@ class _GoalStepper extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.backgroundOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Row(
         children: [
@@ -196,8 +199,8 @@ class _GoalStepper extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: AppColors.textPrimaryOf(context),
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
@@ -205,8 +208,8 @@ class _GoalStepper extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   helper,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -216,29 +219,35 @@ class _GoalStepper extends StatelessWidget {
           ),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.borderOf(context)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   onPressed: onDecrease,
-                  icon: const Icon(Icons.remove, color: AppColors.textSecondary),
+                  icon: Icon(
+                    Icons.remove,
+                    color: AppColors.textSecondaryOf(context),
+                  ),
                   splashRadius: 20,
                 ),
                 Text(
                   '$value $unit',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: AppColors.textPrimaryOf(context),
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 IconButton(
                   onPressed: onIncrease,
-                  icon: const Icon(Icons.add, color: AppColors.textSecondary),
+                  icon: Icon(
+                    Icons.add,
+                    color: AppColors.textSecondaryOf(context),
+                  ),
                   splashRadius: 20,
                 ),
               ],

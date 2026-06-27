@@ -982,7 +982,7 @@ class _PeriodNavigator extends StatelessWidget {
           icon: Icon(Icons.chevron_left, color: AppColors.textPrimaryOf(context)),
           style: IconButton.styleFrom(
             backgroundColor: AppColors.cardOf(context),
-            side: const BorderSide(color: AppColors.border),
+            side: BorderSide(color: AppColors.borderOf(context)),
           ),
         ),
         Expanded(
@@ -1001,7 +1001,7 @@ class _PeriodNavigator extends StatelessWidget {
           icon: Icon(Icons.chevron_right, color: AppColors.textPrimaryOf(context)),
           style: IconButton.styleFrom(
             backgroundColor: AppColors.cardOf(context),
-            side: const BorderSide(color: AppColors.border),
+            side: BorderSide(color: AppColors.borderOf(context)),
           ),
         ),
       ],

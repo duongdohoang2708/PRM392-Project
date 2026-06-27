@@ -544,7 +544,7 @@ class _FocusStatisticsContent extends StatelessWidget {
                   value: formatFocusMinutes(data.totalMinutes),
                   icon: Icons.timer_outlined,
                   color: AppColors.primaryDark,
-                  bgColor: AppColors.primaryLight.withValues(alpha: 0.4),
+                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.4),
                 ),
                 _StatCardModel(
                   title: 'Sessions',
@@ -619,7 +619,7 @@ class _TaskStatisticsContent extends StatelessWidget {
                   value: '${data.total}',
                   icon: Icons.task_alt,
                   color: AppColors.primaryDark,
-                  bgColor: AppColors.primaryLight.withValues(alpha: 0.4),
+                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.4),
                 ),
                 _StatCardModel(
                   title: 'Completed',

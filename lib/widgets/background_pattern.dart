@@ -51,7 +51,11 @@ class _BackgroundPatternState extends State<BackgroundPattern> {
         _cachedBrightness != brightness) {
       _cachedSize = size;
       _cachedBrightness = brightness;
-      _cachedPattern = _buildPattern(size, isDark: isDark);
+      _cachedPattern = _buildPattern(
+        size,
+        isDark: isDark,
+        base: AppColors.backgroundOf(context),
+      );
     }
 
     return IgnorePointer(
@@ -79,10 +83,13 @@ class _BackgroundPatternState extends State<BackgroundPattern> {
     return (dark + 0.22).clamp(0.0, 0.82);
   }
 
-  Widget _buildPattern(Size size, {required bool isDark}) {
+  Widget _buildPattern(
+    Size size, {
+    required bool isDark,
+    required Color base,
+  }) {
     final width = size.width;
     final height = size.height;
-    final base = isDark ? AppColors.darkBackground : AppColors.background;
 
     Widget icon(
       IconData iconData,

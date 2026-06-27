@@ -536,7 +536,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withAlpha(100),
+                    color: AppColors.primaryLightTintOf(context, alpha: 0.39),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -593,7 +593,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   decoration: BoxDecoration(
                     color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border.withAlpha(150)),
+                    border: Border.all(
+                        color: AppColors.borderOf(context).withValues(alpha: 0.59)),
                   ),
                   child: Column(
                     children: [
@@ -624,7 +625,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   decoration: BoxDecoration(
                     color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border.withAlpha(150)),
+                    border: Border.all(
+                        color: AppColors.borderOf(context).withValues(alpha: 0.59)),
                   ),
                   child: Column(
                     children: [
@@ -655,7 +657,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   decoration: BoxDecoration(
                     color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border.withAlpha(150)),
+                    border: Border.all(
+                        color: AppColors.borderOf(context).withValues(alpha: 0.59)),
                   ),
                   child: Column(
                     children: [
@@ -997,8 +1000,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(100),
-                    side: const BorderSide(
-                      color: AppColors.primaryLight,
+                    side: BorderSide(
+                      color: AppColors.primaryLightTintOf(context, alpha: 0.55),
                       width: 1.5,
                     ),
                   ),
