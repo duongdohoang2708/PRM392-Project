@@ -31,7 +31,7 @@ class AppDropdown<T> extends StatelessWidget {
     this.itemHeight,
     this.hint,
     this.accentColor = AppColors.primaryDark,
-    this.solidShell = true,
+    this.solidShell = false,
   });
 
   static const int menuElevation = 6;

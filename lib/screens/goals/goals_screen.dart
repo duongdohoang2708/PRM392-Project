@@ -121,14 +121,20 @@ class GoalsScreen extends StatelessWidget {
                                   children: [
                                     _StreakHeroCard(
                                       goalsProvider: goalsProvider,
-                                      onUseManualRest: goalsProvider
-                                              .canUseManualRestCreditToday
-                                          ? () => _confirmFreezeDay(
-                                              context,
-                                              goalsProvider,
-                                            )
-                                          : null,
                                     ),
+                                    if (goalsProvider.shouldShowFreezeDaySection) ...[
+                                      const SizedBox(height: 16),
+                                      _FreezeDaySection(
+                                        goalsProvider: goalsProvider,
+                                        onUseManualRest: goalsProvider
+                                                .canUseManualRestCreditToday
+                                            ? () => _confirmFreezeDay(
+                                                context,
+                                                goalsProvider,
+                                              )
+                                            : null,
+                                      ),
+                                    ],
                                     const SizedBox(height: 16),
                                     _TodayGoalsSection(
                                       taskGoal: taskGoal,
@@ -163,16 +169,22 @@ class GoalsScreen extends StatelessWidget {
                         else ...[
                           _StreakHeroCard(
                             goalsProvider: goalsProvider,
-                            onUseManualRest:
-                                goalsProvider.canUseManualRestCreditToday
-                                    ? () => _confirmFreezeDay(
-                                        context,
-                                        goalsProvider,
-                                      )
-                                    : null,
                           ),
                           const SizedBox(height: 16),
                           const _StreakCalendarWidget(),
+                          if (goalsProvider.shouldShowFreezeDaySection) ...[
+                            const SizedBox(height: 16),
+                            _FreezeDaySection(
+                              goalsProvider: goalsProvider,
+                              onUseManualRest:
+                                  goalsProvider.canUseManualRestCreditToday
+                                      ? () => _confirmFreezeDay(
+                                          context,
+                                          goalsProvider,
+                                        )
+                                      : null,
+                            ),
+                          ],
                           const SizedBox(height: 16),
                           _TodayGoalsSection(
                             taskGoal: taskGoal,
@@ -416,11 +428,9 @@ class _StreakCalendarWidgetState extends State<_StreakCalendarWidget> {
 
 class _StreakHeroCard extends StatelessWidget {
   final GoalsProvider goalsProvider;
-  final VoidCallback? onUseManualRest;
 
   const _StreakHeroCard({
     required this.goalsProvider,
-    this.onUseManualRest,
   });
 
   @override
@@ -495,55 +505,73 @@ class _StreakHeroCard extends StatelessWidget {
               ),
             ],
           ),
-          if (goalsProvider.shouldShowFreezeDaySection) ...[
-            const SizedBox(height: 14),
-            if (onUseManualRest != null)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: onUseManualRest,
-                  icon: const Icon(
-                    AppIcons.freezeDay,
+        ],
+      ),
+    );
+  }
+}
+
+class _FreezeDaySection extends StatelessWidget {
+  final GoalsProvider goalsProvider;
+  final VoidCallback? onUseManualRest;
+
+  const _FreezeDaySection({
+    required this.goalsProvider,
+    this.onUseManualRest,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StatPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (onUseManualRest != null)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onUseManualRest,
+                icon: const Icon(
+                  AppIcons.freezeDay,
+                  color: AppIcons.freezeDayColor,
+                ),
+                label: const Text(
+                  'Mark today as freeze day',
+                  style: TextStyle(
                     color: AppIcons.freezeDayColor,
+                    fontWeight: FontWeight.w700,
                   ),
-                  label: const Text(
-                    'Mark today as freeze day',
-                    style: TextStyle(
-                      color: AppIcons.freezeDayColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppIcons.freezeDayColor),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppIcons.freezeDayColor),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
-            if (onUseManualRest != null) const SizedBox(height: 6),
-            Text(
-              '${goalsProvider.manualRestCreditsRemaining} of ${GoalsProvider.manualRestCreditsPerMonth} freeze days left this month',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondaryOf(context),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Your streak won\'t break, but today won\'t increase your '
-              'streak number.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondaryOf(context),
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                height: 1.35,
-              ),
+          if (onUseManualRest != null) const SizedBox(height: 8),
+          Text(
+            '${goalsProvider.manualRestCreditsRemaining} of ${GoalsProvider.manualRestCreditsPerMonth} freeze days left this month',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textSecondaryOf(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-          ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Your streak won\'t break, but today won\'t increase your '
+            'streak number.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textSecondaryOf(context),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              height: 1.35,
+            ),
+          ),
         ],
       ),
     );

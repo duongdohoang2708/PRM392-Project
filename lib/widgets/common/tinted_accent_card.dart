@@ -136,7 +136,7 @@ class TintedAccentCard extends StatelessWidget {
   Widget _buildActionContent(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: accentColor, size: 24),
+        Icon(icon, color: AppColors.projectAccentOf(context, accentColor), size: 24),
         const SizedBox(width: 8),
         Expanded(
           child: Text(

@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/settings_provider.dart';
 import '../theme/app_colors.dart';
 
 /// Decorative background icons using a ROYGBIV spectrum.
-/// Light mode: soft pastels. Dark mode: neon accents.
+/// Light mode: vivid pastels. Dark mode: neon accents.
 class _SpectrumTone {
   final Color light;
   final Color darkNeon;
@@ -11,24 +13,77 @@ class _SpectrumTone {
   const _SpectrumTone({required this.light, required this.darkNeon});
 }
 
+class _DecorIconSpec {
+  final IconData icon;
+  final int colorIndex;
+  final double x;
+  final double y;
+  final double size;
+  final double rotation;
+  final double lightOpacity;
+  final double darkOpacity;
+
+  const _DecorIconSpec({
+    required this.icon,
+    required this.colorIndex,
+    required this.x,
+    required this.y,
+    this.size = 36,
+    this.rotation = 0,
+    this.lightOpacity = 0.65,
+    this.darkOpacity = 0.44,
+  });
+}
+
 class BackgroundPattern extends StatefulWidget {
   const BackgroundPattern({super.key});
 
   static const List<_SpectrumTone> _spectrum = [
-    // Red — đỏ
     _SpectrumTone(light: Color(0xFFF5B0B0), darkNeon: Color(0xFFFF4D6D)),
-    // Orange — cam
     _SpectrumTone(light: Color(0xFFF6C9A8), darkNeon: Color(0xFFFF8F3D)),
-    // Yellow — vàng
     _SpectrumTone(light: Color(0xFFF6E6A8), darkNeon: Color(0xFFFFEA4D)),
-    // Green — xanh lá
     _SpectrumTone(light: Color(0xFFA8CFA3), darkNeon: Color(0xFF5DFF8F)),
-    // Blue — xanh lam
     _SpectrumTone(light: Color(0xFFA8C8F4), darkNeon: Color(0xFF4DA6FF)),
-    // Indigo — chàm
     _SpectrumTone(light: Color(0xFFB0A8F4), darkNeon: Color(0xFF6B5DFF)),
-    // Violet — tím
     _SpectrumTone(light: Color(0xFFD4A8F4), darkNeon: Color(0xFFC45DFF)),
+  ];
+
+  /// Even staggered layout — one icon per zone, avoids edge/corner clusters.
+  static const List<_DecorIconSpec> _decorIcons = [
+    _DecorIconSpec(icon: Icons.favorite, colorIndex: 0, x: 0.10, y: 0.06, size: 44, rotation: -15, lightOpacity: 0.72),
+    _DecorIconSpec(icon: Icons.menu_book, colorIndex: 3, x: 0.32, y: 0.06, size: 34, rotation: 35),
+    _DecorIconSpec(icon: Icons.star_rounded, colorIndex: 2, x: 0.54, y: 0.06, size: 30, rotation: 20, lightOpacity: 0.78),
+    _DecorIconSpec(icon: Icons.schedule, colorIndex: 4, x: 0.76, y: 0.06, size: 40, rotation: -25),
+    _DecorIconSpec(icon: Icons.lightbulb, colorIndex: 1, x: 0.90, y: 0.06, size: 28, rotation: 15, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.local_florist, colorIndex: 3, x: 0.18, y: 0.16, size: 46, rotation: 15, lightOpacity: 0.68),
+    _DecorIconSpec(icon: Icons.cloud, colorIndex: 4, x: 0.42, y: 0.16, size: 38, rotation: -10, lightOpacity: 0.52, darkOpacity: 0.40),
+    _DecorIconSpec(icon: Icons.auto_awesome, colorIndex: 2, x: 0.66, y: 0.16, size: 32, rotation: 45, lightOpacity: 0.78),
+    _DecorIconSpec(icon: Icons.filter_vintage, colorIndex: 0, x: 0.86, y: 0.16, size: 34, rotation: -20),
+    _DecorIconSpec(icon: Icons.wb_sunny, colorIndex: 2, x: 0.08, y: 0.28, size: 28, rotation: 30),
+    _DecorIconSpec(icon: Icons.eco, colorIndex: 3, x: 0.30, y: 0.28, size: 44, rotation: 25),
+    _DecorIconSpec(icon: Icons.edit, colorIndex: 6, x: 0.52, y: 0.28, size: 36, rotation: -15),
+    _DecorIconSpec(icon: Icons.note, colorIndex: 5, x: 0.74, y: 0.28, size: 40, rotation: 15, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.emoji_objects, colorIndex: 1, x: 0.92, y: 0.28, size: 30, rotation: -10, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.flag, colorIndex: 3, x: 0.20, y: 0.40, size: 32, rotation: 5, lightOpacity: 0.52, darkOpacity: 0.38),
+    _DecorIconSpec(icon: Icons.local_cafe, colorIndex: 1, x: 0.44, y: 0.40, size: 46, rotation: -20, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.sentiment_satisfied_alt, colorIndex: 2, x: 0.68, y: 0.40, size: 36, rotation: 30, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.check_circle, colorIndex: 3, x: 0.88, y: 0.40, size: 40, rotation: 10),
+    _DecorIconSpec(icon: Icons.headset, colorIndex: 5, x: 0.10, y: 0.52, size: 30, rotation: -15),
+    _DecorIconSpec(icon: Icons.directions_run, colorIndex: 4, x: 0.36, y: 0.52, size: 38, rotation: 20),
+    _DecorIconSpec(icon: Icons.calendar_month, colorIndex: 4, x: 0.58, y: 0.52, size: 32, rotation: 45),
+    _DecorIconSpec(icon: Icons.favorite, colorIndex: 0, x: 0.82, y: 0.52, size: 36, rotation: -30),
+    _DecorIconSpec(icon: Icons.bolt, colorIndex: 1, x: 0.22, y: 0.64, size: 34, rotation: 15, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.push_pin, colorIndex: 6, x: 0.48, y: 0.64, size: 28, rotation: -20, lightOpacity: 0.52, darkOpacity: 0.38),
+    _DecorIconSpec(icon: Icons.work_outline, colorIndex: 3, x: 0.72, y: 0.64, size: 32, rotation: -10),
+    _DecorIconSpec(icon: Icons.code, colorIndex: 5, x: 0.06, y: 0.76, size: 40, rotation: 20, lightOpacity: 0.52),
+    _DecorIconSpec(icon: Icons.brush, colorIndex: 6, x: 0.28, y: 0.76, size: 30, rotation: -25, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.rocket_launch, colorIndex: 1, x: 0.50, y: 0.76, size: 36, rotation: 15),
+    _DecorIconSpec(icon: Icons.extension, colorIndex: 5, x: 0.74, y: 0.76, size: 34, rotation: -30, lightOpacity: 0.52),
+    _DecorIconSpec(icon: Icons.mic, colorIndex: 6, x: 0.90, y: 0.76, size: 28, rotation: 10),
+    _DecorIconSpec(icon: Icons.music_note, colorIndex: 2, x: 0.16, y: 0.88, size: 32, rotation: -15, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.coffee, colorIndex: 1, x: 0.40, y: 0.88, size: 38, rotation: 25),
+    _DecorIconSpec(icon: Icons.spa, colorIndex: 0, x: 0.64, y: 0.88, size: 30, rotation: -10, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.sports_esports, colorIndex: 4, x: 0.84, y: 0.88, size: 36, rotation: 35),
   ];
 
   @override
@@ -38,6 +93,7 @@ class BackgroundPattern extends StatefulWidget {
 class _BackgroundPatternState extends State<BackgroundPattern> {
   Size? _cachedSize;
   Brightness? _cachedBrightness;
+  bool? _cachedDecorEnabled;
   Widget? _cachedPattern;
 
   @override
@@ -45,16 +101,21 @@ class _BackgroundPatternState extends State<BackgroundPattern> {
     final size = MediaQuery.sizeOf(context);
     final brightness = Theme.of(context).brightness;
     final isDark = brightness == Brightness.dark;
+    final decorEnabled =
+        context.watch<SettingsProvider>().backgroundDecorIconsEnabled;
 
     if (_cachedPattern == null ||
         _cachedSize != size ||
-        _cachedBrightness != brightness) {
+        _cachedBrightness != brightness ||
+        _cachedDecorEnabled != decorEnabled) {
       _cachedSize = size;
       _cachedBrightness = brightness;
+      _cachedDecorEnabled = decorEnabled;
       _cachedPattern = _buildPattern(
         size,
         isDark: isDark,
         base: AppColors.backgroundOf(context),
+        showDecorIcons: decorEnabled,
       );
     }
 
@@ -75,11 +136,19 @@ class _BackgroundPatternState extends State<BackgroundPattern> {
 
   Color _resolveColor(bool isDark, int colorIndex) {
     final tone = _toneAt(colorIndex);
-    return isDark ? tone.darkNeon : tone.light;
+    if (isDark) return tone.darkNeon;
+    return _vividLightColor(tone.light);
+  }
+
+  Color _vividLightColor(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    final saturation = (hsl.saturation + 0.16).clamp(0.0, 0.78);
+    final lightness = (hsl.lightness - 0.05).clamp(0.48, 0.68);
+    return hsl.withSaturation(saturation).withLightness(lightness).toColor();
   }
 
   double _opacity(bool isDark, double light, double dark) {
-    if (!isDark) return light;
+    if (!isDark) return (light + 0.06).clamp(0.0, 0.88);
     return (dark + 0.22).clamp(0.0, 0.82);
   }
 
@@ -87,79 +156,36 @@ class _BackgroundPatternState extends State<BackgroundPattern> {
     Size size, {
     required bool isDark,
     required Color base,
+    required bool showDecorIcons,
   }) {
-    final width = size.width;
-    final height = size.height;
-
-    Widget icon(
-      IconData iconData,
-      int colorIndex,
-      double lightOpacity,
-      double darkOpacity,
-      double iconSize,
-      double? topPos,
-      double? leftPos,
-      double rotationDegrees, {
-      double? right,
-      double? bottom,
-    }) {
-      return _buildPatternIcon(
-        width,
-        height,
-        iconData,
-        _resolveColor(isDark, colorIndex),
-        _opacity(isDark, lightOpacity, darkOpacity),
-        iconSize,
-        topPos,
-        leftPos,
-        rotationDegrees,
-        right: right,
-        bottom: bottom,
+    if (!showDecorIcons) {
+      return SizedBox(
+        width: size.width,
+        height: size.height,
+        child: ColoredBox(color: base),
       );
     }
 
     return SizedBox(
-      width: width,
-      height: height,
+      width: size.width,
+      height: size.height,
       child: ColoredBox(
         color: base,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            icon(Icons.favorite, 0, 0.7, 0.50, 48, 0.05, 0.12, -15),
-            icon(Icons.menu_book, 3, 0.6, 0.44, 36, 0.18, 0.06, 35),
-            icon(Icons.star_rounded, 2, 0.8, 0.55, 30, 0.08, 0.28, 20),
-            icon(Icons.schedule, 4, 0.6, 0.44, 44, 0.22, 0.22, -25),
-            icon(Icons.lightbulb, 1, 0.7, 0.48, 28, 0.32, 0.08, 15),
-            icon(Icons.local_florist, 3, 0.7, 0.48, 48, 0.08, null, 15, right: 0.15),
-            icon(Icons.cloud, 4, 0.5, 0.40, 40, 0.22, null, -10, right: 0.25),
-            icon(Icons.auto_awesome, 2, 0.8, 0.50, 32, 0.06, null, 45, right: 0.35),
-            icon(Icons.filter_vintage, 0, 0.6, 0.44, 36, 0.30, null, -20, right: 0.08),
-            icon(Icons.wb_sunny, 2, 0.6, 0.44, 26, 0.15, null, 30, right: 0.05),
-            icon(Icons.eco, 3, 0.6, 0.44, 48, null, 0.08, 25, bottom: 0.12),
-            icon(Icons.edit, 6, 0.6, 0.44, 38, null, 0.25, -15, bottom: 0.22),
-            icon(Icons.note, 5, 0.7, 0.48, 44, null, 0.30, 15, bottom: 0.05),
-            icon(Icons.emoji_objects, 1, 0.7, 0.48, 30, null, 0.12, -10, bottom: 0.30),
-            icon(Icons.flag, 3, 0.5, 0.38, 34, null, 0.05, 5, bottom: 0.40),
-            icon(Icons.local_cafe, 1, 0.7, 0.48, 48, null, null, -20, bottom: 0.18, right: 0.18),
-            icon(Icons.sentiment_satisfied_alt, 2, 0.7, 0.48, 38, null, null, 30, bottom: 0.08, right: 0.35),
-            icon(Icons.check_circle, 3, 0.6, 0.44, 44, null, null, 10, bottom: 0.28, right: 0.10),
-            icon(Icons.headset, 5, 0.6, 0.44, 32, null, null, -15, bottom: 0.05, right: 0.10),
-            icon(Icons.directions_run, 4, 0.6, 0.44, 40, null, null, 20, bottom: 0.40, right: 0.05),
-            icon(Icons.calendar_month, 4, 0.6, 0.44, 32, 0.38, 0.10, 45),
-            icon(Icons.favorite, 0, 0.6, 0.44, 40, null, null, -30, bottom: 0.45, right: 0.15),
-            icon(Icons.bolt, 1, 0.7, 0.48, 36, 0.45, null, 15, right: 0.25),
-            icon(Icons.push_pin, 6, 0.5, 0.38, 30, null, 0.35, -20, bottom: 0.35),
-            icon(Icons.work_outline, 3, 0.6, 0.44, 34, 0.15, 0.40, -10),
-            icon(Icons.code, 5, 0.5, 0.38, 42, 0.25, 0.60, 20),
-            icon(Icons.brush, 6, 0.7, 0.48, 30, 0.35, 0.45, -25),
-            icon(Icons.rocket_launch, 1, 0.6, 0.44, 38, 0.55, 0.25, 15),
-            icon(Icons.extension, 5, 0.5, 0.38, 36, 0.65, 0.75, -30),
-            icon(Icons.mic, 6, 0.6, 0.44, 28, 0.80, 0.50, 10),
-            icon(Icons.music_note, 2, 0.7, 0.48, 34, 0.75, 0.30, -15),
-            icon(Icons.coffee, 1, 0.6, 0.44, 40, 0.10, 0.70, 25),
-            icon(Icons.spa, 0, 0.7, 0.48, 32, 0.45, 0.80, -10),
-            icon(Icons.sports_esports, 4, 0.6, 0.44, 38, 0.85, 0.80, 35),
+            for (final spec in BackgroundPattern._decorIcons)
+              _buildPatternIcon(
+                size.width,
+                size.height,
+                spec.icon,
+                _resolveColor(isDark, spec.colorIndex),
+                _opacity(isDark, spec.lightOpacity, spec.darkOpacity),
+                spec.size,
+                spec.x,
+                spec.y,
+                spec.rotation,
+              ),
           ],
         ),
       ),
@@ -173,17 +199,13 @@ class _BackgroundPatternState extends State<BackgroundPattern> {
     Color color,
     double opacity,
     double size,
-    double? topPos,
-    double? leftPos,
-    double rotationDegrees, {
-    double? right,
-    double? bottom,
-  }) {
+    double x,
+    double y,
+    double rotationDegrees,
+  ) {
     return Positioned(
-      top: topPos != null ? maxHeight * topPos : null,
-      left: leftPos != null ? maxWidth * leftPos : null,
-      right: right != null ? maxWidth * right : null,
-      bottom: bottom != null ? maxHeight * bottom : null,
+      left: maxWidth * x,
+      top: maxHeight * y,
       child: Transform.rotate(
         angle: rotationDegrees * (math.pi / 180),
         child: Icon(

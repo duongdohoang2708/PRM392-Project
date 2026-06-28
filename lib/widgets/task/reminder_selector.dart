@@ -46,31 +46,33 @@ class ReminderSelector extends StatelessWidget {
     final dropdownValue = TaskReminder.dropdownValue(value, isAllDay);
     final menuFill = AppColors.dropdownMenuFillOf(context);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.dropdownShellFillOf(context),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          canvasColor: menuFill,
-          menuTheme: MenuThemeData(
-            style: MenuStyle(
-              backgroundColor: WidgetStatePropertyAll(menuFill),
-              surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
-            ),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        canvasColor: menuFill,
+        menuTheme: MenuThemeData(
+          style: MenuStyle(
+            backgroundColor: WidgetStatePropertyAll(menuFill),
+            surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
           ),
         ),
+      ),
+      child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: dropdownValue,
           isExpanded: true,
           alignment: AlignmentDirectional.centerEnd,
           dropdownColor: menuFill,
-          underline: const SizedBox(),
+          elevation: 6,
+          borderRadius: BorderRadius.circular(16),
           style: TextStyle(
             fontSize: 14,
             color: AppColors.textPrimaryOf(context),
             fontWeight: FontWeight.w500,
+          ),
+          icon: Icon(
+            Icons.expand_more,
+            size: 20,
+            color: AppColors.textSecondaryOf(context),
           ),
           selectedItemBuilder: (context) {
             return options.map((option) {

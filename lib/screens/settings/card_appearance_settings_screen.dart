@@ -11,18 +11,13 @@ import '../../widgets/statistics/statistics_widgets.dart';
 class CardAppearanceSettingsScreen extends StatelessWidget {
   const CardAppearanceSettingsScreen({super.key});
 
-  String _tintStrengthLabel(double strength) {
-    if (strength == 0) return 'No tint';
-    if (strength == SettingsProvider.maxCardTintStrength) return 'Strong';
-    return '${(strength * 100).round()}%';
-  }
-
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final solidity = settings.cardFillSolidity;
     final tintStrength = settings.cardTintStrength;
     final transparentPercent = ((1 - solidity) * 100).round();
+    final tintLabel = settings.cardTintStrengthLabel;
 
     return SettingsScreenShell(
       activeRoute: '/settings',
@@ -104,7 +99,7 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  _tintStrengthLabel(tintStrength),
+                  tintLabel,
                   style: TextStyle(
                     color: AppColors.primaryDark,
                     fontSize: 15,
@@ -119,7 +114,7 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
               min: SettingsProvider.minCardTintStrength,
               max: SettingsProvider.maxCardTintStrength,
               divisions: 20,
-              label: _tintStrengthLabel(tintStrength),
+              label: tintLabel,
               activeColor: AppColors.primaryDark,
               inactiveColor: AppColors.borderOf(context),
               onChanged: settings.setCardTintStrength,

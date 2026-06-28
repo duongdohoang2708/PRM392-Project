@@ -1,12 +1,51 @@
 import 'package:flutter/material.dart';
+
 import '../../theme/app_colors.dart';
 import '../project/create_project_popup.dart';
 import '../common/app_popup_transition.dart';
 import '../common/tinted_accent_card.dart';
-import '../custom_snackbar.dart';
 
 class QuickActionsSection extends StatelessWidget {
   const QuickActionsSection({super.key});
+
+  static const _actions = <_QuickAction>[
+    _QuickAction(
+      icon: Icons.add_task,
+      title: 'Create Task',
+      rainbowIndex: 0,
+      route: '/create-task',
+    ),
+    _QuickAction(
+      icon: Icons.timer,
+      title: 'Start Focus',
+      rainbowIndex: 1,
+      route: '/focus',
+    ),
+    _QuickAction(
+      icon: Icons.create_new_folder_outlined,
+      title: 'New Project',
+      rainbowIndex: 2,
+      opensProjectPopup: true,
+    ),
+    _QuickAction(
+      icon: Icons.calendar_month_outlined,
+      title: 'Calendar',
+      rainbowIndex: 3,
+      route: '/calendar',
+    ),
+    _QuickAction(
+      icon: Icons.format_list_bulleted,
+      title: 'Task List',
+      rainbowIndex: 4,
+      route: '/task-list',
+    ),
+    _QuickAction(
+      icon: Icons.flag_outlined,
+      title: 'Goals',
+      rainbowIndex: 5,
+      route: '/goals',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +63,7 @@ class QuickActionsSection extends StatelessWidget {
         const SizedBox(height: 16),
         LayoutBuilder(
           builder: (context, constraints) {
-            final crossAxisCount = constraints.maxWidth >= 600 ? 4 : 2;
+            final crossAxisCount = constraints.maxWidth >= 600 ? 3 : 2;
             return GridView.count(
               crossAxisCount: crossAxisCount,
               shrinkWrap: true,
@@ -32,36 +71,9 @@ class QuickActionsSection extends StatelessWidget {
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
               childAspectRatio: 2.5,
-              children: [
-                _actionCard(
-                  context,
-                  icon: Icons.add_task,
-                  title: 'Create Task',
-                  color: AppColors.primaryDark,
-                  lightBgAlpha: 0.39,
-                ),
-                _actionCard(
-                  context,
-                  icon: Icons.timer,
-                  title: 'Start Focus',
-                  color: AppColors.accentYellow,
-                  lightBgAlpha: 0.20,
-                ),
-                _actionCard(
-                  context,
-                  icon: Icons.create_new_folder_outlined,
-                  title: 'New Project',
-                  color: AppColors.accentPeach,
-                  lightBgAlpha: 0.20,
-                ),
-                _actionCard(
-                  context,
-                  icon: Icons.calendar_month_outlined,
-                  title: 'Calendar',
-                  color: AppColors.primary,
-                  lightBgAlpha: 0.20,
-                ),
-              ],
+              children: _actions
+                  .map((action) => _actionCard(context, action))
+                  .toList(),
             );
           },
         ),
@@ -69,38 +81,47 @@ class QuickActionsSection extends StatelessWidget {
     );
   }
 
-  Widget _actionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required Color color,
-    required double lightBgAlpha,
-  }) {
+  Widget _actionCard(BuildContext context, _QuickAction action) {
+    final baseColor =
+        AppColors.rainbowPalette[action.rainbowIndex % AppColors.rainbowPalette.length];
+
     return Builder(
       builder: (buttonContext) => TintedAccentCard(
         variant: TintedAccentCardVariant.action,
-        accentColor: color,
-        icon: icon,
-        label: title,
-        lightBgAlpha: lightBgAlpha,
-        darkBgAlpha: lightBgAlpha * 0.5,
+        accentColor: baseColor,
+        icon: action.icon,
+        label: action.title,
+        lightBgAlpha: 0.28,
+        darkBgAlpha: 0.28,
         onTap: () {
-          if (title == 'Create Task') {
-            Navigator.pushNamed(context, '/create-task');
-          } else if (title == 'Calendar') {
-            Navigator.pushNamed(context, '/calendar');
-          } else if (title == 'New Project') {
+          if (action.opensProjectPopup) {
             showCreateProjectPopup(
               context,
               anchor: popupAnchorFromContext(buttonContext),
             );
-          } else if (title == 'Start Focus') {
-            Navigator.pushNamed(context, '/focus');
-          } else {
-            AppNotification.showInfo(context, '$title coming soon!');
+            return;
+          }
+          if (action.route != null) {
+            Navigator.pushNamed(context, action.route!);
           }
         },
       ),
     );
   }
+}
+
+class _QuickAction {
+  final IconData icon;
+  final String title;
+  final int rainbowIndex;
+  final String? route;
+  final bool opensProjectPopup;
+
+  const _QuickAction({
+    required this.icon,
+    required this.title,
+    required this.rainbowIndex,
+    this.route,
+    this.opensProjectPopup = false,
+  });
 }

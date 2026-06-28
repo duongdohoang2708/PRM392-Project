@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 
 class GreetingSection extends StatelessWidget {
@@ -6,6 +9,7 @@ class GreetingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserProvider>();
     final hour = DateTime.now().hour;
     String greeting;
     String subtitle;
@@ -26,11 +30,14 @@ class GreetingSection extends StatelessWidget {
       children: [
         Text(
           greeting,
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondaryOf(context)),
+          style: TextStyle(
+            fontSize: 16,
+            color: AppColors.textSecondaryOf(context),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
-          'Dương',
+          user.fullName,
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -41,9 +48,9 @@ class GreetingSection extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           subtitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: AppColors.primaryDark,
+            color: AppColors.projectAccentOf(context, AppColors.primaryDark),
             fontWeight: FontWeight.w500,
           ),
         ),

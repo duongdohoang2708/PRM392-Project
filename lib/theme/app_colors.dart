@@ -29,6 +29,22 @@ class AppColors {
   static const Color statYellow = Color(0xFFE3B82B);
   static const Color statRed = Color(0xFFE53935);
 
+  /// Rainbow palette for quick actions (red → violet).
+  static const List<Color> rainbowPalette = [
+    Color(0xFFE53935), // red
+    Color(0xFFF4511E), // orange
+    Color(0xFFF9A825), // yellow
+    Color(0xFF43A047), // green
+    Color(0xFF1E88E5), // blue
+    Color(0xFF8E24AA), // violet
+  ];
+
+  /// Rainbow accent readable in light and dark mode.
+  static Color rainbowOf(BuildContext context, int index) {
+    final palette = rainbowPalette;
+    return projectAccentOf(context, palette[index % palette.length]);
+  }
+
   /// Streak flame cells in calendar views.
   static const Color streakRed = Color(0xFFC62828);
 
@@ -80,9 +96,8 @@ class AppColors {
   /// Dropdown menu list — always fully opaque, never follows Card appearance.
   static Color dropdownMenuFillOf(BuildContext context) => surfaceOf(context);
 
-  /// Dropdown field shell on forms — follows Card appearance transparency.
-  static Color dropdownShellFillOf(BuildContext context) =>
-      cardSurfaceFillOf(context);
+  /// Dropdown field shell on forms — transparent; parent card shows through.
+  static Color dropdownShellFillOf(BuildContext context) => Colors.transparent;
 
   /// Dropdown filter pill shell (task filters, etc.) — always solid.
   static Color dropdownFilterShellFillOf(BuildContext context) => cardOf(context);

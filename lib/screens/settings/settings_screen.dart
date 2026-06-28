@@ -80,6 +80,15 @@ class SettingsScreen extends StatelessWidget {
                 onTap: () =>
                     Navigator.pushNamed(context, '/settings/card-appearance'),
               ),
+              SettingsSwitchTile(
+                icon: Icons.auto_awesome_outlined,
+                title: 'Background icons',
+                subtitle: settings.backgroundDecorIconsEnabled
+                    ? 'Decorative icons shown'
+                    : 'Plain background only',
+                value: settings.backgroundDecorIconsEnabled,
+                onChanged: settings.setBackgroundDecorIconsEnabled,
+              ),
               SettingsNavTile(
                 icon: Icons.calendar_month_outlined,
                 title: 'Calendar & Time Format',

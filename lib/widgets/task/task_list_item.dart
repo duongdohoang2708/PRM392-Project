@@ -446,9 +446,13 @@ class _TaskListItemState extends State<TaskListItem>
                     );
                   },
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildTitleText(theme),
+                      SizedBox(
+                        width: double.infinity,
+                        child: _buildTitleText(theme),
+                      ),
                       const SizedBox(height: 4),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -531,50 +535,57 @@ class _TaskListItemState extends State<TaskListItem>
                 ),
               ),
               if (!widget.hideActions) ...[
-                const SizedBox(width: 16),
-                // Star Action
-                GestureDetector(
-                  onTap: () {
-                    context.read<TaskProvider>().toggleTaskImportance(
-                      widget.task.id,
-                    );
-                  },
-                  child: Icon(
-                    widget.task.isImportant ? Icons.star : Icons.star_border,
-                    color: widget.task.isImportant
-                        ? AppColors.accentYellow
-                        : AppOpacity.fixed(
-                            AppColors.textSecondaryOf(context),
-                            AppOpacity.textMuted,
-                          ),
-                  ),
-                ),
                 const SizedBox(width: 12),
-                // Play Action
-                GestureDetector(
-                  onTap: _isCompletedLocal ? null : () => _handleStartFocus(context),
-                  child: Icon(
-                    Icons.play_circle_fill,
-                    size: 28,
-                    color: _isCompletedLocal
-                        ? AppOpacity.fixed(
-                            AppColors.textSecondaryOf(context),
-                            AppOpacity.textMuted,
-                          )
-                        : projectColor,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isExpanded = !_isExpanded;
-                    });
-                  },
-                  child: Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textSecondaryOf(context),
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        context.read<TaskProvider>().toggleTaskImportance(
+                          widget.task.id,
+                        );
+                      },
+                      child: Icon(
+                        widget.task.isImportant
+                            ? Icons.star
+                            : Icons.star_border,
+                        color: widget.task.isImportant
+                            ? AppColors.accentYellow
+                            : AppOpacity.fixed(
+                                AppColors.textSecondaryOf(context),
+                                AppOpacity.textMuted,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: _isCompletedLocal
+                          ? null
+                          : () => _handleStartFocus(context),
+                      child: Icon(
+                        Icons.play_circle_fill,
+                        size: 28,
+                        color: _isCompletedLocal
+                            ? AppOpacity.fixed(
+                                AppColors.textSecondaryOf(context),
+                                AppOpacity.textMuted,
+                              )
+                            : projectColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isExpanded = !_isExpanded;
+                        });
+                      },
+                      child: Icon(
+                        _isExpanded ? Icons.expand_less : Icons.expand_more,
+                        color: AppColors.textSecondaryOf(context),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ],
@@ -717,7 +728,8 @@ class _TaskListItemState extends State<TaskListItem>
     if (_strikeAnimation == null) {
       return Text(
         widget.task.title,
-        maxLines: 1,
+        maxLines: 2,
+        softWrap: true,
         overflow: TextOverflow.ellipsis,
         style: style?.copyWith(
           decoration:
@@ -850,18 +862,22 @@ class _MultiLineStrikethroughText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      foregroundPainter: _MultiLineStrikethroughPainter(
-        text: text,
-        style: style,
-        progress: progress,
-        lineColor: lineColor,
-      ),
-      child: Text(
-        text,
-        style: style,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+    return SizedBox(
+      width: double.infinity,
+      child: CustomPaint(
+        foregroundPainter: _MultiLineStrikethroughPainter(
+          text: text,
+          style: style,
+          progress: progress,
+          lineColor: lineColor,
+        ),
+        child: Text(
+          text,
+          style: style,
+          maxLines: 2,
+          softWrap: true,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
   }
@@ -887,7 +903,7 @@ class _MultiLineStrikethroughPainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
-      maxLines: 1,
+      maxLines: 2,
       ellipsis: '...',
     )..layout(maxWidth: size.width);
 

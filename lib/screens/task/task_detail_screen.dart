@@ -576,6 +576,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildInfoCard(List<String> projects, Color projectColor) {
+    final accent = AppColors.projectAccentOf(context, projectColor);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: AppColors.taskCardDecorationOf(context, projectColor),
@@ -585,6 +587,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildInfoRow(
             icon: Icons.calendar_today,
             label: 'Date',
+            iconColor: accent,
             child: Builder(
               builder: (tapContext) => InkWell(
                 onTap: () => _selectDate(tapContext),
@@ -614,6 +617,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildInfoRow(
             icon: Icons.access_time,
             label: 'Time',
+            iconColor: accent,
             child: Builder(
               builder: (tapContext) => InkWell(
                 onTap: () => _selectTime(tapContext),
@@ -647,10 +651,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildInfoRow(
             icon: Icons.all_inclusive,
             label: 'All Day',
+            iconColor: accent,
             child: Switch(
               value: _isAllDay,
-              activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
-              activeThumbColor: AppColors.primaryDark,
+              activeTrackColor: accent.withValues(alpha: 0.5),
+              activeThumbColor: accent,
               onChanged: (val) {
                 setState(() {
                   _isAllDay = val;
@@ -665,10 +670,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildInfoRow(
             icon: Icons.pending_actions,
             label: 'Status',
+            iconColor: accent,
             child: AppDropdown<bool>(
               value: _isCompleted,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
+              accentColor: accent,
               items: [
                 DropdownMenuItem(
                   value: false,
@@ -694,11 +701,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildInfoRow(
             icon: Icons.folder_open,
             label: 'Project',
+            iconColor: accent,
             child: Builder(
               builder: (tapContext) => AppDropdown<String>(
                 value: _project,
                 isExpanded: true,
                 alignment: AlignmentDirectional.centerEnd,
+                accentColor: accent,
                 items: [
                   ...projects.map(
                     (p) => DropdownMenuItem(
@@ -712,7 +721,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       Text(
                         '+ Add Project',
                         style: TextStyle(
-                          color: AppColors.primaryDark,
+                          color: accent,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -737,10 +746,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildInfoRow(
             icon: Icons.flag_outlined,
             label: 'Priority',
+            iconColor: accent,
             child: AppDropdown<String>(
               value: _priority,
               isExpanded: true,
               alignment: AlignmentDirectional.centerEnd,
+              accentColor: accent,
               items: [
                 DropdownMenuItem(
                   value: 'High',
@@ -770,6 +781,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           _buildInfoRow(
             icon: Icons.notifications,
             label: 'Reminder',
+            iconColor: accent,
             child: ReminderSelector(
               value: _reminder,
               isAllDay: _isAllDay,
@@ -784,11 +796,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
+    required Color iconColor,
     required Widget child,
   }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppColors.primaryDark),
+        Icon(icon, size: 20, color: iconColor),
         const SizedBox(width: 12),
         Text(
           label,
