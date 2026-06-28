@@ -24,6 +24,9 @@ import 'settings/card_appearance_settings_screen.dart';
 import 'settings/notification_settings_screen.dart';
 import 'settings/focus_settings_screen.dart';
 import 'settings/calendar_display_settings_screen.dart';
+import 'settings/activity_modes_screen.dart';
+import 'settings/activity_mode_detail_screen.dart';
+import '../../models/activity_mode.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -207,6 +210,16 @@ class _MainShellState extends State<MainShell> {
       case '/settings/pomodoro':
       case '/settings/focus':
         page = const FocusSettingsScreen();
+        break;
+      case '/settings/activity-modes':
+        page = const ActivityModesScreen();
+        break;
+      case '/settings/activity-modes/detail':
+        final args = settings.arguments as Map<String, dynamic>?;
+        final modeId = ActivityModes.idFromRoute(
+          args?['modeId'] as String? ?? 'defaultMode',
+        );
+        page = ActivityModeDetailScreen(modeId: modeId);
         break;
       default:
         page = const HomeScreen();

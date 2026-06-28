@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../models/activity_mode.dart';
+import 'activity_mode_palette.dart';
 import 'app_opacity.dart';
 
 class AppColors {
@@ -65,29 +67,41 @@ class AppColors {
   static bool isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
 
+  static ActivityModePalette paletteOf(BuildContext context) {
+    return Theme.of(context).extension<ActivityModePalette>() ??
+        ActivityModePalette.forMode(
+          ActivityModeId.defaultMode,
+          brightness: Theme.of(context).brightness,
+        );
+  }
+
+  static Color primaryOf(BuildContext context) => paletteOf(context).primary;
+
+  static Color primaryDarkOf(BuildContext context) =>
+      paletteOf(context).primaryDark;
+
+  static Color primaryLightOf(BuildContext context) =>
+      paletteOf(context).primaryLight;
+
   static Color backgroundOf(BuildContext context) =>
-      isDark(context) ? darkBackground : background;
+      paletteOf(context).background;
 
-  static Color surfaceOf(BuildContext context) =>
-      isDark(context) ? darkSurface : surface;
+  static Color surfaceOf(BuildContext context) => paletteOf(context).surface;
 
-  static Color borderOf(BuildContext context) =>
-      isDark(context) ? darkBorder : border;
+  static Color borderOf(BuildContext context) => paletteOf(context).border;
 
   static Color textPrimaryOf(BuildContext context) =>
-      isDark(context) ? darkTextPrimary : textPrimary;
+      paletteOf(context).textPrimary;
 
   static Color textSecondaryOf(BuildContext context) =>
-      isDark(context) ? darkTextSecondary : textSecondary;
+      paletteOf(context).textSecondary;
 
   /// Drawer header strip behind profile greeting.
-  static Color drawerHeaderOf(BuildContext context) => isDark(context)
-      ? const Color(0xFF2A332E)
-      : primaryLight;
+  static Color drawerHeaderOf(BuildContext context) =>
+      paletteOf(context).drawerHeader;
 
   /// Cards/lists on top of scaffold background.
-  static Color cardOf(BuildContext context) =>
-      isDark(context) ? const Color(0xFF2D3530) : surface;
+  static Color cardOf(BuildContext context) => paletteOf(context).card;
 
   /// Neutral panel (StatPanel) — no accent tint, solidity from Settings.
   static Color panelFillOf(BuildContext context) =>
@@ -226,7 +240,7 @@ class AppColors {
 
   /// Inset surface for nested cells (streak day, list rows).
   static Color insetSurfaceOf(BuildContext context) =>
-      isDark(context) ? const Color(0xFF232A26) : background;
+      paletteOf(context).insetSurface;
 
   static Color primaryLightTintOf(BuildContext context, {double alpha = 0.3}) {
     if (isDark(context)) {
@@ -362,23 +376,7 @@ class AppColors {
       : streakFlame;
 
   static Color streakTodayAccentOf(BuildContext context) =>
-      isDark(context) ? primary : primaryDark;
-
-  /// Statistics bar chart — highlighted column.
-  static Color chartBarActiveOf(BuildContext context) =>
-      isDark(context) ? primary : primaryDark;
-
-  /// Statistics bar chart — default columns.
-  static Color chartBarIdleOf(BuildContext context) {
-    if (isDark(context)) {
-      return AppOpacity.fixed(primary, AppOpacity.chartIdle);
-    }
-    return primaryLight;
-  }
-
-  /// Statistics bar chart — label for highlighted column.
-  static Color chartBarHighlightLabelOf(BuildContext context) =>
-      isDark(context) ? primary : primaryDark;
+      isDark(context) ? primaryOf(context) : primaryDarkOf(context);
 
   static Color streakFreezeBorderOf(BuildContext context) {
     if (isDark(context)) {
@@ -437,28 +435,45 @@ class AppColors {
     required bool isRunning,
   }) {
     if (isRunning) return accentYellow;
-    return isDark(context) ? primary : primaryDark;
+    return isDark(context) ? primaryOf(context) : primaryDarkOf(context);
   }
 
   /// Segmented pill (Focus/Task, Week/Month) — selected fill; matches range chips.
-  static Color segmentSelectedFillOf(BuildContext context) => primaryDark;
+  static Color segmentSelectedFillOf(BuildContext context) =>
+      primaryDarkOf(context);
 
   /// Segmented pill — selected label.
   static Color segmentSelectedLabelOf(BuildContext context) => Colors.white;
 
   /// Calendar — selected day circle fill.
   static Color calendarSelectedDayFillOf(BuildContext context) =>
-      isDark(context) ? primaryDark : primary;
+      isDark(context) ? primaryDarkOf(context) : primaryOf(context);
 
   /// Calendar — today ring when the day is not selected.
   static Color calendarTodayRingOf(BuildContext context) {
     if (isDark(context)) {
-      return AppOpacity.fixed(primaryDark, AppOpacity.todayRing);
+      return AppOpacity.fixed(primaryDarkOf(context), AppOpacity.todayRing);
     }
-    return primaryDark;
+    return primaryDarkOf(context);
   }
 
   /// Calendar — selected day number.
   static Color calendarSelectedDayTextOf(BuildContext context) =>
       isDark(context) ? darkTextPrimary : textPrimary;
+
+  /// Statistics bar chart — highlighted column.
+  static Color chartBarActiveOf(BuildContext context) =>
+      isDark(context) ? primaryOf(context) : primaryDarkOf(context);
+
+  /// Statistics bar chart — default columns.
+  static Color chartBarIdleOf(BuildContext context) {
+    if (isDark(context)) {
+      return AppOpacity.fixed(primaryOf(context), AppOpacity.chartIdle);
+    }
+    return primaryLightOf(context);
+  }
+
+  /// Statistics bar chart — label for highlighted column.
+  static Color chartBarHighlightLabelOf(BuildContext context) =>
+      isDark(context) ? primaryOf(context) : primaryDarkOf(context);
 }

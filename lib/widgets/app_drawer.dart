@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../providers/activity_mode_provider.dart';
 import '../providers/drawer_provider.dart';
 import '../providers/user_provider.dart';
 import 'common/user_avatar.dart';
@@ -32,6 +33,8 @@ class AppDrawer extends StatelessWidget {
     final isDesktopCollapsed =
         isPermanent ? context.watch<DrawerProvider>().isDesktopCollapsed : false;
     final user = context.watch<UserProvider>();
+    final activityModes = context.watch<ActivityModeProvider>();
+    final activeMode = activityModes.activeDefinition;
     final width = isDesktopCollapsed ? 88.0 : 280.0;
 
     final drawerContent = Column(
@@ -88,6 +91,65 @@ class AppDrawer extends StatelessWidget {
         ),
 
         const SizedBox(height: 16),
+
+        if (!isDesktopCollapsed)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  if (!isPermanent) Navigator.pop(context);
+                  _openActivityModes(context);
+                },
+                borderRadius: BorderRadius.circular(100),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLightTintOf(context, alpha: 0.35),
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                      color: AppColors.projectBorderOf(
+                        context,
+                        AppColors.primaryOf(context),
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        activeMode.icon,
+                        size: 18,
+                        color: AppColors.primaryDarkOf(context),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          activeMode.name,
+                          style: TextStyle(
+                            color: AppColors.primaryDarkOf(context),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: AppColors.textSecondaryOf(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        if (!isDesktopCollapsed) const SizedBox(height: 12),
 
         // Menu Items
         Expanded(
@@ -361,6 +423,21 @@ class AppDrawer extends StatelessWidget {
     }
   }
 
+  void _openActivityModes(BuildContext context) {
+    if (!isPermanent) {
+      Navigator.pop(context);
+    }
+    if (onNavigate != null) {
+      onNavigate!('/settings/activity-modes');
+    } else {
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (context.mounted) {
+          Navigator.pushNamed(context, '/settings/activity-modes');
+        }
+      });
+    }
+  }
+
   Widget _buildMenuItem(
     BuildContext context, {
     required IconData icon,
@@ -369,8 +446,9 @@ class AppDrawer extends StatelessWidget {
     bool isCollapsed = false,
     required VoidCallback onTap,
   }) {
-    final activeColor =
-        AppColors.isDark(context) ? AppColors.primary : AppColors.primaryDark;
+    final activeColor = AppColors.isDark(context)
+        ? AppColors.primaryOf(context)
+        : AppColors.primaryDarkOf(context);
     final color = isActive ? activeColor : AppColors.textSecondaryOf(context);
     final bgColor = isActive
         ? AppColors.primaryLightTintOf(context)

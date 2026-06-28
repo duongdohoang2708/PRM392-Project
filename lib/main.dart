@@ -11,6 +11,7 @@ import 'providers/focus_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/goals_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/activity_mode_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/user_provider.dart';
 import 'services/notification_service.dart';
@@ -22,13 +23,16 @@ void main() async {
   await NotificationService.init();
 
   final settingsProvider = SettingsProvider();
+  final activityModeProvider = ActivityModeProvider();
   final userProvider = UserProvider();
   await settingsProvider.load();
+  await activityModeProvider.load();
   await userProvider.load();
 
   runApp(
     MyApp(
       settingsProvider: settingsProvider,
+      activityModeProvider: activityModeProvider,
       userProvider: userProvider,
     ),
   );
@@ -36,11 +40,13 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final SettingsProvider settingsProvider;
+  final ActivityModeProvider activityModeProvider;
   final UserProvider userProvider;
 
   const MyApp({
     super.key,
     required this.settingsProvider,
+    required this.activityModeProvider,
     required this.userProvider,
   });
 
@@ -49,6 +55,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsProvider),
+        ChangeNotifierProvider.value(value: activityModeProvider),
         ChangeNotifierProvider.value(value: userProvider),
         ChangeNotifierProxyProvider<SettingsProvider, TaskProvider>(
           create: (_) => TaskProvider(),
@@ -90,14 +97,24 @@ class MyApp extends StatelessWidget {
           },
         ),
       ],
-      child: Consumer<SettingsProvider>(
-        builder: (context, settings, _) {
+      child: Consumer2<SettingsProvider, ActivityModeProvider>(
+        builder: (context, settings, activityModes, _) {
+          final lightPalette =
+              activityModes.paletteFor(Brightness.light);
+          final darkPalette = activityModes.paletteFor(Brightness.dark);
+
           return SlidableAutoCloseBehavior(
             child: MaterialApp(
               navigatorKey: navigatorKey,
               title: 'TaskFlow',
-              theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
+              theme: AppTheme.build(
+                brightness: Brightness.light,
+                palette: lightPalette,
+              ),
+              darkTheme: AppTheme.build(
+                brightness: Brightness.dark,
+                palette: darkPalette,
+              ),
               themeMode: settings.themeMode,
               debugShowCheckedModeBanner: false,
               home: const SplashScreen(),

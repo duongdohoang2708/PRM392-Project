@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/activity_mode_provider.dart';
 import '../../providers/goals_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_icons.dart';
@@ -54,6 +55,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final goalsProvider = context.watch<GoalsProvider>();
     final settings = context.watch<SettingsProvider>();
+    final activityModes = context.watch<ActivityModeProvider>();
     final weekStartLabel = settings.weekStartsOnMonday ? 'Monday' : 'Sunday';
     final timeFormatLabel = settings.use12HourClock ? '12-hour' : '24-hour';
 
@@ -72,6 +74,13 @@ class SettingsScreen extends StatelessWidget {
                 title: 'Theme',
                 subtitle: settings.themeModeLabel,
                 onTap: () => Navigator.pushNamed(context, '/settings/theme'),
+              ),
+              SettingsNavTile(
+                icon: Icons.tune_outlined,
+                title: 'Activity Modes',
+                subtitle: activityModes.activeDefinition.name,
+                onTap: () =>
+                    Navigator.pushNamed(context, '/settings/activity-modes'),
               ),
               SettingsNavTile(
                 icon: Icons.style_outlined,

@@ -6,7 +6,9 @@ import '../task/task_list_item.dart';
 import '../common/section_action_button.dart';
 
 class UpNextTasksSection extends StatelessWidget {
-  const UpNextTasksSection({super.key});
+  final int maxTasks;
+
+  const UpNextTasksSection({super.key, this.maxTasks = 4});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class UpNextTasksSection extends StatelessWidget {
       if (b.dueDate == null) return -1;
       return a.dueDate!.compareTo(b.dueDate!);
     });
-    final displayTasks = upcomingTasks.take(4).toList();
+    final displayTasks = upcomingTasks.take(maxTasks).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
