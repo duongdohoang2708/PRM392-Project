@@ -117,13 +117,23 @@ class _StreakSummary extends StatelessWidget {
           height: isCompact ? 56 : 64,
           decoration: BoxDecoration(
             color: isRestDay
-                ? AppColors.freezeBlue.withValues(alpha: 0.14)
-                : AppColors.accentPeach.withValues(alpha: 0.18),
+                ? AppColors.cardFillOf(
+                    context,
+                    accentColor: AppColors.freezeBlue,
+                    lightTintAlpha: 0.14,
+                    darkTintAlpha: 0.14,
+                  )
+                : AppColors.cardFillOf(
+                    context,
+                    accentColor: AppColors.accentPeach,
+                    lightTintAlpha: 0.18,
+                    darkTintAlpha: 0.18,
+                  ),
             shape: BoxShape.circle,
             border: Border.all(
               color: isRestDay
-                  ? AppColors.freezeBlue.withValues(alpha: 0.35)
-                  : AppColors.accentPeach.withValues(alpha: 0.35),
+                  ? AppColors.statCardBorderOf(context, AppColors.freezeBlue)
+                  : AppColors.statCardBorderOf(context, AppColors.accentPeach),
               width: 1.5,
             ),
           ),

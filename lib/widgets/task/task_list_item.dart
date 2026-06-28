@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../common/animations/app_delete_transition.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../models/task_model.dart';
@@ -360,7 +361,7 @@ class _TaskListItemState extends State<TaskListItem>
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.surfaceOf(context),
+          backgroundColor: AppColors.panelFillOf(context),
           title: Text('Timer is running',
               style: TextStyle(color: AppColors.textPrimaryOf(context))),
           content: Text(
@@ -425,18 +426,26 @@ class _TaskListItemState extends State<TaskListItem>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _isCompletedLocal
-            ? AppColors.backgroundOf(context)
-            : Color.alphaBlend(
-                projectColor.withValues(alpha: 0.08),
-                AppColors.surfaceOf(context),
+            ? AppOpacity.solidSurfaceFill(
+                context,
+                AppColors.backgroundOf(context),
+              )
+            : AppColors.projectTintOf(
+                context,
+                projectColor,
+                lightAlpha: 0.08,
+                darkAlpha: 0.12,
               ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(
+          color: AppColors.projectBorderOf(context, projectColor),
+          width: 1.5,
+        ),
         boxShadow: _isCompletedLocal
             ? null
             : [
                 BoxShadow(
-                  color: projectColor.withValues(alpha: 0.04),
+                  color: AppColors.projectGlowOf(context, projectColor),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -463,7 +472,7 @@ class _TaskListItemState extends State<TaskListItem>
                     border: Border.all(
                       color: _isCompletedLocal
                           ? projectColor
-                          : projectColor.withValues(alpha: 0.5),
+                          : AppColors.projectMutedAccentOf(context, projectColor),
                       width: 2,
                     ),
                   ),
@@ -591,7 +600,10 @@ class _TaskListItemState extends State<TaskListItem>
                     widget.task.isImportant ? Icons.star : Icons.star_border,
                     color: widget.task.isImportant
                         ? AppColors.accentYellow
-                        : AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
+                        : AppOpacity.fixed(
+                            AppColors.textSecondaryOf(context),
+                            AppOpacity.textMuted,
+                          ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -602,7 +614,10 @@ class _TaskListItemState extends State<TaskListItem>
                     Icons.play_circle_fill,
                     size: 28,
                     color: _isCompletedLocal
-                        ? AppColors.textSecondaryOf(context).withValues(alpha: 0.5)
+                        ? AppOpacity.fixed(
+                            AppColors.textSecondaryOf(context),
+                            AppOpacity.textMuted,
+                          )
                         : projectColor,
                   ),
                 ),
@@ -830,7 +845,10 @@ class _EditableSubTaskRowState extends State<_EditableSubTaskRow> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: widget.projectColor.withValues(alpha: 0.5),
+              color: AppColors.projectMutedAccentOf(
+                context,
+                widget.projectColor,
+              ),
               width: 2,
             ),
           ),

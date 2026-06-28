@@ -76,6 +76,13 @@ class SettingsScreen extends StatelessWidget {
                 onTap: () => Navigator.pushNamed(context, '/settings/theme'),
               ),
               SettingsNavTile(
+                icon: Icons.opacity_outlined,
+                title: 'Transparency',
+                subtitle: settings.cardAppearanceSubtitle,
+                onTap: () =>
+                    Navigator.pushNamed(context, '/settings/transparency'),
+              ),
+              SettingsNavTile(
                 icon: Icons.calendar_month_outlined,
                 title: 'Calendar & Time',
                 subtitle: 'Week starts $weekStartLabel • $timeFormatLabel',

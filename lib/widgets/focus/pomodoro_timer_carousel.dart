@@ -542,7 +542,7 @@ class _FlipDigitState extends State<_FlipDigit>
       height: 96 * s,
       margin: EdgeInsets.symmetric(horizontal: 5 * s),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16 * s),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
@@ -621,7 +621,7 @@ class _TimerCenterDisplay extends StatelessWidget {
       width: 160 * scale,
       height: 160 * scale,
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [

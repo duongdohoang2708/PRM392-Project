@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../providers/goals_provider.dart';
+import '../../utils/calendar_week_config.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../../theme/app_icons.dart';
 import '../statistics/statistics_widgets.dart';
 
@@ -40,22 +42,29 @@ class WeeklyStreakRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: days
-          .map((day) => Expanded(child: WeekDayTile(day: day)))
-          .toList(),
+      children: List.generate(days.length, (index) {
+        return Expanded(
+          child: WeekDayTile(day: days[index], labelIndex: index),
+        );
+      }),
     );
   }
 }
 
 class WeekDayTile extends StatelessWidget {
   final GoalDayData day;
+  final int labelIndex;
 
-  const WeekDayTile({super.key, required this.day});
+  const WeekDayTile({
+    super.key,
+    required this.day,
+    required this.labelIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final label = labels[day.date.weekday - 1];
+    final labels = CalendarWeekConfig.weekdayLabels;
+    final label = labels[labelIndex.clamp(0, labels.length - 1)];
     final missed = day.isMissed;
     final isRestDay = day.isRestDay;
 
@@ -68,7 +77,7 @@ class WeekDayTile extends StatelessWidget {
         : isRestDay
         ? AppColors.streakFreezeBorderOf(context)
         : day.isPartial
-        ? AppColors.accentYellow.withValues(alpha: 0.55)
+        ? AppOpacity.fixed(AppColors.accentYellow, 0.55)
         : AppColors.borderOf(context);
 
     return Column(

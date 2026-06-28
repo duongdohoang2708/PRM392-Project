@@ -177,14 +177,14 @@ class _AvatarCropEditor extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: ColoredBox(
-        color: AppColors.surfaceOf(context),
+        color: AppColors.panelFillOf(context),
         child: Crop(
           key: ValueKey(imageBytes.lengthInBytes ^ imageBytes.hashCode),
           controller: controller,
           image: imageBytes,
           withCircleUi: true,
           interactive: true,
-          baseColor: AppColors.surfaceOf(context),
+          baseColor: AppColors.panelFillOf(context),
           maskColor: Colors.black.withValues(alpha: 0.62),
           progressIndicator: const Center(
             child: CircularProgressIndicator(

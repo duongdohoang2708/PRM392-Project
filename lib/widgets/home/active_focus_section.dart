@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../../providers/focus_provider.dart';
 
 class ActiveFocusSection extends StatelessWidget {
@@ -82,11 +83,11 @@ class ActiveFocusSection extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.cardOf(context),
+              color: AppColors.cardSurfaceFillOf(context),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isDark
-                    ? AppColors.primary.withValues(alpha: 0.3)
+                    ? AppOpacity.fixed(AppColors.primary, 0.3)
                     : AppColors.borderOf(context),
               ),
               boxShadow: isDark

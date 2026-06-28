@@ -52,7 +52,7 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surfaceOf(context),
+          color: AppColors.panelFillOf(context),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
@@ -219,7 +219,7 @@ class _GoalStepper extends StatelessWidget {
           ),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surfaceOf(context),
+              color: AppColors.panelFillOf(context),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.borderOf(context)),
             ),

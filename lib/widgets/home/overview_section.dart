@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/task_provider.dart';
+import '../common/tinted_accent_card.dart';
 
 class OverviewSection extends StatelessWidget {
   const OverviewSection({super.key});
@@ -34,105 +35,37 @@ class OverviewSection extends StatelessWidget {
               crossAxisSpacing: 16,
               childAspectRatio: aspectRatio,
               children: [
-                _buildStatCard(
-                  context,
-                  title: 'Tasks Today',
-                  value: '${taskProvider.tasksTodayCount}',
+                TintedAccentCard(
+                  accentColor: const Color(0xFF0277BD),
                   icon: Icons.task_alt,
-                  color: const Color(0xFF0277BD),
-                  bgColor: const Color(0xFF0277BD).withAlpha(50),
+                  label: 'Tasks Today',
+                  value: '${taskProvider.tasksTodayCount}',
                 ),
-                _buildStatCard(
-                  context,
-                  title: 'Completed',
-                  value: '${taskProvider.completedTodayCount}',
+                TintedAccentCard(
+                  accentColor: AppColors.primaryDark,
                   icon: Icons.check_circle_outline,
-                  color: AppColors.primaryDark,
-                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.39),
+                  label: 'Completed',
+                  value: '${taskProvider.completedTodayCount}',
+                  lightBgAlpha: 0.52,
+                  darkBgAlpha: 0.26,
                 ),
-                _buildStatCard(
-                  context,
-                  title: 'Remaining',
-                  value: '${taskProvider.remainingTodayCount}',
+                TintedAccentCard(
+                  accentColor: AppColors.accentYellow,
                   icon: Icons.pending_actions_outlined,
-                  color: AppColors.accentYellow,
-                  bgColor: AppColors.accentYellow.withAlpha(50),
+                  label: 'Remaining',
+                  value: '${taskProvider.remainingTodayCount}',
                 ),
-                _buildStatCard(
-                  context,
-                  title: 'Overdue',
-                  value: '${taskProvider.overdueCount}',
+                TintedAccentCard(
+                  accentColor: const Color(0xFFD32F2F),
                   icon: Icons.event_busy_outlined,
-                  color: const Color(0xFFD32F2F),
-                  bgColor: const Color(0xFFD32F2F).withAlpha(50),
+                  label: 'Overdue',
+                  value: '${taskProvider.overdueCount}',
                 ),
               ],
             );
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    required Color bgColor,
-  }) {
-    final cardBg = AppColors.isDark(context)
-        ? color.withValues(alpha: 0.18)
-        : bgColor;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: AppColors.isDark(context) ? 0.35 : 0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimaryOf(context),
-                  ),
-                ),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondaryOf(context),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -46,7 +46,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       context: parentContext,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.surfaceOf(parentContext),
+          backgroundColor: AppColors.panelFillOf(parentContext),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -170,8 +170,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(
-            projectColor.withValues(alpha: 0.08), AppColors.surfaceOf(context)),
+        color: AppColors.cardFillOf(
+          context,
+          accentColor: projectColor,
+          lightTintAlpha: 0.08,
+          darkTintAlpha: 0.08,
+          surface: AppColors.surfaceOf(context),
+        ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
@@ -251,8 +256,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(
-            projectColor.withValues(alpha: 0.08), AppColors.surfaceOf(context)),
+        color: AppColors.cardFillOf(
+          context,
+          accentColor: projectColor,
+          lightTintAlpha: 0.08,
+          darkTintAlpha: 0.08,
+          surface: AppColors.surfaceOf(context),
+        ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
@@ -368,8 +378,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
             decoration: BoxDecoration(
-              color: Color.alphaBlend(
-            projectColor.withValues(alpha: 0.08), AppColors.surfaceOf(context)),
+              color: AppColors.cardFillOf(
+          context,
+          accentColor: projectColor,
+          lightTintAlpha: 0.08,
+          darkTintAlpha: 0.08,
+          surface: AppColors.surfaceOf(context),
+        ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
             ),

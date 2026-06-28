@@ -80,7 +80,7 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 0),

@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../../providers/drawer_provider.dart';
 import '../../providers/goals_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../utils/calendar_week_config.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_snackbar.dart';
@@ -28,7 +31,7 @@ class GoalsScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.cardOf(context),
+          backgroundColor: AppColors.cardSurfaceFillOf(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -106,6 +109,7 @@ class GoalsScreen extends StatelessWidget {
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 768;
         final goalsProvider = context.watch<GoalsProvider>();
+        context.watch<SettingsProvider>();
         final taskGoal = goalsProvider.taskDailyGoal;
         final focusGoal = goalsProvider.focusDailyGoal;
 
@@ -370,11 +374,9 @@ class _StreakCalendarWidgetState extends State<_StreakCalendarWidget> {
 
   String _periodLabel() {
     if (_activeView == _StreakView.week) {
-      final monday = _weekAnchor.subtract(
-        Duration(days: _weekAnchor.weekday - 1),
-      );
-      final sunday = monday.add(const Duration(days: 6));
-      return '${_shortMonth(monday.month)} ${monday.day} - ${_shortMonth(sunday.month)} ${sunday.day}';
+      final weekStart = CalendarWeekConfig.weekStartFor(_weekAnchor);
+      final weekEnd = weekStart.add(const Duration(days: 6));
+      return '${_shortMonth(weekStart.month)} ${weekStart.day} - ${_shortMonth(weekEnd.month)} ${weekEnd.day}';
     }
 
     return '${_monthName(_monthAnchor.month)} ${_monthAnchor.year}';
@@ -466,13 +468,23 @@ class _StreakHeroCard extends StatelessWidget {
             height: 76,
             decoration: BoxDecoration(
               color: isRestDay
-                  ? AppColors.freezeBlue.withValues(alpha: 0.14)
-                  : AppColors.accentPeach.withValues(alpha: 0.18),
+                  ? AppColors.cardFillOf(
+                      context,
+                      accentColor: AppColors.freezeBlue,
+                      lightTintAlpha: 0.14,
+                      darkTintAlpha: 0.14,
+                    )
+                  : AppColors.cardFillOf(
+                      context,
+                      accentColor: AppColors.accentPeach,
+                      lightTintAlpha: 0.18,
+                      darkTintAlpha: 0.18,
+                    ),
               shape: BoxShape.circle,
               border: Border.all(
                 color: isRestDay
-                    ? AppColors.freezeBlue.withValues(alpha: 0.35)
-                    : AppColors.accentPeach.withValues(alpha: 0.35),
+                    ? AppColors.statCardBorderOf(context, AppColors.freezeBlue)
+                    : AppColors.statCardBorderOf(context, AppColors.accentPeach),
                 width: 1.5,
               ),
             ),
@@ -736,7 +748,12 @@ class _AchievementsEntryCard extends StatelessWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: AppColors.accentYellow.withValues(alpha: 0.2),
+                color: AppColors.cardFillOf(
+                  context,
+                  accentColor: AppColors.accentYellow,
+                  lightTintAlpha: 0.2,
+                  darkTintAlpha: 0.2,
+                ),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(
@@ -895,7 +912,7 @@ class _ViewSwitcher extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -981,7 +998,7 @@ class _PeriodNavigator extends StatelessWidget {
           onPressed: onPrevious,
           icon: Icon(Icons.chevron_left, color: AppColors.textPrimaryOf(context)),
           style: IconButton.styleFrom(
-            backgroundColor: AppColors.cardOf(context),
+            backgroundColor: AppColors.cardSurfaceFillOf(context),
             side: BorderSide(color: AppColors.borderOf(context)),
           ),
         ),
@@ -1000,7 +1017,7 @@ class _PeriodNavigator extends StatelessWidget {
           onPressed: onNext,
           icon: Icon(Icons.chevron_right, color: AppColors.textPrimaryOf(context)),
           style: IconButton.styleFrom(
-            backgroundColor: AppColors.cardOf(context),
+            backgroundColor: AppColors.cardSurfaceFillOf(context),
             side: BorderSide(color: AppColors.borderOf(context)),
           ),
         ),
@@ -1113,7 +1130,7 @@ class _MonthDayTile extends StatelessWidget {
         : isRestDay
         ? AppColors.streakFreezeBorderOf(context)
         : day.isPartial
-        ? AppColors.accentYellow.withValues(alpha: 0.45)
+        ? AppOpacity.fixed(AppColors.accentYellow, 0.45)
         : AppColors.borderOf(context);
 
     return Opacity(

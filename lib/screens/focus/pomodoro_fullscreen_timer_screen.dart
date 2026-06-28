@@ -114,7 +114,7 @@ class _PomodoroFullscreenTimerScreenState
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.cardOf(context),
+            color: AppColors.cardSurfaceFillOf(context),
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.borderOf(context)),
           ),
@@ -159,7 +159,7 @@ class _PomodoroFullscreenTimerScreenState
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.cardOf(context),
+            color: AppColors.cardSurfaceFillOf(context),
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.borderOf(context)),
           ),
@@ -188,7 +188,7 @@ class _PomodoroFullscreenTimerScreenState
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [

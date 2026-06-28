@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import '../../providers/drawer_provider.dart';
 import '../../providers/focus_provider.dart';
 import '../../providers/statistics_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../widgets/common/tinted_accent_card.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/common/animations/app_horizontal_slide_transition.dart';
@@ -24,6 +27,7 @@ class StatisticsScreen extends StatelessWidget {
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 768;
         final statsProvider = context.watch<StatisticsProvider>();
+        context.watch<SettingsProvider>();
 
         final content = Stack(
           children: [
@@ -138,7 +142,7 @@ class _StatisticsSegmentedControl extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
+        color: AppColors.panelFillOf(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -481,7 +485,10 @@ class _PeriodNavButton extends StatelessWidget {
           size: 20,
           color: enabled
               ? AppColors.primaryDark
-              : AppColors.textSecondaryOf(context).withValues(alpha: 0.4),
+              : AppOpacity.fixed(
+                  AppColors.textSecondaryOf(context),
+                  0.4,
+                ),
         ),
       ),
     );
@@ -544,28 +551,28 @@ class _FocusStatisticsContent extends StatelessWidget {
                   value: formatFocusMinutes(data.totalMinutes),
                   icon: Icons.timer_outlined,
                   color: AppColors.primaryDark,
-                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.4),
+                  lightBgAlpha: 0.4,
                 ),
                 _StatCardModel(
                   title: 'Sessions',
                   value: '${data.sessions}',
                   icon: Icons.repeat,
                   color: AppColors.accentYellow,
-                  bgColor: AppColors.accentYellow.withValues(alpha: 0.2),
+                  lightBgAlpha: 0.2,
                 ),
                 _StatCardModel(
                   title: 'Average',
                   value: '${data.averageMinutes}m',
                   icon: Icons.auto_graph,
                   color: AppColors.accentPeach,
-                  bgColor: AppColors.accentPeach.withValues(alpha: 0.18),
+                  lightBgAlpha: 0.18,
                 ),
                 _StatCardModel(
                   title: 'Longest',
                   value: '${data.longestMinutes}m',
                   icon: Icons.emoji_events_outlined,
                   color: AppColors.accentPink,
-                  bgColor: AppColors.accentPink.withValues(alpha: 0.15),
+                  lightBgAlpha: 0.15,
                 ),
               ],
             ),
@@ -619,28 +626,28 @@ class _TaskStatisticsContent extends StatelessWidget {
                   value: '${data.total}',
                   icon: Icons.task_alt,
                   color: AppColors.primaryDark,
-                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.4),
+                  lightBgAlpha: 0.4,
                 ),
                 _StatCardModel(
                   title: 'Completed',
                   value: '${data.completed}',
                   icon: Icons.check_circle_outline,
                   color: AppColors.primary,
-                  bgColor: AppColors.primary.withValues(alpha: 0.2),
+                  lightBgAlpha: 0.2,
                 ),
                 _StatCardModel(
                   title: 'Pending',
                   value: '${data.pending}',
                   icon: Icons.hourglass_top_outlined,
                   color: AppColors.accentYellow,
-                  bgColor: AppColors.accentYellow.withValues(alpha: 0.2),
+                  lightBgAlpha: 0.2,
                 ),
                 _StatCardModel(
                   title: 'Overdue',
                   value: '${data.overdue}',
                   icon: Icons.error_outline,
                   color: AppColors.accentPeach,
-                  bgColor: AppColors.accentPeach.withValues(alpha: 0.18),
+                  lightBgAlpha: 0.18,
                 ),
               ],
             ),
@@ -889,14 +896,14 @@ class _StatCardModel {
   final String value;
   final IconData icon;
   final Color color;
-  final Color bgColor;
+  final double lightBgAlpha;
 
   const _StatCardModel({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
-    required this.bgColor,
+    required this.lightBgAlpha,
   });
 }
 
@@ -907,59 +914,14 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = AppColors.isDark(context);
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: card.bgColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: card.color.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.cardOf(context)
-                  : Colors.white.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(card.icon, color: card.color, size: 22),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  card.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: AppColors.textPrimaryOf(context),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  card.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: AppColors.textSecondaryOf(context),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return TintedAccentCard(
+      variant: TintedAccentCardVariant.statistics,
+      accentColor: card.color,
+      icon: card.icon,
+      label: card.title,
+      value: card.value,
+      lightBgAlpha: card.lightBgAlpha,
+      darkBgAlpha: card.lightBgAlpha,
     );
   }
 }

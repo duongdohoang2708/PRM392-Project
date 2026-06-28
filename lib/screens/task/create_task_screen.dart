@@ -369,7 +369,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
@@ -510,7 +510,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
@@ -717,7 +717,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
@@ -835,7 +835,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   Widget _buildNotesCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [

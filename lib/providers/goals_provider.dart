@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../models/task_model.dart';
+import '../utils/calendar_week_config.dart';
 import 'focus_provider.dart';
 import 'task_provider.dart';
 
@@ -288,10 +289,10 @@ class GoalsProvider with ChangeNotifier {
     final now = DateTime.now();
     final today = _normalizeDay(now);
     final anchorDay = _normalizeDay(anchorDate);
-    final monday = anchorDay.subtract(Duration(days: anchorDay.weekday - 1));
+    final weekStart = CalendarWeekConfig.weekStartFor(anchorDay);
 
     return List.generate(7, (index) {
-      final day = monday.add(Duration(days: index));
+      final day = weekStart.add(Duration(days: index));
       return _buildGoalDay(day, today);
     });
   }
@@ -300,9 +301,9 @@ class GoalsProvider with ChangeNotifier {
     final now = DateTime.now();
     final today = _normalizeDay(now);
     final firstDay = DateTime(anchorMonth.year, anchorMonth.month, 1);
-
-    final firstWeekday = firstDay.weekday;
-    final startDate = firstDay.subtract(Duration(days: firstWeekday - 1));
+    final startDate = firstDay.subtract(
+      Duration(days: CalendarWeekConfig.leadingDaysBeforeMonth(firstDay)),
+    );
 
     return List.generate(42, (index) {
       final day = startDate.add(Duration(days: index));

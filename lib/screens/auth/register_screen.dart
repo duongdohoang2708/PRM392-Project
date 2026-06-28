@@ -101,7 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       constraints: const BoxConstraints(maxWidth: 480),
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: AppColors.cardOf(context),
+                        color: AppColors.cardSurfaceFillOf(context),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: AppColors.borderOf(context)),
                         boxShadow: [

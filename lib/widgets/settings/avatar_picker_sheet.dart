@@ -150,7 +150,7 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         decoration: BoxDecoration(
-          color: AppColors.cardOf(context),
+          color: AppColors.cardSurfaceFillOf(context),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.borderOf(context)),
         ),

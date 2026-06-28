@@ -21,6 +21,23 @@ class SettingsProvider with ChangeNotifier {
       'settings_default_allday_reminder';
   static const String _use12HourClockKey = 'settings_use_12_hour_clock';
   static const String _weekStartsMondayKey = 'settings_week_starts_monday';
+  static const String _transparencyMultiplierKey =
+      'settings_transparency_multiplier';
+  static const String _cardFillSolidityKey = 'settings_card_fill_solidity';
+  static const String _cardTintStrengthKey = 'settings_card_tint_strength';
+
+  static const double minCardFillSolidity = 0.0;
+  static const double maxCardFillSolidity = 1.0;
+  static const double defaultCardFillSolidity = 0.0;
+
+  static const double minCardTintStrength = 0.0;
+  static const double maxCardTintStrength = 2.0;
+  static const double defaultCardTintStrength = 1.0;
+
+  /// Legacy multiplier range — migrated to [cardFillSolidity].
+  static const double minTransparencyMultiplier = 0.5;
+  static const double maxTransparencyMultiplier = 1.5;
+  static const double defaultTransparencyMultiplier = 1.0;
 
   ThemeMode _themeMode = ThemeMode.system;
   bool _notificationsEnabled = true;
@@ -34,6 +51,8 @@ class SettingsProvider with ChangeNotifier {
   String _defaultAllDayReminder = '1 day before';
   bool _use12HourClock = true;
   bool _weekStartsOnMonday = true;
+  double _cardFillSolidity = defaultCardFillSolidity;
+  double _cardTintStrength = defaultCardTintStrength;
   bool _loaded = false;
 
   ThemeMode get themeMode => _themeMode;
@@ -48,7 +67,21 @@ class SettingsProvider with ChangeNotifier {
   String get defaultAllDayReminder => _defaultAllDayReminder;
   bool get use12HourClock => _use12HourClock;
   bool get weekStartsOnMonday => _weekStartsOnMonday;
+  double get cardFillSolidity => _cardFillSolidity;
+  double get cardTintStrength => _cardTintStrength;
   bool get isLoaded => _loaded;
+
+  /// 0 = transparent card background, 100 = fully solid.
+  int get cardFillSolidityPercent => (_cardFillSolidity * 100).round();
+
+  /// 100 = default tint; 0 = no accent tint; 200 = double strength.
+  int get cardTintStrengthPercent => (_cardTintStrength * 100).round();
+
+  @Deprecated('Use cardFillSolidity')
+  double get transparencyMultiplier => _cardFillSolidity;
+
+  @Deprecated('Use cardFillSolidityPercent')
+  int get transparencyPercent => cardFillSolidityPercent;
 
   bool get canDeliverTaskReminders =>
       _notificationsEnabled && _taskRemindersEnabled;
@@ -131,6 +164,8 @@ class SettingsProvider with ChangeNotifier {
         prefs.getString(_defaultAllDayReminderKey) ?? '1 day before';
     _use12HourClock = prefs.getBool(_use12HourClockKey) ?? true;
     _weekStartsOnMonday = prefs.getBool(_weekStartsMondayKey) ?? true;
+    _cardFillSolidity = _readCardFillSolidity(prefs);
+    _cardTintStrength = _readCardTintStrength(prefs);
 
     _applyDisplayPreferences();
     _loaded = true;
@@ -155,6 +190,31 @@ class SettingsProvider with ChangeNotifier {
 
   String _encodeTimeOfDay(TimeOfDay value) =>
       '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+
+  double _readCardFillSolidity(SharedPreferences prefs) {
+    final stored = prefs.getDouble(_cardFillSolidityKey);
+    if (stored != null) {
+      return stored.clamp(minCardFillSolidity, maxCardFillSolidity);
+    }
+
+    final legacy = prefs.getDouble(_transparencyMultiplierKey);
+    if (legacy == null) return defaultCardFillSolidity;
+
+    // Migrate old 0.5–1.5 multiplier to 0.0–1.0 solidity.
+    if (legacy > maxCardFillSolidity) {
+      return ((legacy - minTransparencyMultiplier) /
+              (maxTransparencyMultiplier - minTransparencyMultiplier))
+          .clamp(minCardFillSolidity, maxCardFillSolidity);
+    }
+
+    return legacy.clamp(minCardFillSolidity, maxCardFillSolidity);
+  }
+
+  double _readCardTintStrength(SharedPreferences prefs) {
+    final stored = prefs.getDouble(_cardTintStrengthKey);
+    if (stored == null) return defaultCardTintStrength;
+    return stored.clamp(minCardTintStrength, maxCardTintStrength);
+  }
 
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
@@ -250,4 +310,56 @@ class SettingsProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_weekStartsMondayKey, value);
   }
+
+  Future<void> setCardFillSolidity(double value) async {
+    final clamped = value.clamp(minCardFillSolidity, maxCardFillSolidity);
+    if (_cardFillSolidity == clamped) return;
+    _cardFillSolidity = clamped;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_cardFillSolidityKey, clamped);
+  }
+
+  Future<void> setCardTintStrength(double value) async {
+    final clamped = value.clamp(minCardTintStrength, maxCardTintStrength);
+    if (_cardTintStrength == clamped) return;
+    _cardTintStrength = clamped;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_cardTintStrengthKey, clamped);
+  }
+
+  Future<void> resetCardAppearance() async {
+    await setCardFillSolidity(defaultCardFillSolidity);
+    await setCardTintStrength(defaultCardTintStrength);
+  }
+
+  bool get isDefaultCardAppearance =>
+      _cardFillSolidity == defaultCardFillSolidity &&
+      _cardTintStrength == defaultCardTintStrength;
+
+  String get cardAppearanceSubtitle {
+    final parts = <String>[];
+    if (_cardFillSolidity == 0) {
+      parts.add('Transparent cards');
+    } else if (_cardFillSolidity == 1) {
+      parts.add('Solid cards');
+    } else {
+      parts.add('${((1 - _cardFillSolidity) * 100).round()}% transparent');
+    }
+    if (_cardTintStrength == 0) {
+      parts.add('no tint');
+    } else if (_cardTintStrength != defaultCardTintStrength) {
+      if (_cardTintStrength < defaultCardTintStrength) {
+        parts.add('subtle tint');
+      } else {
+        parts.add('strong tint');
+      }
+    }
+    return parts.join(' · ');
+  }
+
+  @Deprecated('Use setCardFillSolidity')
+  Future<void> setTransparencyMultiplier(double value) =>
+      setCardFillSolidity(value);
 }

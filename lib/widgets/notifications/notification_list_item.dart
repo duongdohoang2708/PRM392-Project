@@ -62,7 +62,7 @@ class NotificationListItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.cardOf(context),
+            color: AppColors.cardSurfaceFillOf(context),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.borderOf(context)),
           ),

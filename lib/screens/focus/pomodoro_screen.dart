@@ -6,6 +6,7 @@ import '../../providers/task_provider.dart';
 import '../../providers/drawer_provider.dart';
 import '../../providers/focus_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../utils/formatters/app_date_time_format.dart';
@@ -411,12 +412,12 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 28),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: phaseColor.withAlpha(10),
+            color: AppColors.phaseTintOf(context, phaseColor, baseAlpha: 10 / 255),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -435,7 +436,11 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: phaseColor.withAlpha(30),
+                    color: AppColors.phaseTintOf(
+                      context,
+                      phaseColor,
+                      baseAlpha: 30 / 255,
+                    ),
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
@@ -477,7 +482,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.cardOf(context),
+              color: AppColors.cardSurfaceFillOf(context),
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.borderOf(context)),
               boxShadow: [
@@ -514,12 +519,12 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 28),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withAlpha(10),
+            color: AppOpacity.fixed(AppColors.primary, 10 / 255),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -594,7 +599,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: AppColors.borderOf(context).withValues(alpha: 0.59)),
+                        color: AppOpacity.fixed(
+                          AppColors.borderOf(context),
+                          0.59,
+                        )),
                   ),
                   child: Column(
                     children: [
@@ -626,7 +634,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: AppColors.borderOf(context).withValues(alpha: 0.59)),
+                        color: AppOpacity.fixed(
+                          AppColors.borderOf(context),
+                          0.59,
+                        )),
                   ),
                   child: Column(
                     children: [
@@ -658,7 +669,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: AppColors.borderOf(context).withValues(alpha: 0.59)),
+                        color: AppOpacity.fixed(
+                          AppColors.borderOf(context),
+                          0.59,
+                        )),
                   ),
                   child: Column(
                     children: [
@@ -710,7 +724,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 4,
-              shadowColor: AppColors.primary.withAlpha(100),
+              shadowColor: AppOpacity.fixed(
+                AppColors.primary,
+                100 / 255,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
@@ -744,7 +761,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: AppColors.cardOf(context),
+            color: AppColors.cardSurfaceFillOf(context),
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.borderOf(context)),
           ),
@@ -791,7 +808,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: AppColors.cardOf(context),
+            color: AppColors.cardSurfaceFillOf(context),
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.borderOf(context)),
           ),
@@ -811,7 +828,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.cardOf(context),
+          backgroundColor: AppColors.cardSurfaceFillOf(context),
           title: Text(
             'Timer is running',
             style: TextStyle(color: AppColors.textPrimaryOf(context)),
@@ -870,12 +887,12 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.cardOf(context),
+            color: AppColors.cardSurfaceFillOf(context),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.borderOf(context)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withAlpha(10),
+                color: AppOpacity.fixed(AppColors.primary, 10 / 255),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -995,7 +1012,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               ElevatedButton(
                 onPressed: () => _handleChangeTask(context, _openTaskSelector),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.cardOf(context),
+                  backgroundColor: AppColors.cardSurfaceFillOf(context),
                   foregroundColor: AppColors.primary,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -1081,7 +1098,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -1095,7 +1112,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               shape: BoxShape.circle,
               border: AppColors.isDark(context)
                   ? Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.35),
+                      color: AppColors.statCardBorderOf(context, AppColors.primary),
                     )
                   : null,
             ),

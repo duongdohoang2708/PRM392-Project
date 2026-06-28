@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../providers/focus_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 
 class PomodoroSessionProgressCard extends StatelessWidget {
   final List<PhaseType> sequence;
@@ -110,7 +111,10 @@ class PomodoroSessionProgressCard extends StatelessWidget {
         color: AppColors.backgroundOf(context),
         borderRadius: BorderRadius.circular(16 * s),
         border: Border.all(
-            color: AppColors.borderOf(context).withValues(alpha: 0.59)),
+            color: AppOpacity.fixed(
+              AppColors.borderOf(context),
+              0.59,
+            )),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -158,7 +162,11 @@ class PomodoroSessionProgressCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6 * s,
-              backgroundColor: phaseColor.withAlpha(35),
+              backgroundColor: AppColors.phaseTintOf(
+                context,
+                phaseColor,
+                baseAlpha: 35 / 255,
+              ),
               valueColor: AlwaysStoppedAnimation<Color>(phaseColor),
             ),
           ),
@@ -172,7 +180,10 @@ class PomodoroSessionProgressCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11 * s,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textSecondaryOf(context).withAlpha(200),
+                    color: AppOpacity.fixed(
+                      AppColors.textSecondaryOf(context),
+                      200 / 255,
+                    ),
                     letterSpacing: 1.1,
                   ),
                 ),

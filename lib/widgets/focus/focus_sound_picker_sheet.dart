@@ -49,7 +49,7 @@ class FocusSoundPickerSheet extends StatelessWidget {
           maxHeight: MediaQuery.sizeOf(context).height * 0.75,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surfaceOf(context),
+          color: AppColors.panelFillOf(context),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.borderOf(context)),
         ),

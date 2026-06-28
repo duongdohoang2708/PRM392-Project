@@ -86,7 +86,7 @@ class ProjectsSection extends StatelessWidget {
       width: 180,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [

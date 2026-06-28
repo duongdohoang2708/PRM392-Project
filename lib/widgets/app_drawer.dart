@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../providers/drawer_provider.dart';
+import '../providers/user_provider.dart';
+import 'common/user_avatar.dart';
 
 class AppDrawer extends StatelessWidget {
   final bool isPermanent;
@@ -29,6 +31,7 @@ class AppDrawer extends StatelessWidget {
 
     final isDesktopCollapsed =
         isPermanent ? context.watch<DrawerProvider>().isDesktopCollapsed : false;
+    final user = context.watch<UserProvider>();
     final width = isDesktopCollapsed ? 88.0 : 280.0;
 
     final drawerContent = Column(
@@ -44,10 +47,10 @@ class AppDrawer extends StatelessWidget {
           decoration: BoxDecoration(color: AppColors.drawerHeaderOf(context)),
           child: Row(
             children: [
-              const CircleAvatar(
+              UserAvatar(
+                avatarUrl: user.avatarUrl,
+                initials: user.initials,
                 radius: 20,
-                backgroundColor: AppColors.primary,
-                child: Icon(Icons.person, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -65,7 +68,7 @@ class AppDrawer extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Dương',
+                        user.fullName,
                         style: TextStyle(
                           color: AppColors.textPrimaryOf(context),
                           fontSize: 20,

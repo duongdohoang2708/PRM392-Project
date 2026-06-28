@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/task_model.dart';
+import '../../providers/settings_provider.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/drawer_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/task/task_list_item.dart';
@@ -14,6 +16,7 @@ import '../../widgets/custom_snackbar.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/staggered_list_entry.dart';
 import '../../utils/validation/task_deadline_rules.dart';
+import '../../utils/calendar_week_config.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -72,11 +75,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   List<DateTime> _generateMonthlyGridDates(DateTime focusedMonth) {
     final firstDayOfMonth = DateTime(focusedMonth.year, focusedMonth.month, 1);
-    final firstWeekday = firstDayOfMonth.weekday; // 1 = Monday, ..., 7 = Sunday
-    final int prevDays = firstWeekday - 1; // days to pad from previous month
+    final prevDays = CalendarWeekConfig.leadingDaysBeforeMonth(firstDayOfMonth);
     final startDate = firstDayOfMonth.subtract(Duration(days: prevDays));
-    
-    // Create exactly 42 days (6 weeks) to cover any month grid consistently
+
     return List.generate(42, (index) => startDate.add(Duration(days: index)));
   }
 
@@ -127,6 +128,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<SettingsProvider>();
     final taskProvider = context.watch<TaskProvider>();
     final allTasks = taskProvider.tasks;
     final selectedDayTasks = _getTasksForDay(allTasks, _selectedDate);
@@ -391,12 +393,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget _buildMonthView(
       BuildContext context, List<Task> allTasks, DateTime displayMonth) {
     final gridDates = _generateMonthlyGridDates(displayMonth);
-    final weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final weekdayLabels = CalendarWeekConfig.weekdayLabels;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
+        color: AppColors.panelFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -501,8 +503,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   ? AppColors.calendarSelectedDayTextOf(context)
                                   : (isCurrentMonth
                                       ? AppColors.textPrimaryOf(context)
-                                      : AppColors.textSecondaryOf(context)
-                                          .withValues(alpha: 0.4)),
+                                      : AppOpacity.fixed(
+                                          AppColors.textSecondaryOf(context),
+                                          0.4,
+                                        )),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -685,12 +689,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
+        color: AppColors.panelFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
+            color: AppOpacity.fixed(AppColors.primary, 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -710,7 +714,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             Icon(
               Icons.spa_outlined,
               size: 48,
-              color: AppColors.primaryDark.withValues(alpha: 0.4),
+              color: AppOpacity.fixed(AppColors.primaryDark, 0.4),
             ),
             const SizedBox(height: 12),
             Text(

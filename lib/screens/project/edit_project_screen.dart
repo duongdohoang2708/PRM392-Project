@@ -267,7 +267,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [

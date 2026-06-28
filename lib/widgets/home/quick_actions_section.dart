@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../project/create_project_popup.dart';
 import '../common/app_popup_transition.dart';
+import '../common/tinted_accent_card.dart';
 import '../custom_snackbar.dart';
 
 class QuickActionsSection extends StatelessWidget {
@@ -32,33 +33,33 @@ class QuickActionsSection extends StatelessWidget {
               crossAxisSpacing: 12,
               childAspectRatio: 2.5,
               children: [
-                _buildActionButton(
+                _actionCard(
                   context,
                   icon: Icons.add_task,
                   title: 'Create Task',
                   color: AppColors.primaryDark,
-                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.39),
+                  lightBgAlpha: 0.39,
                 ),
-                _buildActionButton(
+                _actionCard(
                   context,
                   icon: Icons.timer,
                   title: 'Start Focus',
                   color: AppColors.accentYellow,
-                  bgColor: AppColors.accentYellow.withAlpha(50),
+                  lightBgAlpha: 0.20,
                 ),
-                _buildActionButton(
+                _actionCard(
                   context,
                   icon: Icons.create_new_folder_outlined,
                   title: 'New Project',
                   color: AppColors.accentPeach,
-                  bgColor: AppColors.accentPeach.withAlpha(50),
+                  lightBgAlpha: 0.20,
                 ),
-                _buildActionButton(
+                _actionCard(
                   context,
                   icon: Icons.calendar_month_outlined,
                   title: 'Calendar',
                   color: AppColors.primary,
-                  bgColor: AppColors.primaryLightTintOf(context, alpha: 0.2),
+                  lightBgAlpha: 0.20,
                 ),
               ],
             );
@@ -68,15 +69,21 @@ class QuickActionsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(
+  Widget _actionCard(
     BuildContext context, {
     required IconData icon,
     required String title,
     required Color color,
-    required Color bgColor,
+    required double lightBgAlpha,
   }) {
     return Builder(
-      builder: (buttonContext) => InkWell(
+      builder: (buttonContext) => TintedAccentCard(
+        variant: TintedAccentCardVariant.action,
+        accentColor: color,
+        icon: icon,
+        label: title,
+        lightBgAlpha: lightBgAlpha,
+        darkBgAlpha: lightBgAlpha * 0.5,
         onTap: () {
           if (title == 'Create Task') {
             Navigator.pushNamed(context, '/create-task');
@@ -93,32 +100,6 @@ class QuickActionsSection extends StatelessWidget {
             AppNotification.showInfo(context, '$title coming soon!');
           }
         },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimaryOf(buttonContext),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

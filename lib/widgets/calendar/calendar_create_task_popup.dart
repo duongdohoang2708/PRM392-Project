@@ -316,7 +316,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -378,7 +378,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -532,7 +532,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -641,7 +641,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
   Widget _buildNotesCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
       ),

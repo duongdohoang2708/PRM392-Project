@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/drawer_provider.dart';
 import '../../providers/goals_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
@@ -259,8 +260,10 @@ class _UnlockedSummaryCard extends StatelessWidget {
                     Text(
                       '$progressPercent% of all achievements completed',
                       style: TextStyle(
-                        color: AppColors.textPrimaryOf(context)
-                            .withValues(alpha: isDark ? 0.82 : 0.72),
+                        color: AppOpacity.fixed(
+                          AppColors.textPrimaryOf(context),
+                          isDark ? 0.82 : 0.72,
+                        ),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -277,8 +280,9 @@ class _UnlockedSummaryCard extends StatelessWidget {
                   color: percentBadgeBg,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: AppColors.primary.withValues(
-                      alpha: isDark ? 0.55 : 0.35,
+                    color: AppOpacity.fixed(
+                      AppColors.primary,
+                      isDark ? 0.55 : AppOpacity.borderAccent,
                     ),
                   ),
                 ),
@@ -299,7 +303,10 @@ class _UnlockedSummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: AppColors.borderOf(context).withValues(alpha: 0.6),
+              backgroundColor: AppOpacity.fixed(
+                AppColors.borderOf(context),
+                0.6,
+              ),
               valueColor: AlwaysStoppedAnimation<Color>(
                 isDark ? AppColors.primary : AppColors.primaryDark,
               ),
@@ -383,12 +390,17 @@ class _AchievementGroupSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppColors.primary.withValues(alpha: 0.22)
-                    : AppColors.cardOf(context),
+                    ? AppColors.cardFillOf(
+                        context,
+                        accentColor: AppColors.primary,
+                        lightTintAlpha: 0.22,
+                        darkTintAlpha: 0.22,
+                      )
+                    : AppColors.cardSurfaceFillOf(context),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: isDark
-                      ? AppColors.primary.withValues(alpha: 0.45)
+                      ? AppOpacity.fixed(AppColors.primary, 0.45)
                       : AppColors.borderOf(context),
                 ),
               ),
@@ -467,10 +479,10 @@ class _AchievementCard extends StatelessWidget {
         : AppColors.textSecondaryOf(context);
     final bgColor = unlocked
         ? AppColors.primaryLightTintOf(context, alpha: isDark ? 0.35 : 0.45)
-        : AppColors.cardOf(context);
+        : AppColors.cardSurfaceFillOf(context);
     final iconContainerColor = unlocked
         ? (isDark
-              ? AppColors.primary.withValues(alpha: 0.32)
+              ? AppOpacity.fixed(AppColors.primary, 0.32)
               : Colors.white.withValues(alpha: 0.8))
         : AppColors.insetSurfaceOf(context);
     final iconColor = unlocked
@@ -484,7 +496,7 @@ class _AchievementCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: unlocked
-              ? AppColors.primary.withValues(alpha: 0.5)
+              ? AppOpacity.fixed(AppColors.primary, AppOpacity.borderStrong)
               : AppColors.borderOf(context),
           width: unlocked ? 1.5 : 1,
         ),
@@ -541,7 +553,10 @@ class _AchievementCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: achievement.progress,
               minHeight: 5,
-              backgroundColor: AppColors.borderOf(context).withValues(alpha: 0.6),
+              backgroundColor: AppOpacity.fixed(
+                AppColors.borderOf(context),
+                0.6,
+              ),
               valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),

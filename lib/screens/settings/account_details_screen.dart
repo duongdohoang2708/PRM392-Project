@@ -17,7 +17,7 @@ class AccountDetailsScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cardOf(context),
+        backgroundColor: AppColors.cardSurfaceFillOf(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Sign out?'),
         content: const Text(
@@ -82,7 +82,7 @@ class AccountDetailsScreen extends StatelessWidget {
                               color: AppColors.primaryDark,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.cardOf(context),
+                                color: AppColors.cardSurfaceFillOf(context),
                                 width: 2,
                               ),
                             ),

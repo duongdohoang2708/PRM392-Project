@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../providers/statistics_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 
 String formatFocusMinutes(int totalMinutes) {
   final hours = totalMinutes ~/ 60;
@@ -63,7 +64,7 @@ class StatPanel extends StatelessWidget {
       padding: padding,
       alignment: alignment,
       decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
+        color: AppColors.panelFillOf(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
@@ -401,7 +402,12 @@ class DailyGoalCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
+                  color: AppColors.cardFillOf(
+                    context,
+                    accentColor: accent,
+                    lightTintAlpha: 0.15,
+                    darkTintAlpha: 0.15,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: accent, size: 22),
@@ -450,7 +456,10 @@ class DailyGoalCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: AppColors.borderOf(context).withValues(alpha: 0.6),
+              backgroundColor: AppOpacity.fixed(
+                AppColors.borderOf(context),
+                0.6,
+              ),
               valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),
@@ -576,7 +585,10 @@ class TaskDueInsightPanel extends StatelessWidget {
             child: LinearProgressIndicator(
               value: dueProgress,
               minHeight: 10,
-              backgroundColor: AppColors.borderOf(context).withValues(alpha: 0.6),
+              backgroundColor: AppOpacity.fixed(
+                AppColors.borderOf(context),
+                0.6,
+              ),
               valueColor: const AlwaysStoppedAnimation<Color>(
                 AppColors.primaryDark,
               ),
@@ -679,9 +691,9 @@ class _DueMetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: AppColors.statCardBgOf(context, color, lightAlpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
+        border: Border.all(color: AppColors.statCardBorderOf(context, color)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -744,7 +756,7 @@ class SessionTile extends StatelessWidget {
               shape: BoxShape.circle,
               border: AppColors.isDark(context)
                   ? Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.35),
+                      color: AppColors.statCardBorderOf(context, AppColors.primary),
                     )
                   : null,
             ),
@@ -787,7 +799,7 @@ class SessionTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.cardOf(context),
+              color: AppColors.cardSurfaceFillOf(context),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppColors.borderOf(context)),
             ),
@@ -847,7 +859,10 @@ class PriorityBreakdownChart extends StatelessWidget {
                 child: Container(
                   height: 18,
                   color: value == 0
-                      ? AppColors.borderOf(context).withValues(alpha: 0.7)
+                      ? AppOpacity.fixed(
+                          AppColors.borderOf(context),
+                          0.7,
+                        )
                       : color,
                 ),
               );

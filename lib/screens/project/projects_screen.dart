@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../../widgets/app_drawer.dart';
 import '../../providers/drawer_provider.dart';
 import '../../providers/project_provider.dart';
@@ -21,7 +22,7 @@ void _confirmDeleteProject(BuildContext parentContext, Project project, VoidCall
     context: parentContext,
     builder: (BuildContext dialogContext) {
       return AlertDialog(
-        backgroundColor: AppColors.surfaceOf(parentContext),
+        backgroundColor: AppColors.panelFillOf(parentContext),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -221,7 +222,7 @@ class _SearchBarWithToggle extends StatelessWidget {
           height: 50,
           width: 50,
           decoration: BoxDecoration(
-            color: AppColors.surfaceOf(context),
+            color: AppColors.panelFillOf(context),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.borderOf(context)),
             boxShadow: [
@@ -433,7 +434,7 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
         cursor: SystemMouseCursors.click,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceOf(context),
+            color: AppColors.panelFillOf(context),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.borderOf(context)),
             boxShadow: [
@@ -464,7 +465,12 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: accentColor.withValues(alpha: 0.2),
+                              color: AppColors.cardFillOf(
+                                context,
+                                accentColor: accentColor,
+                                lightTintAlpha: 0.2,
+                                darkTintAlpha: 0.2,
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(widget.project.icon, color: accentColor, size: 18),
@@ -472,7 +478,12 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: accentColor.withValues(alpha: 0.1),
+                              color: AppColors.cardFillOf(
+                                context,
+                                accentColor: accentColor,
+                                lightTintAlpha: 0.1,
+                                darkTintAlpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(100),
                             ),
                             child: Text(
@@ -705,7 +716,7 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
         cursor: SystemMouseCursors.click,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceOf(context),
+            color: AppColors.panelFillOf(context),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.borderOf(context)),
             boxShadow: [
@@ -733,7 +744,12 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.2),
+                          color: AppColors.cardFillOf(
+                            context,
+                            accentColor: accentColor,
+                            lightTintAlpha: 0.2,
+                            darkTintAlpha: 0.2,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(widget.project.icon, color: accentColor, size: 20),
@@ -767,7 +783,12 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                                   decoration: BoxDecoration(
-                                    color: accentColor.withValues(alpha: 0.1),
+                                    color: AppColors.cardFillOf(
+                                context,
+                                accentColor: accentColor,
+                                lightTintAlpha: 0.1,
+                                darkTintAlpha: 0.1,
+                              ),
                                     borderRadius: BorderRadius.circular(100),
                                   ),
                                   child: Text(
@@ -958,7 +979,10 @@ class _ProjectFilterChips extends StatelessWidget {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: filter['activeColor'].withValues(alpha: 0.4),
+                            color: AppOpacity.fixed(
+                              filter['activeColor'] as Color,
+                              0.4,
+                            ),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),

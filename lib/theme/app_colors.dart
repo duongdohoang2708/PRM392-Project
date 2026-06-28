@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_opacity.dart';
+
 class AppColors {
   // Primary & Accents
   static const Color primary = Color(0xFF96C490); // Pastel matcha green
@@ -71,6 +73,33 @@ class AppColors {
   static Color cardOf(BuildContext context) =>
       isDark(context) ? const Color(0xFF2D3530) : surface;
 
+  /// Neutral panel (StatPanel) — no accent tint, solidity from Settings.
+  static Color panelFillOf(BuildContext context) =>
+      AppOpacity.solidSurfaceFill(context, surfaceOf(context));
+
+  /// Neutral card shell — no accent tint, solidity from Settings.
+  static Color cardSurfaceFillOf(BuildContext context) =>
+      AppOpacity.solidSurfaceFill(context, cardOf(context));
+
+  /// Card background: fixed accent tint + adjustable opaque surface layer.
+  /// Solidity 0 = transparent (see page background); 1 = solid card fill.
+  static Color cardFillOf(
+    BuildContext context, {
+    required Color accentColor,
+    double lightTintAlpha = 0.08,
+    double darkTintAlpha = 0.12,
+    Color? surface,
+  }) {
+    final accent = projectAccentOf(context, accentColor);
+    final tintAlpha = isDark(context) ? darkTintAlpha : lightTintAlpha;
+    return AppOpacity.cardFill(
+      context,
+      surface: surface ?? cardOf(context),
+      accent: accent,
+      tintAlpha: tintAlpha,
+    );
+  }
+
   /// Task list/detail card tinted by project accent.
   static Color taskCardOf(
     BuildContext context,
@@ -78,15 +107,17 @@ class AppColors {
     bool completed = false,
   }) {
     if (completed) {
-      // Neutral completed tone — translucent only, not project-tinted.
-      if (isDark(context)) {
-        return const Color(0xFF232A26).withValues(alpha: 0.62);
-      }
-      return background.withValues(alpha: 0.68);
+      final surface = isDark(context)
+          ? const Color(0xFF232A26)
+          : background;
+      return AppOpacity.solidSurfaceFill(context, surface);
     }
-    final accent = projectAccentOf(context, accentColor);
-    // Translucent tint — same approach as Home overview/quick-action cards.
-    return accent.withValues(alpha: 0.18);
+    return cardFillOf(
+      context,
+      accentColor: accentColor,
+      lightTintAlpha: AppOpacity.surfaceTint,
+      darkTintAlpha: AppOpacity.surfaceTint,
+    );
   }
 
   /// Project/task accent — slightly lifted in dark mode for readable, vivid chips.
@@ -98,10 +129,10 @@ class AppColors {
     return hsl.withSaturation(saturation).withLightness(lightness).toColor();
   }
 
-  /// Border color for project/task cards.
+  /// Border color for project/task cards — fixed alpha, not affected by setting.
   static Color projectBorderOf(BuildContext context, Color accentColor) {
     final accent = projectAccentOf(context, accentColor);
-    return accent.withValues(alpha: 0.5);
+    return AppOpacity.fixed(accent, AppOpacity.borderStrong);
   }
 
   /// Soft tint fill behind project icons and chips.
@@ -111,36 +142,94 @@ class AppColors {
     double lightAlpha = 0.15,
     double darkAlpha = 0.20,
   }) {
-    final accent = projectAccentOf(context, accentColor);
-    return accent.withValues(alpha: isDark(context) ? darkAlpha : lightAlpha);
+    return cardFillOf(
+      context,
+      accentColor: accentColor,
+      lightTintAlpha: lightAlpha,
+      darkTintAlpha: darkAlpha,
+    );
   }
 
-  /// Subtle glow/shadow from project accent.
+  /// Subtle glow/shadow from project accent — fixed, not affected by setting.
   static Color projectGlowOf(BuildContext context, Color accentColor) {
     final accent = projectAccentOf(context, accentColor);
-    return accent.withValues(alpha: isDark(context) ? 0.0 : 0.04);
+    if (isDark(context)) {
+      return accent.withValues(alpha: 0.0);
+    }
+    return AppOpacity.fixed(accent, AppOpacity.surfaceSubtle);
   }
 
   /// Muted accent for checkbox rings and secondary accents.
   static Color projectMutedAccentOf(BuildContext context, Color accentColor) {
     final accent = projectAccentOf(context, accentColor);
-    return accent.withValues(alpha: isDark(context) ? 0.50 : 0.5);
+    return AppOpacity.fixed(accent, AppOpacity.textMuted);
   }
 
   /// Inset surface for nested cells (streak day, list rows).
   static Color insetSurfaceOf(BuildContext context) =>
       isDark(context) ? const Color(0xFF232A26) : background;
 
-  static Color primaryLightTintOf(BuildContext context, {double alpha = 0.3}) =>
-      isDark(context)
-          ? primary.withValues(alpha: alpha * 0.5)
-          : primaryLight.withValues(alpha: alpha);
+  static Color primaryLightTintOf(BuildContext context, {double alpha = 0.3}) {
+    if (isDark(context)) {
+      return cardFillOf(
+        context,
+        accentColor: primary,
+        lightTintAlpha: alpha * 0.5,
+        darkTintAlpha: alpha * 0.5,
+      );
+    }
+    return cardFillOf(
+      context,
+      accentColor: primaryLight,
+      lightTintAlpha: alpha,
+      darkTintAlpha: alpha,
+    );
+  }
+
+  /// Tinted stat/overview card background.
+  static Color statCardBgOf(
+    BuildContext context,
+    Color accentColor, {
+    double lightAlpha = 0.28,
+    double darkAlpha = 0.28,
+  }) {
+    return cardFillOf(
+      context,
+      accentColor: accentColor,
+      lightTintAlpha: lightAlpha,
+      darkTintAlpha: darkAlpha,
+    );
+  }
+
+  /// Tinted stat/overview card border — fixed alpha.
+  static Color statCardBorderOf(BuildContext context, Color accentColor) {
+    final accent = projectAccentOf(context, accentColor);
+    final baseAlpha = isDark(context) ? AppOpacity.borderAccent : 0.2;
+    return AppOpacity.fixed(accent, baseAlpha);
+  }
+
+  /// Icon well behind stat/overview card icons — fixed alpha.
+  static Color statCardIconWellOf(BuildContext context, Color accentColor) {
+    final accent = projectAccentOf(context, accentColor);
+    return AppOpacity.fixed(accent, AppOpacity.iconWell);
+  }
+
+  /// Pomodoro phase color tints — fixed alpha.
+  static Color phaseTintOf(
+    BuildContext context,
+    Color phaseColor, {
+    required double baseAlpha,
+  }) {
+    return AppOpacity.fixed(phaseColor, baseAlpha);
+  }
 
   /// Completed-session check circle (focus history, session tiles).
-  static Color completedCheckBgOf(BuildContext context) =>
-      isDark(context)
-          ? primary.withValues(alpha: 0.22)
-          : primaryLight;
+  static Color completedCheckBgOf(BuildContext context) {
+    if (isDark(context)) {
+      return AppOpacity.fixed(primary, 0.22);
+    }
+    return primaryLight;
+  }
 
   static Color completedCheckFgOf(BuildContext context) =>
       isDark(context) ? primary : primaryDark;
@@ -152,7 +241,7 @@ class AppColors {
 
   static Color notificationInfoBgOf(BuildContext context) => isDark(context)
       ? cardOf(context)
-      : textPrimary.withValues(alpha: 0.95);
+      : AppOpacity.fixed(textPrimary, AppOpacity.notificationInfo);
 
   static Color notificationErrorBgOf(BuildContext context) => isDark(context)
       ? const Color(0xFF3D2A2A)
@@ -165,13 +254,22 @@ class AppColors {
   }
 
   /// Streak calendar tiles — stronger red/green/blue on dark backgrounds.
-  static Color streakCompleteBorderOf(BuildContext context) => isDark(context)
-      ? const Color(0xFFFF5252)
-      : streakRed.withValues(alpha: 0.55);
+  static Color streakCompleteBorderOf(BuildContext context) {
+    if (isDark(context)) {
+      return const Color(0xFFFF5252);
+    }
+    return AppOpacity.fixed(streakRed, AppOpacity.borderStreak);
+  }
 
-  static Color streakCompleteFillOf(BuildContext context) => isDark(context)
-      ? const Color(0xFFFF5252).withValues(alpha: 0.2)
-      : streakRed.withValues(alpha: 0.18);
+  static Color streakCompleteFillOf(BuildContext context) {
+    if (isDark(context)) {
+      return AppOpacity.fixed(
+        const Color(0xFFFF5252),
+        AppOpacity.surfaceTintMedium,
+      );
+    }
+    return AppOpacity.fixed(streakRed, AppOpacity.surfaceTint);
+  }
 
   static Color streakMissedMarkOf(BuildContext context) => isDark(context)
       ? const Color(0xFFFF5252)
@@ -189,27 +287,39 @@ class AppColors {
       isDark(context) ? primary : primaryDark;
 
   /// Statistics bar chart — default columns.
-  static Color chartBarIdleOf(BuildContext context) => isDark(context)
-      ? primary.withValues(alpha: 0.32)
-      : primaryLight;
+  static Color chartBarIdleOf(BuildContext context) {
+    if (isDark(context)) {
+      return AppOpacity.fixed(primary, AppOpacity.chartIdle);
+    }
+    return primaryLight;
+  }
 
   /// Statistics bar chart — label for highlighted column.
   static Color chartBarHighlightLabelOf(BuildContext context) =>
       isDark(context) ? primary : primaryDark;
 
-  static Color streakFreezeBorderOf(BuildContext context) => isDark(context)
-      ? const Color(0xFF64C8F5)
-      : freezeBlue.withValues(alpha: 0.4);
+  static Color streakFreezeBorderOf(BuildContext context) {
+    if (isDark(context)) {
+      return const Color(0xFF64C8F5);
+    }
+    return AppOpacity.fixed(freezeBlue, 0.4);
+  }
 
-  static Color streakFreezeFillOf(BuildContext context) => isDark(context)
-      ? const Color(0xFF64C8F5).withValues(alpha: 0.18)
-      : freezeBlue.withValues(alpha: 0.1);
+  static Color streakFreezeFillOf(BuildContext context) {
+    if (isDark(context)) {
+      return AppOpacity.fixed(
+        const Color(0xFF64C8F5),
+        AppOpacity.surfaceTint,
+      );
+    }
+    return AppOpacity.fixed(freezeBlue, 0.1);
+  }
 
   static Color streakFreezeIconOf(BuildContext context) => isDark(context)
       ? const Color(0xFF64C8F5)
       : freezeBlue;
 
-  /// Pomodoro Start/Pause pill — slightly translucent in both states.
+  /// Pomodoro Start/Pause pill — fixed translucency.
   static BoxDecoration pomodoroPlayButtonDecoration(
     BuildContext context, {
     required bool isRunning,
@@ -219,14 +329,20 @@ class AppColors {
     final accent = isRunning ? accentYellow : primary;
 
     return BoxDecoration(
-      color: accent.withValues(alpha: dark ? 0.22 : 0.2),
+      color: AppOpacity.fixed(
+        accent,
+        dark ? 0.22 : AppOpacity.surfaceTintMedium,
+      ),
       borderRadius: BorderRadius.circular(borderRadius),
       border: Border.all(
-        color: accent.withValues(alpha: dark ? 0.45 : 0.38),
+        color: AppOpacity.fixed(accent, dark ? 0.45 : 0.38),
       ),
       boxShadow: [
         BoxShadow(
-          color: accent.withValues(alpha: dark ? 0.28 : 0.22),
+          color: AppOpacity.fixed(
+            accent,
+            dark ? AppOpacity.shadowAccentStrong : AppOpacity.shadowAccent,
+          ),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),
@@ -254,10 +370,12 @@ class AppColors {
       isDark(context) ? primaryDark : primary;
 
   /// Calendar — today ring when the day is not selected.
-  static Color calendarTodayRingOf(BuildContext context) =>
-      isDark(context)
-          ? primaryDark.withValues(alpha: 0.75)
-          : primaryDark;
+  static Color calendarTodayRingOf(BuildContext context) {
+    if (isDark(context)) {
+      return AppOpacity.fixed(primaryDark, AppOpacity.todayRing);
+    }
+    return primaryDark;
+  }
 
   /// Calendar — selected day number.
   static Color calendarSelectedDayTextOf(BuildContext context) =>

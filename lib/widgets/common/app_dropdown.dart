@@ -104,7 +104,7 @@ class AppDropdown<T> extends StatelessWidget {
           itemHeight: itemHeight ?? 48,
           borderRadius: menuBorderRadius,
           elevation: menuElevation,
-          dropdownColor: AppColors.surfaceOf(context),
+          dropdownColor: AppColors.panelFillOf(context),
           icon: icon ??
               Icon(
                 Icons.expand_more,

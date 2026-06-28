@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 
 class PomodoroSettingsForm extends StatefulWidget {
   final int initialFocusMinutes;
@@ -241,7 +242,12 @@ class _PomodoroSettingsFormState extends State<PomodoroSettingsForm> {
     final isSelected = _selectedPreset == title;
     final isDark = AppColors.isDark(context);
     final selectedBg = isDark
-        ? AppColors.primary.withValues(alpha: 0.22)
+        ? AppColors.cardFillOf(
+            context,
+            accentColor: AppColors.primary,
+            lightTintAlpha: 0.22,
+            darkTintAlpha: 0.22,
+          )
         : AppColors.primaryLightTintOf(context, alpha: 0.55);
     final selectedBorder =
         isDark ? AppColors.primary : AppColors.primaryDark;
@@ -249,7 +255,7 @@ class _PomodoroSettingsFormState extends State<PomodoroSettingsForm> {
         isDark ? AppColors.textPrimaryOf(context) : AppColors.primaryDark;
     final selectedSubtitleColor = isDark
         ? AppColors.textSecondaryOf(context)
-        : AppColors.primaryDark.withValues(alpha: 0.75);
+        : AppOpacity.fixed(AppColors.primaryDark, 0.75);
 
     return GestureDetector(
       onTap: () => _applyPreset(title),
@@ -283,7 +289,10 @@ class _PomodoroSettingsFormState extends State<PomodoroSettingsForm> {
                 fontSize: 12,
                 color: isSelected
                     ? selectedSubtitleColor
-                    : AppColors.textSecondaryOf(context).withValues(alpha: 0.7),
+                    : AppOpacity.fixed(
+                        AppColors.textSecondaryOf(context),
+                        0.7,
+                      ),
               ),
             ),
           ],
@@ -322,7 +331,7 @@ class PomodoroSettingSlider extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -333,7 +342,7 @@ class PomodoroSettingSlider extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: AppOpacity.fixed(color, 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 18),
@@ -468,7 +477,7 @@ class PomodoroSettingStepper extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardOf(context),
+        color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -477,7 +486,7 @@ class PomodoroSettingStepper extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: AppOpacity.fixed(color, 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 18),
@@ -561,6 +570,7 @@ class DottedSlider extends StatelessWidget {
           min: min,
           max: max,
           color: color,
+          inactiveTrackColor: AppOpacity.fixed(color, 0.2),
           dotColor: AppColors.borderOf(context),
         ),
       ),
@@ -580,6 +590,7 @@ class DottedSliderPainter extends CustomPainter {
   final double min;
   final double max;
   final Color color;
+  final Color inactiveTrackColor;
   final Color dotColor;
 
   DottedSliderPainter({
@@ -587,6 +598,7 @@ class DottedSliderPainter extends CustomPainter {
     required this.min,
     required this.max,
     required this.color,
+    required this.inactiveTrackColor,
     required this.dotColor,
   });
 
@@ -598,7 +610,7 @@ class DottedSliderPainter extends CustomPainter {
     final activeWidth = size.width * ratio;
 
     final inactivePaint = Paint()
-      ..color = color.withValues(alpha: 0.2)
+      ..color = inactiveTrackColor
       ..style = PaintingStyle.fill;
     final activePaint = Paint()
       ..color = color

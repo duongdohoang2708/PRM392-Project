@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 
 /// Compact pill action for section headers (View All, View history, …).
 class SectionActionButton extends StatelessWidget {
@@ -20,12 +21,12 @@ class SectionActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = foregroundColor ?? AppColors.primaryDark;
     final bg = backgroundColor ??
-        (AppColors.isDark(context)
-            ? AppColors.primary.withValues(alpha: 0.16)
-            : Color.alphaBlend(
-                AppColors.primary.withValues(alpha: 0.14),
-                AppColors.surfaceOf(context),
-              ));
+        AppColors.cardFillOf(
+          context,
+          accentColor: AppColors.primary,
+          lightTintAlpha: 0.14,
+          darkTintAlpha: 0.16,
+        );
 
     return TextButton(
       onPressed: onPressed,
@@ -39,8 +40,8 @@ class SectionActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
             color: AppColors.isDark(context)
-                ? AppColors.primary.withValues(alpha: 0.35)
-                : AppColors.primary.withValues(alpha: 0.22),
+                ? AppOpacity.fixed(AppColors.primary, 0.35)
+                : AppOpacity.fixed(AppColors.primary, 0.22),
           ),
         ),
       ),

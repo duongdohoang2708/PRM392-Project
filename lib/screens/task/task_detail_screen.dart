@@ -134,7 +134,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       context: parentContext,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.cardOf(dialogContext),
+          backgroundColor: AppColors.cardSurfaceFillOf(dialogContext),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -997,7 +997,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          backgroundColor: AppColors.cardOf(context),
+                          backgroundColor: AppColors.cardSurfaceFillOf(context),
                           title: Text(
                             'Timer is running',
                             style: TextStyle(color: AppColors.textPrimaryOf(context)),

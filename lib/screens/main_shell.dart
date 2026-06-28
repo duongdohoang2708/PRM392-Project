@@ -20,6 +20,7 @@ import 'settings/account_details_screen.dart';
 import 'settings/edit_profile_screen.dart';
 import 'settings/change_password_screen.dart';
 import 'settings/theme_settings_screen.dart';
+import 'settings/transparency_settings_screen.dart';
 import 'settings/notification_settings_screen.dart';
 import 'settings/focus_settings_screen.dart';
 import 'settings/calendar_display_settings_screen.dart';
@@ -193,6 +194,9 @@ class _MainShellState extends State<MainShell> {
         break;
       case '/settings/theme':
         page = const ThemeSettingsScreen();
+        break;
+      case '/settings/transparency':
+        page = const TransparencySettingsScreen();
         break;
       case '/settings/notifications':
         page = const NotificationSettingsScreen();

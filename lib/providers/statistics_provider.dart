@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/task_model.dart';
+import '../utils/calendar_week_config.dart';
 import '../utils/formatters/app_date_time_format.dart';
 import 'focus_provider.dart';
 import 'goals_provider.dart';
@@ -390,10 +391,8 @@ class StatisticsProvider with ChangeNotifier {
     return DateTime(now.year, now.month, now.day);
   }
 
-  DateTime _mondayOfWeek(DateTime date) {
-    final normalized = DateTime(date.year, date.month, date.day);
-    return normalized.subtract(Duration(days: normalized.weekday - 1));
-  }
+  DateTime _mondayOfWeek(DateTime date) =>
+      CalendarWeekConfig.weekStartFor(date);
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -708,8 +707,10 @@ class StatisticsProvider with ChangeNotifier {
       case StatisticsRange.today:
         return AppDateTimeFormat.shortDate(day);
       case StatisticsRange.week:
-        const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-        return weekdays[day.weekday - 1];
+        final labels = CalendarWeekConfig.weekdayLabels;
+        final weekStart = CalendarWeekConfig.weekStartFor(day);
+        final index = day.difference(weekStart).inDays.clamp(0, 6);
+        return labels[index].substring(0, 1);
       case StatisticsRange.month:
         return day.day.toString();
     }

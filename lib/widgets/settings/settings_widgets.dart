@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/goals_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_opacity.dart';
 import '../common/user_avatar.dart';
 import '../statistics/statistics_widgets.dart';
 
@@ -317,7 +318,10 @@ class SettingsSwitchTile extends StatelessWidget {
       subtitle: subtitle,
       trailing: Switch.adaptive(
         value: value,
-        activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
+        activeTrackColor: AppOpacity.fixed(
+          AppColors.primaryDark,
+          AppOpacity.textMuted,
+        ),
         thumbColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? AppColors.primaryDark
@@ -361,7 +365,12 @@ class SettingsOptionCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: selected
-                  ? AppColors.primaryDark.withValues(alpha: isDark ? 0.22 : 0.12)
+                  ? AppColors.cardFillOf(
+                      context,
+                      accentColor: AppColors.primaryDark,
+                      lightTintAlpha: isDark ? 0.22 : 0.12,
+                      darkTintAlpha: isDark ? 0.22 : 0.12,
+                    )
                   : AppColors.backgroundOf(context),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(

@@ -55,7 +55,7 @@ class _RestDaysSettingsSheetState extends State<RestDaysSettingsSheet> {
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.cardOf(context),
+          color: AppColors.cardSurfaceFillOf(context),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
