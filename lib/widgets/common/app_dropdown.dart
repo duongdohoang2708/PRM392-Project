@@ -15,6 +15,7 @@ class AppDropdown<T> extends StatelessWidget {
   final double? itemHeight;
   final Widget? hint;
   final Color accentColor;
+  final bool solidShell;
 
   const AppDropdown({
     super.key,
@@ -30,6 +31,7 @@ class AppDropdown<T> extends StatelessWidget {
     this.itemHeight,
     this.hint,
     this.accentColor = AppColors.primaryDark,
+    this.solidShell = true,
   });
 
   static const int menuElevation = 6;
@@ -86,8 +88,17 @@ class AppDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
+    final menuFill = AppColors.dropdownMenuFillOf(context);
+
+    Widget dropdown = Theme(
       data: Theme.of(context).copyWith(
+        canvasColor: menuFill,
+        menuTheme: MenuThemeData(
+          style: MenuStyle(
+            backgroundColor: WidgetStatePropertyAll(menuFill),
+            surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+          ),
+        ),
         hoverColor: accentColor.withValues(alpha: 0.08),
         focusColor: accentColor.withValues(alpha: 0.12),
         highlightColor: accentColor.withValues(alpha: 0.10),
@@ -104,7 +115,7 @@ class AppDropdown<T> extends StatelessWidget {
           itemHeight: itemHeight ?? 48,
           borderRadius: menuBorderRadius,
           elevation: menuElevation,
-          dropdownColor: AppColors.panelFillOf(context),
+          dropdownColor: menuFill,
           icon: icon ??
               Icon(
                 Icons.expand_more,
@@ -114,6 +125,19 @@ class AppDropdown<T> extends StatelessWidget {
           style: style ?? textStyleFor(context, fontWeight: FontWeight.w500),
           selectedItemBuilder: selectedItemBuilder,
         ),
+      ),
+    );
+
+    if (!solidShell) return dropdown;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.dropdownShellFillOf(context),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: dropdown,
       ),
     );
   }

@@ -7,6 +7,8 @@ import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/avatar_storage.dart';
 import '../common/user_avatar.dart';
+import '../common/app_bottom_sheet.dart';
+import '../common/popup_surface.dart';
 import '../custom_snackbar.dart';
 import 'avatar_crop_screen.dart';
 
@@ -46,11 +48,8 @@ class AvatarPickerSheet extends StatefulWidget {
   ];
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
+    return showAppBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => AvatarPickerSheet(anchorContext: context),
     );
   }
@@ -146,14 +145,12 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: Container(
+      child: PopupSurface(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderOf(context)),
+        child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        decoration: BoxDecoration(
-          color: AppColors.cardSurfaceFillOf(context),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.borderOf(context)),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,6 +260,7 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/task_provider.dart';
+import '../common/accent_icon_well.dart';
 
 class SmartListsSection extends StatelessWidget {
   const SmartListsSection({super.key});
@@ -14,7 +15,7 @@ class SmartListsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Smart Lists',
+          'Tasks',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -72,7 +73,8 @@ class SmartListsSection extends StatelessWidget {
                   Icons.event_busy_outlined,
                   'Unscheduled',
                   taskProvider.getCountForFilter('Unscheduled').toString(),
-                  AppColors.borderOf(context),
+                  AppColors.textSecondaryOf(context),
+                  mutedIcon: true,
                 ),
                 _buildListFilter(
                   context,
@@ -94,8 +96,9 @@ class SmartListsSection extends StatelessWidget {
     IconData icon,
     String title,
     String count,
-    Color iconColor,
-  ) {
+    Color iconColor, {
+    bool mutedIcon = false,
+  }) {
     return InkWell(
       onTap: () {
         context.read<TaskProvider>().setActiveFilter(title);
@@ -120,7 +123,14 @@ class SmartListsSection extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: iconColor),
+            AccentIconWell(
+              accentColor: iconColor,
+              icon: icon,
+              iconSize: 20,
+              padding: const EdgeInsets.all(6),
+              borderRadius: 10,
+              muted: mutedIcon,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

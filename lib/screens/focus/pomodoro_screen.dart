@@ -15,6 +15,8 @@ import '../../widgets/focus/pomodoro_session_progress_card.dart';
 import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/focus/pomodoro_timer_carousel.dart';
 import '../../widgets/focus/task_selector_sheet.dart';
+import '../../widgets/common/app_bottom_sheet.dart';
+import '../../widgets/common/app_confirm_dialog.dart';
 import '../../widgets/common/section_action_button.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/common/app_scaffold.dart';
@@ -207,11 +209,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   }
 
   void _openTaskSelector() {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      useRootNavigator: true,
       builder: (context) {
         return const TaskSelectorSheet();
       },
@@ -821,47 +820,23 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     );
   }
 
-  void _handleChangeTask(BuildContext context, VoidCallback onProceed) {
+  void _handleChangeTask(BuildContext context, VoidCallback onProceed) async {
     final focusProvider = context.read<FocusProvider>();
     if (focusProvider.timerState == TimerState.running ||
         focusProvider.timerState == TimerState.paused) {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.cardSurfaceFillOf(context),
-          title: Text(
-            'Timer is running',
-            style: TextStyle(color: AppColors.textPrimaryOf(context)),
-          ),
-          content: Text(
+      final confirmed = await AppConfirmDialog.show(
+        context,
+        title: 'Timer is running',
+        content:
             'You currently have an active focus session. Changing or clearing the task will reset the current timer. Do you want to proceed?',
-            style: TextStyle(color: AppColors.textSecondaryOf(context)),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondaryOf(context)),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                focusProvider.resetEntireCycle();
-                onProceed();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accentPeach,
-              ),
-              child: const Text(
-                'Reset & Proceed',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
+        confirmLabel: 'Reset & Proceed',
+        confirmBackgroundColor: AppColors.accentPeach,
+        confirmForegroundColor: Colors.white,
       );
+      if (confirmed == true && context.mounted) {
+        focusProvider.resetEntireCycle();
+        onProceed();
+      }
     } else {
       onProceed();
     }

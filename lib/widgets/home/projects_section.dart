@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/project_provider.dart';
+import '../common/accent_icon_well.dart';
 import '../common/section_action_button.dart';
 
 class ProjectsSection extends StatelessWidget {
@@ -59,11 +60,7 @@ class ProjectsSection extends StatelessWidget {
                     title: project.name,
                     taskCount: '${taskProvider.getProjectTaskCount(project.name)} tasks',
                     progress: taskProvider.getProjectProgress(project.name),
-                    color: AppColors.projectAccentOf(context, Color(project.colorValue)),
-                    bgColor: AppColors.projectTintOf(
-                      context,
-                      Color(project.colorValue),
-                    ),
+                    accentColor: Color(project.colorValue),
                   ),
                 ),
               );
@@ -79,9 +76,9 @@ class ProjectsSection extends StatelessWidget {
     required String title,
     required String taskCount,
     required double progress,
-    required Color color,
-    required Color bgColor,
+    required Color accentColor,
   }) {
+    final color = AppColors.projectAccentOf(context, accentColor);
     return Container(
       width: 180,
       padding: const EdgeInsets.all(16),
@@ -101,13 +98,12 @@ class ProjectsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
+          AccentIconWell(
+            accentColor: accentColor,
+            icon: Icons.folder_outlined,
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.folder_outlined, color: color, size: 24),
+            iconSize: 24,
+            borderRadius: 12,
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

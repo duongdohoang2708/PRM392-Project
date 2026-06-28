@@ -44,47 +44,65 @@ class ReminderSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final options = TaskReminder.presetsFor(isAllDay);
     final dropdownValue = TaskReminder.dropdownValue(value, isAllDay);
+    final menuFill = AppColors.dropdownMenuFillOf(context);
 
-    return DropdownButton<String>(
-      value: dropdownValue,
-      isExpanded: true,
-      alignment: AlignmentDirectional.centerEnd,
-      dropdownColor: AppColors.panelFillOf(context),
-      underline: const SizedBox(),
-      style: TextStyle(
-        fontSize: 14,
-        color: AppColors.textPrimaryOf(context),
-        fontWeight: FontWeight.w500,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.dropdownShellFillOf(context),
+        borderRadius: BorderRadius.circular(8),
       ),
-      selectedItemBuilder: (context) {
-        return options.map((option) {
-          final displayText = option == TaskReminder.custom &&
-                  TaskReminder.isCustomValue(value, isAllDay)
-              ? value
-              : option;
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              displayText,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-              textAlign: TextAlign.right,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: menuFill,
+          menuTheme: MenuThemeData(
+            style: MenuStyle(
+              backgroundColor: WidgetStatePropertyAll(menuFill),
+              surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
             ),
-          );
-        }).toList();
-      },
-      items: options
-          .map(
-            (option) => DropdownMenuItem(
-              value: option,
-              child: Align(
+          ),
+        ),
+        child: DropdownButton<String>(
+          value: dropdownValue,
+          isExpanded: true,
+          alignment: AlignmentDirectional.centerEnd,
+          dropdownColor: menuFill,
+          underline: const SizedBox(),
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.textPrimaryOf(context),
+            fontWeight: FontWeight.w500,
+          ),
+          selectedItemBuilder: (context) {
+            return options.map((option) {
+              final displayText = option == TaskReminder.custom &&
+                      TaskReminder.isCustomValue(value, isAllDay)
+                  ? value
+                  : option;
+              return Align(
                 alignment: Alignment.centerRight,
-                child: Text(option),
-              ),
-            ),
-          )
-          .toList(),
-      onChanged: (selected) => _handleSelection(context, selected),
+                child: Text(
+                  displayText,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  textAlign: TextAlign.right,
+                ),
+              );
+            }).toList();
+          },
+          items: options
+              .map(
+                (option) => DropdownMenuItem(
+                  value: option,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(option),
+                  ),
+                ),
+              )
+              .toList(),
+          onChanged: (selected) => _handleSelection(context, selected),
+        ),
+      ),
     );
   }
 }

@@ -12,9 +12,11 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/goals/weekly_streak_panel.dart';
+import '../../widgets/common/accent_icon_well.dart';
 import '../../widgets/common/animations/app_horizontal_slide_transition.dart';
 import '../../widgets/common/animations/app_page_transition.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
+import '../../widgets/common/app_confirm_dialog.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/common/app_scaffold.dart';
 
@@ -23,54 +25,25 @@ enum _StreakView { week, month }
 class GoalsScreen extends StatelessWidget {
   const GoalsScreen({super.key});
 
-  void _confirmFreezeDay(BuildContext context, GoalsProvider goalsProvider) {
+  void _confirmFreezeDay(BuildContext context, GoalsProvider goalsProvider) async {
     final credits = goalsProvider.manualRestCreditsRemaining;
     final total = GoalsProvider.manualRestCreditsPerMonth;
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.cardSurfaceFillOf(context),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            'Mark freeze day?',
-            style: TextStyle(color: AppColors.textPrimaryOf(context)),
-          ),
-          content: Text(
-            'Mark today as a freeze day? Your streak won\'t break, but today '
-            'won\'t increase your streak number.\n\n'
-            'This will use 1 of your $credits remaining freeze days '
-            'this month ($total per month).',
-            style: TextStyle(color: AppColors.textSecondaryOf(context)),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondaryOf(context)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                _handleManualRest(context, goalsProvider);
-              },
-              child: const Text(
-                'Confirm',
-                style: TextStyle(
-                  color: AppIcons.freezeDayColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      title: 'Mark freeze day?',
+      content:
+          'Mark today as a freeze day? Your streak won\'t break, but today '
+          'won\'t increase your streak number.\n\n'
+          'This will use 1 of your $credits remaining freeze days '
+          'this month ($total per month).',
+      confirmLabel: 'Confirm',
+      confirmButtonStyle: AppConfirmButtonStyle.accentText,
+      confirmForegroundColor: AppIcons.freezeDayColor,
     );
+    if (confirmed == true && context.mounted) {
+      _handleManualRest(context, goalsProvider);
+    }
   }
 
   void _handleManualRest(BuildContext context, GoalsProvider goalsProvider) {
@@ -460,43 +433,21 @@ class _StreakHeroCard extends StatelessWidget {
         : '${nextAchievement.target} days';
     final isRestDay = goalsProvider.isTodayRestDay;
 
+    final streakAccent =
+        isRestDay ? AppColors.freezeBlue : AppColors.accentPeach;
+
     return StatPanel(
       child: Column(
         children: [
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: isRestDay
-                  ? AppColors.cardFillOf(
-                      context,
-                      accentColor: AppColors.freezeBlue,
-                      lightTintAlpha: 0.14,
-                      darkTintAlpha: 0.14,
-                    )
-                  : AppColors.cardFillOf(
-                      context,
-                      accentColor: AppColors.accentPeach,
-                      lightTintAlpha: 0.18,
-                      darkTintAlpha: 0.18,
-                    ),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isRestDay
-                    ? AppColors.statCardBorderOf(context, AppColors.freezeBlue)
-                    : AppColors.statCardBorderOf(context, AppColors.accentPeach),
-                width: 1.5,
-              ),
-            ),
-            child: Icon(
-              isRestDay
-                  ? AppIcons.freezeDay
-                  : Icons.local_fire_department,
-              color: isRestDay
-                  ? AppIcons.freezeDayColor
-                  : AppColors.streakFlame,
-              size: 42,
-            ),
+          AccentIconWell(
+            accentColor: streakAccent,
+            icon: isRestDay
+                ? AppIcons.freezeDay
+                : Icons.local_fire_department,
+            size: 76,
+            iconSize: 42,
+            shape: BoxShape.circle,
+            borderWidth: 1.5,
           ),
           const SizedBox(height: 14),
           Text(
@@ -744,23 +695,12 @@ class _AchievementsEntryCard extends StatelessWidget {
       child: StatPanel(
         child: Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: AppColors.cardFillOf(
-                  context,
-                  accentColor: AppColors.accentYellow,
-                  lightTintAlpha: 0.2,
-                  darkTintAlpha: 0.2,
-                ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.emoji_events_outlined,
-                color: AppColors.accentYellow,
-                size: 28,
-              ),
+            AccentIconWell(
+              accentColor: AppColors.accentYellow,
+              icon: Icons.emoji_events_outlined,
+              size: 50,
+              iconSize: 28,
+              borderRadius: 14,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -912,7 +852,7 @@ class _ViewSwitcher extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.cardSurfaceFillOf(context),
+        color: AppColors.panelFillOf(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
@@ -961,8 +901,13 @@ class _SwitchButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected
               ? AppColors.segmentSelectedFillOf(context)
-              : Colors.transparent,
+              : AppColors.backgroundOf(context),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? AppColors.primaryDark
+                : AppColors.borderOf(context),
+          ),
         ),
         child: Text(
           label,
@@ -1141,7 +1086,7 @@ class _MonthDayTile extends StatelessWidget {
               ? AppColors.streakCompleteFillOf(context)
               : isRestDay
               ? AppColors.streakFreezeFillOf(context)
-              : AppColors.backgroundOf(context),
+              : AppColors.panelFillOf(context),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: borderColor, width: day.isToday ? 1.5 : 1),
         ),

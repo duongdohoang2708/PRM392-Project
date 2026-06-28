@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../providers/settings_provider.dart';
 
-/// Card fill transparency and tint strength from Settings.
+/// Card fill solidity and tint strength from Card appearance settings.
 class AppOpacity {
   AppOpacity._();
 
-  // Fixed semantic alphas (never scaled by the transparency setting).
+  // Fixed semantic alphas (never scaled by the card appearance setting).
   static const double surfaceSubtle = 0.08;
   static const double surfaceTint = 0.18;
   static const double surfaceTintMedium = 0.20;

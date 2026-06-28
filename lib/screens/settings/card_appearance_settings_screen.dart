@@ -8,14 +8,11 @@ import '../../widgets/settings/settings_screen_shell.dart';
 import '../../widgets/common/tinted_accent_card.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
 
-class TransparencySettingsScreen extends StatelessWidget {
-  const TransparencySettingsScreen({super.key});
+class CardAppearanceSettingsScreen extends StatelessWidget {
+  const CardAppearanceSettingsScreen({super.key});
 
   String _tintStrengthLabel(double strength) {
     if (strength == 0) return 'No tint';
-    if (strength == SettingsProvider.defaultCardTintStrength) {
-      return 'Default';
-    }
     if (strength == SettingsProvider.maxCardTintStrength) return 'Strong';
     return '${(strength * 100).round()}%';
   }
@@ -29,23 +26,12 @@ class TransparencySettingsScreen extends StatelessWidget {
 
     return SettingsScreenShell(
       activeRoute: '/settings',
-      title: 'Transparency',
+      title: 'Card appearance',
       showBack: true,
       child: StatPanel(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Two independent controls: background solidity (transparent ↔ solid) '
-              'and accent tint strength on tinted card backgrounds. '
-              'Borders, icons, and text stay the same.',
-              style: TextStyle(
-                color: AppColors.textSecondaryOf(context),
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -190,7 +176,13 @@ class TransparencySettingsScreen extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final isWide = constraints.maxWidth >= 480;
-                final tintedCards = [
+                final cards = [
+                  TintedAccentCard(
+                    accentColor: AppColors.statBlue,
+                    icon: Icons.water_drop_outlined,
+                    label: 'Sessions',
+                    value: '8',
+                  ),
                   TintedAccentCard(
                     accentColor: AppColors.primaryDark,
                     icon: Icons.task_alt,
@@ -210,60 +202,24 @@ class TransparencySettingsScreen extends StatelessWidget {
                     value: '2',
                   ),
                 ];
-                final panelPreview = StatPanel(
-                  title: 'Appearance',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Neutral panels in Settings, Statistics, and Goals use the same transparency.',
-                        style: TextStyle(
-                          color: AppColors.textSecondaryOf(context),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Light theme',
-                        style: TextStyle(
-                          color: AppColors.textPrimaryOf(context),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
 
                 if (isWide) {
                   return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            for (var i = 0; i < tintedCards.length; i++) ...[
-                              if (i > 0) const SizedBox(width: 12),
-                              Expanded(child: tintedCards[i]),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(child: panelPreview),
+                      for (var i = 0; i < cards.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 12),
+                        Expanded(child: cards[i]),
+                      ],
                     ],
                   );
                 }
 
                 return Column(
                   children: [
-                    for (var i = 0; i < tintedCards.length; i++) ...[
+                    for (var i = 0; i < cards.length; i++) ...[
                       if (i > 0) const SizedBox(height: 12),
-                      tintedCards[i],
+                      cards[i],
                     ],
-                    const SizedBox(height: 16),
-                    panelPreview,
                   ],
                 );
               },

@@ -5,6 +5,7 @@ import '../../providers/goals_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_icons.dart';
 import '../../widgets/custom_snackbar.dart';
+import '../../widgets/common/app_bottom_sheet.dart';
 import '../../widgets/goals/rest_days_settings_sheet.dart';
 import '../../widgets/settings/settings_screen_shell.dart';
 import '../../widgets/settings/settings_widgets.dart';
@@ -34,11 +35,8 @@ class SettingsScreen extends StatelessWidget {
     if (scaffoldState?.isDrawerOpen ?? false) {
       Navigator.pop(context);
     }
-    showModalBottomSheet<void>(
+    showAppBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) => RestDaysSettingsSheet(
         initialRestWeekdays: goalsProvider.restWeekdays,
         onSave: (weekdays) {
@@ -72,19 +70,19 @@ class SettingsScreen extends StatelessWidget {
               SettingsNavTile(
                 icon: Icons.palette_outlined,
                 title: 'Theme',
-                subtitle: 'Light, dark, or system',
+                subtitle: settings.themeModeLabel,
                 onTap: () => Navigator.pushNamed(context, '/settings/theme'),
               ),
               SettingsNavTile(
-                icon: Icons.opacity_outlined,
-                title: 'Transparency',
+                icon: Icons.style_outlined,
+                title: 'Card appearance',
                 subtitle: settings.cardAppearanceSubtitle,
                 onTap: () =>
-                    Navigator.pushNamed(context, '/settings/transparency'),
+                    Navigator.pushNamed(context, '/settings/card-appearance'),
               ),
               SettingsNavTile(
                 icon: Icons.calendar_month_outlined,
-                title: 'Calendar & Time',
+                title: 'Calendar & Time Format',
                 subtitle: 'Week starts $weekStartLabel • $timeFormatLabel',
                 onTap: () => Navigator.pushNamed(context, '/settings/calendar'),
               ),

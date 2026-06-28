@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/task/task_list_item.dart';
+import '../../widgets/common/app_confirm_dialog.dart';
 import '../../widgets/project/project_create_task_popup.dart';
 import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/custom_snackbar.dart';
@@ -41,65 +42,32 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
-  void _confirmDeleteProject(BuildContext parentContext, Project project) {
-    showDialog(
-      context: parentContext,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.panelFillOf(parentContext),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            'Delete Project',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimaryOf(parentContext),
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
-            style: TextStyle(color: AppColors.textSecondaryOf(parentContext)),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondaryOf(parentContext)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext); // Close dialog
-
-                // Delete all tasks associated with this project
-                final taskProvider = parentContext.read<TaskProvider>();
-                final tasksToDelete = taskProvider.tasks
-                    .where((t) => t.project == project.name)
-                    .toList();
-                for (var t in tasksToDelete) {
-                  taskProvider.deleteTask(t.id);
-                }
-
-                // Delete project
-                parentContext.read<ProjectProvider>().deleteProject(project.id);
-                AppNotification.showError(parentContext, 'Project "${project.name}" deleted');
-
-                Navigator.pop(parentContext); // Close detail screen
-              },
-              child: const Text(
-                'Delete',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+  void _confirmDeleteProject(BuildContext parentContext, Project project) async {
+    final confirmed = await AppConfirmDialog.show(
+      parentContext,
+      title: 'Delete Project',
+      content:
+          'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
+      confirmLabel: 'Delete',
+      confirmButtonStyle: AppConfirmButtonStyle.destructive,
+      fillColor: AppColors.popupPanelOverlayFillOf(parentContext),
     );
+    if (confirmed != true) return;
+
+    final taskProvider = parentContext.read<TaskProvider>();
+    final tasksToDelete = taskProvider.tasks
+        .where((t) => t.project == project.name)
+        .toList();
+    for (var t in tasksToDelete) {
+      taskProvider.deleteTask(t.id);
+    }
+
+    parentContext.read<ProjectProvider>().deleteProject(project.id);
+    AppNotification.showError(parentContext, 'Project "${project.name}" deleted');
+
+    if (parentContext.mounted) {
+      Navigator.pop(parentContext);
+    }
   }
 
   @override

@@ -6,6 +6,7 @@ import '../../providers/project_provider.dart';
 import '../../theme/app_colors.dart';
 import '../common/app_popup_transition.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
+import '../common/popup_surface.dart';
 import '../custom_snackbar.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 
@@ -135,21 +136,16 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
   Widget build(BuildContext context) {
     return AppPopupShell(
       alignment: Alignment.centerRight,
-      child: Container(
-        decoration: BoxDecoration(
-            color: AppColors.backgroundOf(context),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+      child: PopupSurface(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
+        ],
+        child: Stack(
               children: [
                 Column(
                   mainAxisSize: MainAxisSize.min,
@@ -248,7 +244,6 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
                 ),
               ],
             ),
-          ),
         ),
     );
   }

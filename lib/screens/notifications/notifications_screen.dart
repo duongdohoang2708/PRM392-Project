@@ -53,71 +53,105 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Notifications',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            left: 24,
+                            right: 24,
+                            top: 24,
+                            bottom: 16,
+                          ),
+                          child: Text(
+                            'Notifications',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        _buildFilterChips(),
-                        const SizedBox(height: 20),
-                        if (history.isEmpty)
-                          StatPanel(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(
-                                'No notifications in this view yet.',
-                                style: TextStyle(
-                                  color: AppColors.textSecondaryOf(context),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                      ),
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _StickyHeaderDelegate(
+                          height: 60,
+                          backgroundColor: AppColors.backgroundOf(context),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 8,
                             ),
-                          )
-                        else
-                          ...groupedHistory.entries.map((entry) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: StatPanel(
-                                title: entry.key,
-                                child: Column(
-                                  children:
-                                      List.generate(entry.value.length, (index) {
-                                    final record = entry.value[index];
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                        bottom: index == entry.value.length - 1
-                                            ? 0
-                                            : 10,
-                                      ),
-                                      child: NotificationListItem(
-                                        record: record,
-                                        onTap: () => _openRecord(
+                            child: _buildFilterChips(),
+                          ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+                        sliver: SliverToBoxAdapter(
+                          child: history.isEmpty
+                              ? StatPanel(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    child: Text(
+                                      'No notifications in this view yet.',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondaryOf(
                                           context,
-                                          record,
                                         ),
+                                        fontWeight: FontWeight.w500,
                                       ),
-                                    );
-                                  }),
+                                    ),
+                                  ),
+                                )
+                              : Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: groupedHistory.entries.map(
+                                    (entry) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: StatPanel(
+                                          title: entry.key,
+                                          child: Column(
+                                            children: List.generate(
+                                              entry.value.length,
+                                              (index) {
+                                                final record =
+                                                    entry.value[index];
+                                                return Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom: index ==
+                                                            entry.value.length -
+                                                                1
+                                                        ? 0
+                                                        : 10,
+                                                  ),
+                                                  child: NotificationListItem(
+                                                    record: record,
+                                                    onTap: () => _openRecord(
+                                                      context,
+                                                      record,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ).toList(),
                                 ),
-                              ),
-                            );
-                          }),
-                        const SizedBox(height: 40),
-                      ],
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -291,5 +325,43 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         builder: (_) => TaskDetailScreen(taskId: taskId),
       ),
     );
+  }
+}
+
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+  final Color backgroundColor;
+
+  _StickyHeaderDelegate({
+    required this.child,
+    required this.height,
+    required this.backgroundColor,
+  });
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: backgroundColor,
+      alignment: Alignment.centerLeft,
+      child: child,
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child ||
+        oldDelegate.height != height ||
+        oldDelegate.backgroundColor != backgroundColor;
   }
 }

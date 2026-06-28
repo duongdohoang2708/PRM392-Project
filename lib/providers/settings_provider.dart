@@ -28,11 +28,11 @@ class SettingsProvider with ChangeNotifier {
 
   static const double minCardFillSolidity = 0.0;
   static const double maxCardFillSolidity = 1.0;
-  static const double defaultCardFillSolidity = 0.0;
+  static const double defaultCardFillSolidity = 1.0;
 
   static const double minCardTintStrength = 0.0;
   static const double maxCardTintStrength = 2.0;
-  static const double defaultCardTintStrength = 1.0;
+  static const double defaultCardTintStrength = 0.5;
 
   /// Legacy multiplier range — migrated to [cardFillSolidity].
   static const double minTransparencyMultiplier = 0.5;
@@ -56,6 +56,12 @@ class SettingsProvider with ChangeNotifier {
   bool _loaded = false;
 
   ThemeMode get themeMode => _themeMode;
+
+  String get themeModeLabel => switch (_themeMode) {
+        ThemeMode.light => 'Light',
+        ThemeMode.dark => 'Dark',
+        ThemeMode.system => 'System',
+      };
   bool get notificationsEnabled => _notificationsEnabled;
   bool get taskRemindersEnabled => _taskRemindersEnabled;
   bool get goalsInsightsEnabled => _goalsInsightsEnabled;

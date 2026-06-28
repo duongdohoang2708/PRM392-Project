@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import 'accent_icon_well.dart';
 
 enum TintedAccentCardVariant {
   /// Overview-style: icon well, border, value + label.
@@ -9,7 +10,7 @@ enum TintedAccentCardVariant {
   /// Quick action: flat tint, icon + label only.
   action,
 
-  /// Statistics-style: border, white/dark icon well, larger padding.
+  /// Statistics-style: border, accent-tinted icon well, larger padding.
   statistics,
 }
 
@@ -55,7 +56,10 @@ class TintedAccentCard extends StatelessWidget {
         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       TintedAccentCardVariant.action =>
         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      TintedAccentCardVariant.statistics => const EdgeInsets.all(14),
+      TintedAccentCardVariant.statistics => const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 8,
+        ),
     };
 
     final borderRadius = switch (variant) {
@@ -89,13 +93,12 @@ class TintedAccentCard extends StatelessWidget {
   Widget _buildOverviewContent(BuildContext context) {
     return Row(
       children: [
-        Container(
+        AccentIconWell(
+          accentColor: accentColor,
+          icon: icon,
+          iconSize: 20,
           padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: AppColors.statCardIconWellOf(context, accentColor),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: accentColor, size: 20),
+          borderRadius: 10,
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -152,19 +155,14 @@ class TintedAccentCard extends StatelessWidget {
   }
 
   Widget _buildStatisticsContent(BuildContext context) {
-    final isDark = AppColors.isDark(context);
     return Row(
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.cardSurfaceFillOf(context)
-                : Colors.white.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: accentColor, size: 22),
+        AccentIconWell(
+          accentColor: accentColor,
+          icon: icon,
+          size: 34,
+          iconSize: 20,
+          borderRadius: 10,
         ),
         const SizedBox(width: 10),
         Expanded(

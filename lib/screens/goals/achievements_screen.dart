@@ -8,6 +8,7 @@ import '../../theme/app_opacity.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
+import '../../widgets/common/accent_icon_well.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/common/app_scaffold.dart';
 
@@ -226,22 +227,13 @@ class _UnlockedSummaryCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.accentYellow.withValues(
-                    alpha: isDark ? 0.28 : 0.2,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  Icons.emoji_events,
-                  color: isDark
-                      ? const Color(0xFFFFD54F)
-                      : AppColors.accentYellow,
-                  size: 24,
-                ),
+              AccentIconWell(
+                accentColor: AppColors.accentYellow,
+                icon: Icons.emoji_events,
+                size: 44,
+                iconSize: 24,
+                borderRadius: 14,
+                iconColor: isDark ? const Color(0xFFFFD54F) : null,
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -480,14 +472,8 @@ class _AchievementCard extends StatelessWidget {
     final bgColor = unlocked
         ? AppColors.primaryLightTintOf(context, alpha: isDark ? 0.35 : 0.45)
         : AppColors.cardSurfaceFillOf(context);
-    final iconContainerColor = unlocked
-        ? (isDark
-              ? AppOpacity.fixed(AppColors.primary, 0.32)
-              : Colors.white.withValues(alpha: 0.8))
-        : AppColors.insetSurfaceOf(context);
-    final iconColor = unlocked
-        ? (isDark ? const Color(0xFF9AE8A0) : AppColors.primaryDark)
-        : AppColors.textSecondaryOf(context);
+    final iconAccent =
+        unlocked ? AppColors.primaryDark : AppColors.textSecondaryOf(context);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -507,14 +493,16 @@ class _AchievementCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 35,
-                height: 35,
-                decoration: BoxDecoration(
-                  color: iconContainerColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(_icon, color: iconColor, size: 16),
+              AccentIconWell(
+                accentColor: iconAccent,
+                icon: _icon,
+                size: 35,
+                iconSize: 16,
+                borderRadius: 10,
+                muted: !unlocked,
+                iconColor: unlocked && isDark
+                    ? const Color(0xFF9AE8A0)
+                    : null,
               ),
               Icon(
                 unlocked ? Icons.check_circle : Icons.lock_outline,

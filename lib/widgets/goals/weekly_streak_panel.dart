@@ -90,7 +90,7 @@ class WeekDayTile extends StatelessWidget {
                 ? AppColors.streakCompleteFillOf(context)
                 : isRestDay
                 ? AppColors.streakFreezeFillOf(context)
-                : AppColors.insetSurfaceOf(context),
+                : AppColors.panelFillOf(context),
             shape: BoxShape.circle,
             border: Border.all(
               color: borderColor,

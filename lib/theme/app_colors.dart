@@ -77,9 +77,27 @@ class AppColors {
   static Color panelFillOf(BuildContext context) =>
       AppOpacity.solidSurfaceFill(context, surfaceOf(context));
 
+  /// Dropdown menu list — always fully opaque, never follows Card appearance.
+  static Color dropdownMenuFillOf(BuildContext context) => surfaceOf(context);
+
+  /// Dropdown field shell on forms — follows Card appearance transparency.
+  static Color dropdownShellFillOf(BuildContext context) =>
+      cardSurfaceFillOf(context);
+
+  /// Dropdown filter pill shell (task filters, etc.) — always solid.
+  static Color dropdownFilterShellFillOf(BuildContext context) => cardOf(context);
+
   /// Neutral card shell — no accent tint, solidity from Settings.
   static Color cardSurfaceFillOf(BuildContext context) =>
       AppOpacity.solidSurfaceFill(context, cardOf(context));
+
+  /// Overlay fill on [BackgroundPattern] inside popups/sheets/dialogs.
+  static Color popupOverlayFillOf(BuildContext context) =>
+      cardSurfaceFillOf(context);
+
+  /// Panel overlay fill for large popup shells (e.g. sound picker).
+  static Color popupPanelOverlayFillOf(BuildContext context) =>
+      panelFillOf(context);
 
   /// Card background: fixed accent tint + adjustable opaque surface layer.
   /// Solidity 0 = transparent (see page background); 1 = solid card fill.
@@ -117,6 +135,32 @@ class AppColors {
       accentColor: accentColor,
       lightTintAlpha: AppOpacity.surfaceTint,
       darkTintAlpha: AppOpacity.surfaceTint,
+    );
+  }
+
+  /// Shared shell for task list/detail/create cards — project tint + border.
+  static BoxDecoration taskCardDecorationOf(
+    BuildContext context,
+    Color accentColor, {
+    bool completed = false,
+    bool includeShadow = false,
+  }) {
+    return BoxDecoration(
+      color: taskCardOf(context, accentColor, completed: completed),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: projectBorderOf(context, accentColor),
+        width: 1.5,
+      ),
+      boxShadow: includeShadow && !completed
+          ? [
+              BoxShadow(
+                color: projectGlowOf(context, accentColor),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ]
+          : null,
     );
   }
 
@@ -212,6 +256,29 @@ class AppColors {
   static Color statCardIconWellOf(BuildContext context, Color accentColor) {
     final accent = projectAccentOf(context, accentColor);
     return AppOpacity.fixed(accent, AppOpacity.iconWell);
+  }
+
+  /// Achievement-style icon well background (neutral — no accent tint).
+  static Color accentIconWellFillOf(
+    BuildContext context,
+    Color accentColor, {
+    bool muted = false,
+  }) {
+    if (muted) return insetSurfaceOf(context);
+    if (isDark(context)) {
+      return backgroundOf(context);
+    }
+    return Colors.white.withValues(alpha: 0.8);
+  }
+
+  /// Achievement-style icon foreground (and matching border color).
+  static Color accentIconWellForegroundOf(
+    BuildContext context,
+    Color accentColor, {
+    bool muted = false,
+  }) {
+    if (muted) return textSecondaryOf(context);
+    return projectAccentOf(context, accentColor);
   }
 
   /// Pomodoro phase color tints — fixed alpha.
@@ -358,9 +425,8 @@ class AppColors {
     return isDark(context) ? primary : primaryDark;
   }
 
-  /// Segmented pill (Focus/Task, Week/Month) — selected fill.
-  static Color segmentSelectedFillOf(BuildContext context) =>
-      isDark(context) ? primaryDark : primary;
+  /// Segmented pill (Focus/Task, Week/Month) — selected fill; matches range chips.
+  static Color segmentSelectedFillOf(BuildContext context) => primaryDark;
 
   /// Segmented pill — selected label.
   static Color segmentSelectedLabelOf(BuildContext context) => Colors.white;

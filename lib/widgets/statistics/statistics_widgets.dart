@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../providers/statistics_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_opacity.dart';
+import '../common/accent_icon_well.dart';
 
 String formatFocusMinutes(int totalMinutes) {
   final hours = totalMinutes ~/ 60;
@@ -398,19 +399,12 @@ class DailyGoalCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.cardFillOf(
-                    context,
-                    accentColor: accent,
-                    lightTintAlpha: 0.15,
-                    darkTintAlpha: 0.15,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: accent, size: 22),
+              AccentIconWell(
+                accentColor: accent,
+                icon: icon,
+                size: 40,
+                iconSize: 22,
+                borderRadius: 12,
               ),
               const SizedBox(width: 12),
               Expanded(

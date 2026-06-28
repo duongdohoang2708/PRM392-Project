@@ -17,7 +17,7 @@ class CalendarDisplaySettingsScreen extends StatelessWidget {
 
     return SettingsScreenShell(
       activeRoute: '/settings',
-      title: 'Calendar & Time',
+      title: 'Calendar & Time Format',
       showBack: true,
       child: Column(
         children: [

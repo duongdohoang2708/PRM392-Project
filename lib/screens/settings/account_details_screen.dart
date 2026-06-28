@@ -7,6 +7,7 @@ import '../../widgets/common/user_avatar.dart';
 import '../../widgets/settings/avatar_picker_sheet.dart';
 import '../../widgets/settings/settings_screen_shell.dart';
 import '../../widgets/settings/settings_widgets.dart';
+import '../../widgets/common/app_confirm_dialog.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
 import '../auth/login_screen.dart';
 
@@ -14,30 +15,13 @@ class AccountDetailsScreen extends StatelessWidget {
   const AccountDetailsScreen({super.key});
 
   Future<void> _confirmLogout(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cardSurfaceFillOf(context),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Sign out?'),
-        content: const Text(
-          'You will need to sign in again to access your tasks.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentPeach,
-              foregroundColor: AppColors.textPrimaryOf(context),
-            ),
-            child: const Text('Sign out'),
-          ),
-        ],
-      ),
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      title: 'Sign out?',
+      content: 'You will need to sign in again to access your tasks.',
+      confirmLabel: 'Sign out',
+      confirmBackgroundColor: AppColors.accentPeach,
+      confirmForegroundColor: AppColors.textPrimaryOf(context),
     );
 
     if (confirmed == true && context.mounted) {

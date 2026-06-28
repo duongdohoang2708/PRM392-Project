@@ -197,6 +197,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       projects.add(_project);
     }
 
+    final projectAccent =
+        ProjectAccentColor.resolve(context, projectProvider, _project);
+
     final titleWidget = Padding(
       padding: const EdgeInsets.only(left: 8, bottom: 24, top: 8),
       child: Text(
@@ -215,21 +218,21 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         // Main Columns
         final leftColumnWidgets = [
           // Title card
-          _buildTitleCard(projectProvider),
+          _buildTitleCard(projectAccent),
           const SizedBox(height: 16),
 
           // Task details info for Mobile/Tablet only
           if (!useTwoColumns) ...[
-            _buildInfoCard(projects),
+            _buildInfoCard(projects, projectAccent),
             const SizedBox(height: 16),
           ],
 
           // Subtasks card
-          _buildSubtasksCard(),
+          _buildSubtasksCard(projectAccent),
           const SizedBox(height: 16),
 
           // Notes card
-          _buildNotesCard(),
+          _buildNotesCard(projectAccent),
 
           // Bottom actions for Mobile/Tablet only
           if (!useTwoColumns) ...[
@@ -241,7 +244,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         final rightColumnWidgets = [
           // Task details info for Desktop only
           if (useTwoColumns) ...[
-            _buildInfoCard(projects),
+            _buildInfoCard(projects, projectAccent),
             const SizedBox(height: 16),
             _buildActionButtons(),
           ],
@@ -361,25 +364,12 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
   }
 
-  Widget _buildTitleCard(ProjectProvider projectProvider) {
-    final projectAccent =
-        ProjectAccentColor.resolve(context, projectProvider, _project);
+  Widget _buildTitleCard(Color projectAccent) {
     final projectDot = AppColors.projectAccentOf(context, projectAccent);
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurfaceFillOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectAccent),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -506,21 +496,10 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
   }
 
-  Widget _buildInfoCard(List<String> projects) {
+  Widget _buildInfoCard(List<String> projects, Color projectAccent) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurfaceFillOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectAccent),
       child: Column(
         children: [
           // Date Row
@@ -713,21 +692,10 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
   }
 
-  Widget _buildSubtasksCard() {
+  Widget _buildSubtasksCard(Color projectAccent) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurfaceFillOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectAccent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -832,20 +800,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
   }
 
-  Widget _buildNotesCard() {
+  Widget _buildNotesCard(Color projectAccent) {
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardSurfaceFillOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectAccent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

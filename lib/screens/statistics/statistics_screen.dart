@@ -238,13 +238,22 @@ class _SegmentButton extends StatelessWidget {
         height: 44,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.transparent,
+          color: selected
+              ? AppColors.segmentSelectedFillOf(context)
+              : AppColors.backgroundOf(context),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? AppColors.primaryDark
+                : AppColors.borderOf(context),
+          ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textSecondaryOf(context),
+            color: selected
+                ? AppColors.segmentSelectedLabelOf(context)
+                : AppColors.textSecondaryOf(context),
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -550,29 +559,27 @@ class _FocusStatisticsContent extends StatelessWidget {
                   title: 'Focus Time',
                   value: formatFocusMinutes(data.totalMinutes),
                   icon: Icons.timer_outlined,
-                  color: AppColors.primaryDark,
-                  lightBgAlpha: 0.4,
+                  color: const Color(0xFF0277BD),
                 ),
                 _StatCardModel(
                   title: 'Sessions',
                   value: '${data.sessions}',
                   icon: Icons.repeat,
-                  color: AppColors.accentYellow,
-                  lightBgAlpha: 0.2,
+                  color: AppColors.primaryDark,
+                  lightBgAlpha: 0.52,
+                  darkBgAlpha: 0.26,
                 ),
                 _StatCardModel(
                   title: 'Average',
                   value: '${data.averageMinutes}m',
                   icon: Icons.auto_graph,
-                  color: AppColors.accentPeach,
-                  lightBgAlpha: 0.18,
+                  color: AppColors.accentYellow,
                 ),
                 _StatCardModel(
                   title: 'Longest',
                   value: '${data.longestMinutes}m',
                   icon: Icons.emoji_events_outlined,
-                  color: AppColors.accentPink,
-                  lightBgAlpha: 0.15,
+                  color: const Color(0xFFD32F2F),
                 ),
               ],
             ),
@@ -589,8 +596,6 @@ class _FocusStatisticsContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        FocusGoalProgressPanel(data: data.goalProgress),
         const SizedBox(height: 16),
         _SessionsSection(
           totalSessions: statsProvider.totalSessionsInRange,
@@ -625,29 +630,27 @@ class _TaskStatisticsContent extends StatelessWidget {
                   title: 'Total Tasks',
                   value: '${data.total}',
                   icon: Icons.task_alt,
-                  color: AppColors.primaryDark,
-                  lightBgAlpha: 0.4,
+                  color: const Color(0xFF0277BD),
                 ),
                 _StatCardModel(
                   title: 'Completed',
                   value: '${data.completed}',
                   icon: Icons.check_circle_outline,
-                  color: AppColors.primary,
-                  lightBgAlpha: 0.2,
+                  color: AppColors.primaryDark,
+                  lightBgAlpha: 0.52,
+                  darkBgAlpha: 0.26,
                 ),
                 _StatCardModel(
                   title: 'Pending',
                   value: '${data.pending}',
                   icon: Icons.hourglass_top_outlined,
                   color: AppColors.accentYellow,
-                  lightBgAlpha: 0.2,
                 ),
                 _StatCardModel(
                   title: 'Overdue',
                   value: '${data.overdue}',
                   icon: Icons.error_outline,
-                  color: AppColors.accentPeach,
-                  lightBgAlpha: 0.18,
+                  color: const Color(0xFFD32F2F),
                 ),
               ],
             ),
@@ -877,7 +880,7 @@ class _StatsCardGrid extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: constraints.maxWidth >= 900 ? 2.2 : 1.8,
+            childAspectRatio: constraints.maxWidth >= 900 ? 3.2 : 2.4,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
@@ -897,13 +900,15 @@ class _StatCardModel {
   final IconData icon;
   final Color color;
   final double lightBgAlpha;
+  final double? darkBgAlpha;
 
   const _StatCardModel({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
-    required this.lightBgAlpha,
+    this.lightBgAlpha = 0.28,
+    this.darkBgAlpha,
   });
 }
 
@@ -921,7 +926,7 @@ class _StatCard extends StatelessWidget {
       label: card.title,
       value: card.value,
       lightBgAlpha: card.lightBgAlpha,
-      darkBgAlpha: card.lightBgAlpha,
+      darkBgAlpha: card.darkBgAlpha ?? card.lightBgAlpha,
     );
   }
 }

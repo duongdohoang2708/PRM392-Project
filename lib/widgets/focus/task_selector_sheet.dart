@@ -6,6 +6,7 @@ import '../../providers/focus_provider.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../theme/app_colors.dart';
 import '../common/app_dropdown.dart';
+import '../common/popup_surface.dart';
 
 class TaskSelectorSheet extends StatefulWidget {
   const TaskSelectorSheet({super.key});
@@ -78,11 +79,9 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
       filteredTasks = filteredTasks.where((t) => t.priority == _selectedPriority).toList();
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardSurfaceFillOf(context),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+    return PopupSurface(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: Container(
       padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 0),
       height: MediaQuery.of(context).size.height * 0.75,
       child: Column(
@@ -199,6 +198,7 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -214,12 +214,13 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.backgroundOf(context),
+        color: AppColors.dropdownFilterShellFillOf(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: AppDropdown<String>(
         value: safeValue,
+        solidShell: false,
         isDense: true,
         icon: Icon(Icons.expand_more, color: AppColors.textSecondaryOf(context), size: 20),
         style: TextStyle(

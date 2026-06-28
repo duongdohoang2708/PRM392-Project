@@ -17,6 +17,7 @@ import '../../widgets/task/subtask_title_field.dart';
 import '../../widgets/common/app_time_picker.dart';
 import '../../widgets/common/app_date_picker.dart';
 import '../../widgets/common/app_dropdown.dart';
+import '../../widgets/common/app_confirm_dialog.dart';
 import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../utils/reminder/task_reminder.dart';
@@ -129,53 +130,22 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     Navigator.pop(context);
   }
 
-  void _confirmDeleteTask(BuildContext parentContext) {
-    showDialog(
-      context: parentContext,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.cardSurfaceFillOf(dialogContext),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            'Delete Task',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimaryOf(dialogContext),
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to delete this task? This action cannot be undone.',
-            style: TextStyle(color: AppColors.textSecondaryOf(dialogContext)),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondaryOf(dialogContext)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext); // Close dialog
-                parentContext.read<TaskProvider>().deleteTask(widget.taskId);
-                AppNotification.showError(parentContext, 'Task deleted');
-                Navigator.pop(parentContext); // Close detail screen
-              },
-              child: const Text(
-                'Delete',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+  void _confirmDeleteTask(BuildContext parentContext) async {
+    final confirmed = await AppConfirmDialog.show(
+      parentContext,
+      title: 'Delete Task',
+      content:
+          'Are you sure you want to delete this task? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      confirmButtonStyle: AppConfirmButtonStyle.destructive,
     );
+    if (confirmed != true) return;
+
+    parentContext.read<TaskProvider>().deleteTask(widget.taskId);
+    AppNotification.showError(parentContext, 'Task deleted');
+    if (parentContext.mounted) {
+      Navigator.pop(parentContext);
+    }
   }
 
   Future<void> _selectDate(BuildContext tapContext) async {
@@ -462,13 +432,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     final accent = AppColors.projectAccentOf(context, projectColor);
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.projectBorderOf(context, projectColor),
-          width: 1.5,
-        ),
+      decoration: AppColors.taskCardDecorationOf(
+        context,
+        projectColor,
+        completed: _isCompleted,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -611,14 +578,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Widget _buildInfoCard(List<String> projects, Color projectColor) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.projectBorderOf(context, projectColor),
-          width: 1.5,
-        ),
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Column(
         children: [
           // Date Row
@@ -856,14 +816,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.projectBorderOf(context, projectColor),
-          width: 1.5,
-        ),
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -981,71 +934,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ElevatedButton(
             onPressed: _isCompleted
                 ? null
-                : () {
+                : () async {
                     final focusProvider = context.read<FocusProvider>();
-                    bool settingsChanged =
+                    final settingsChanged =
                         focusProvider.focusMinutes != _focusMinutes ||
                         focusProvider.shortBreakMinutes != _breakMinutes ||
                         focusProvider.longBreakMinutes != _longBreakMinutes ||
                         focusProvider.rounds != _sessions ||
                         focusProvider.longBreakInterval != _longBreakInterval;
 
-                    if ((focusProvider.timerState == TimerState.running ||
-                            focusProvider.timerState == TimerState.paused) &&
-                        (focusProvider.selectedTask?.id != widget.taskId ||
-                            settingsChanged)) {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          backgroundColor: AppColors.cardSurfaceFillOf(context),
-                          title: Text(
-                            'Timer is running',
-                            style: TextStyle(color: AppColors.textPrimaryOf(context)),
-                          ),
-                          content: Text(
-                            'You currently have an active focus session. Starting this will reset the current timer. Do you want to proceed?',
-                            style: TextStyle(color: AppColors.textSecondaryOf(context)),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  color: AppColors.textSecondaryOf(context),
-                                ),
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                focusProvider.resetEntireCycle();
-                                Navigator.pushNamed(
-                                  context,
-                                  '/focus',
-                                  arguments: {
-                                    'taskId': widget.taskId,
-                                    'focusMinutes': _focusMinutes,
-                                    'breakMinutes': _breakMinutes,
-                                    'longBreakMinutes': _longBreakMinutes,
-                                    'sessions': _sessions,
-                                    'longBreakInterval': _longBreakInterval,
-                                    'autoStart': true,
-                                  },
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.accentPeach,
-                              ),
-                              child: const Text(
-                                'Reset & Proceed',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
+                    void navigateToFocus() {
                       Navigator.pushNamed(
                         context,
                         '/focus',
@@ -1059,6 +957,27 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                           'autoStart': true,
                         },
                       );
+                    }
+
+                    if ((focusProvider.timerState == TimerState.running ||
+                            focusProvider.timerState == TimerState.paused) &&
+                        (focusProvider.selectedTask?.id != widget.taskId ||
+                            settingsChanged)) {
+                      final confirmed = await AppConfirmDialog.show(
+                        context,
+                        title: 'Timer is running',
+                        content:
+                            'You currently have an active focus session. Starting this will reset the current timer. Do you want to proceed?',
+                        confirmLabel: 'Reset & Proceed',
+                        confirmBackgroundColor: AppColors.accentPeach,
+                        confirmForegroundColor: Colors.white,
+                      );
+                      if (confirmed == true && context.mounted) {
+                        focusProvider.resetEntireCycle();
+                        navigateToFocus();
+                      }
+                    } else {
+                      navigateToFocus();
                     }
                   },
             style: ElevatedButton.styleFrom(
@@ -1151,14 +1070,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     final accent = AppColors.projectAccentOf(context, projectColor);
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.projectBorderOf(context, projectColor),
-          width: 1.5,
-        ),
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1266,14 +1178,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Widget _buildNotesCard(Color projectColor) {
     final accent = AppColors.projectAccentOf(context, projectColor);
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.projectBorderOf(context, projectColor),
-          width: 1.5,
-        ),
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

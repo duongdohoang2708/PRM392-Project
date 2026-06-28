@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../common/popup_surface.dart';
 
 class EditGoalsSheet extends StatefulWidget {
   final int initialTaskGoal;
@@ -50,11 +51,9 @@ class _EditGoalsSheetState extends State<EditGoalsSheet> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.panelFillOf(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+      child: PopupSurface(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        fillColor: AppColors.popupPanelOverlayFillOf(context),
         child: SafeArea(
           top: false,
           child: Padding(

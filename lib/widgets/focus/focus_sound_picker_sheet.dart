@@ -4,6 +4,8 @@ import '../../services/focus_feedback_service.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/focus_sound_options.dart';
 import '../custom_snackbar.dart';
+import '../common/app_bottom_sheet.dart';
+import '../common/popup_surface.dart';
 import '../settings/settings_widgets.dart';
 
 class FocusSoundPickerSheet extends StatelessWidget {
@@ -24,11 +26,8 @@ class FocusSoundPickerSheet extends StatelessWidget {
     required String selectedSoundId,
     required ValueChanged<String> onSelected,
   }) {
-    return showModalBottomSheet<void>(
+    return showAppBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) => FocusSoundPickerSheet(
         title: title,
         selectedSoundId: selectedSoundId,
@@ -43,15 +42,14 @@ class FocusSoundPickerSheet extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: Container(
+      child: PopupSurface(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderOf(context)),
+        fillColor: AppColors.popupPanelOverlayFillOf(context),
+        child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(context).height * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.panelFillOf(context),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.borderOf(context)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -108,6 +106,7 @@ class FocusSoundPickerSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

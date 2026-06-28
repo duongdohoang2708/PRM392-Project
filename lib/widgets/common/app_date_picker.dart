@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import 'app_popup_transition.dart';
+import 'popup_surface.dart';
 
 DateTime _dateOnly(DateTime value) =>
     DateTime(value.year, value.month, value.day);
@@ -130,21 +131,16 @@ class _AppDatePickerDialogState extends State<_AppDatePickerDialog> {
 
     return AppPopupShell(
       alignment: Alignment.centerRight,
-      child: Container(
-        decoration: BoxDecoration(
-            color: AppColors.backgroundOf(context),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+      child: PopupSurface(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Column(
+        ],
+        child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
@@ -217,7 +213,6 @@ class _AppDatePickerDialogState extends State<_AppDatePickerDialog> {
                 ),
               ],
             ),
-          ),
         ),
     );
   }

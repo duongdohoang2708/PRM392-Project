@@ -47,10 +47,14 @@ class AppDrawer extends StatelessWidget {
           decoration: BoxDecoration(color: AppColors.drawerHeaderOf(context)),
           child: Row(
             children: [
-              UserAvatar(
-                avatarUrl: user.avatarUrl,
-                initials: user.initials,
-                radius: 20,
+              InkWell(
+                onTap: () => _openAccountSettings(context),
+                borderRadius: BorderRadius.circular(24),
+                child: UserAvatar(
+                  avatarUrl: user.avatarUrl,
+                  initials: user.initials,
+                  radius: 20,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -338,6 +342,23 @@ class AppDrawer extends StatelessWidget {
       backgroundColor: AppColors.surfaceOf(context),
       child: drawerContent,
     );
+  }
+
+  void _openAccountSettings(BuildContext context) {
+    if (!isPermanent) {
+      Navigator.pop(context);
+    }
+    if (activeRoute != '/settings/account') {
+      if (onNavigate != null) {
+        onNavigate!('/settings/account');
+      } else {
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (context.mounted) {
+            Navigator.pushNamed(context, '/settings/account');
+          }
+        });
+      }
+    }
   }
 
   Widget _buildMenuItem(

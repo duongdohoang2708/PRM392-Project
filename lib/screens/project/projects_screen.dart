@@ -13,55 +13,25 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/staggered_list_entry.dart';
+import '../../widgets/common/accent_icon_well.dart';
 import '../../widgets/common/animations/app_fade_transition.dart';
 import '../../widgets/common/animations/app_scale_transition.dart';
 import '../../widgets/common/animations/app_delete_transition.dart';
+import '../../widgets/common/app_confirm_dialog.dart';
 
-void _confirmDeleteProject(BuildContext parentContext, Project project, VoidCallback onConfirmDelete) {
-  showDialog(
-    context: parentContext,
-    builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        backgroundColor: AppColors.panelFillOf(parentContext),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Delete Project',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimaryOf(parentContext),
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
-          style: TextStyle(color: AppColors.textSecondaryOf(parentContext)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textSecondaryOf(parentContext)),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext); // Close dialog
-              onConfirmDelete();
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      );
-    },
+void _confirmDeleteProject(BuildContext parentContext, Project project, VoidCallback onConfirmDelete) async {
+  final confirmed = await AppConfirmDialog.show(
+    parentContext,
+    title: 'Delete Project',
+    content:
+        'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
+    confirmLabel: 'Delete',
+    confirmButtonStyle: AppConfirmButtonStyle.destructive,
+    fillColor: AppColors.popupPanelOverlayFillOf(parentContext),
   );
+  if (confirmed == true) {
+    onConfirmDelete();
+  }
 }
 
 class ProjectsScreen extends StatelessWidget {
@@ -461,19 +431,12 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: AppColors.cardFillOf(
-                                context,
-                                accentColor: accentColor,
-                                lightTintAlpha: 0.2,
-                                darkTintAlpha: 0.2,
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(widget.project.icon, color: accentColor, size: 18),
+                          AccentIconWell(
+                            accentColor: accentColor,
+                            icon: widget.project.icon,
+                            size: 32,
+                            iconSize: 18,
+                            borderRadius: 10,
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -740,19 +703,12 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
                   child: Row(
                     children: [
                       // Icon
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.cardFillOf(
-                            context,
-                            accentColor: accentColor,
-                            lightTintAlpha: 0.2,
-                            darkTintAlpha: 0.2,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(widget.project.icon, color: accentColor, size: 20),
+                      AccentIconWell(
+                        accentColor: accentColor,
+                        icon: widget.project.icon,
+                        size: 40,
+                        iconSize: 20,
+                        borderRadius: 12,
                       ),
                       const SizedBox(width: 14),
                       // Name + Description

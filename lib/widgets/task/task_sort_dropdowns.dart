@@ -140,7 +140,7 @@ class TaskSortDropdowns extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.cardSurfaceFillOf(context),
+        color: AppColors.dropdownFilterShellFillOf(context),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
@@ -153,6 +153,7 @@ class TaskSortDropdowns extends StatelessWidget {
       ),
       child: AppDropdown<String>(
         value: value,
+        solidShell: false,
         isDense: true,
         icon: Icon(
           Icons.expand_more,

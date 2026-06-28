@@ -11,6 +11,7 @@ import '../../theme/app_colors.dart';
 import '../common/app_time_picker.dart';
 import '../common/app_dropdown.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
+import '../common/popup_surface.dart';
 import '../common/app_popup_transition.dart';
 import '../../widgets/project/create_project_popup.dart';
 import '../../widgets/task/reminder_selector.dart';
@@ -194,24 +195,20 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
 
     return AppPopupShell(
       alignment: Alignment.centerRight,
-      child: Container(
+      child: PopupSurface(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        child: Container(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(context).height * 0.85,
         ),
-        decoration: BoxDecoration(
-            color: AppColors.backgroundOf(context),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
+        child: Stack(
               children: [
                 Column(
                   mainAxisSize: MainAxisSize.min,
@@ -307,7 +304,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                 ),
               ],
             ),
-          ),
+        ),
         ),
     );
   }

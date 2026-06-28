@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../common/app_popup_transition.dart';
+import '../common/popup_surface.dart';
 import 'pomodoro_settings_form.dart';
 
 class PomodoroSettingsPopup extends StatelessWidget {
@@ -33,21 +34,16 @@ class PomodoroSettingsPopup extends StatelessWidget {
 
     return AppPopupShell(
       alignment: isMobile ? Alignment.center : Alignment.centerRight,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.backgroundOf(context),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
+      child: PopupSurface(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
@@ -104,7 +100,6 @@ class PomodoroSettingsPopup extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

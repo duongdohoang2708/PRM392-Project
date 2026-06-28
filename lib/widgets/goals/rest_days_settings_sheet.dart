@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
+import '../common/popup_surface.dart';
 
 class RestDaysSettingsSheet extends StatefulWidget {
   final Set<int> initialRestWeekdays;
@@ -53,11 +54,8 @@ class _RestDaysSettingsSheetState extends State<RestDaysSettingsSheet> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardSurfaceFillOf(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+      child: PopupSurface(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         child: SafeArea(
           top: false,
           child: Padding(

@@ -17,6 +17,7 @@ import '../common/app_date_picker.dart';
 import '../common/app_dropdown.dart';
 import '../common/app_popup_transition.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
+import '../common/popup_surface.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 
 class ProjectCreateTaskPopup extends StatefulWidget {
@@ -208,24 +209,20 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
 
     return AppPopupShell(
       alignment: Alignment.centerRight,
-      child: Container(
+      child: PopupSurface(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        child: Container(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(context).height * 0.85,
         ),
-        decoration: BoxDecoration(
-            color: AppColors.backgroundOf(context),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
+        child: Stack(
               children: [
                 Column(
                   mainAxisSize: MainAxisSize.min,
@@ -325,7 +322,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
                 ),
               ],
             ),
-          ),
+        ),
         ),
     );
   }
@@ -333,11 +330,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
   Widget _buildTitleCard(Color projectColor) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -395,11 +388,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
   Widget _buildInfoCard(Color projectColor) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Column(
         children: [
           _buildInfoRow(
@@ -531,11 +520,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
   Widget _buildSubtasksCard(Color projectColor) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -640,11 +625,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
 
   Widget _buildNotesCard(Color projectColor) {
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.taskCardOf(context, projectColor),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

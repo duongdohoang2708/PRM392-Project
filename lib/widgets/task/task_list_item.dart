@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_opacity.dart';
+import '../common/app_confirm_dialog.dart';
 import '../common/animations/app_delete_transition.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../models/task_model.dart';
@@ -260,43 +261,25 @@ class _TaskListItemState extends State<TaskListItem>
     AppNotification.showError(context, 'Task deleted');
   }
 
-  void _handleDelete(BuildContext context) {
+  void _handleDelete(BuildContext context) async {
     if (_isAnimating) return;
 
-    // Save the slidable controller to close it if the user cancels
     final slidable = Slidable.of(context);
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Task'),
-        content: const Text(
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      title: 'Delete Task',
+      content:
           'Are you sure you want to delete this task? This action cannot be undone.',
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop(); // Close dialog
-              slidable?.close(); // Close the slidable action pane
-            },
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop(); // Close dialog
-              _executeDelete(slidable);
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.redAccent),
-            ),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
+      confirmButtonStyle: AppConfirmButtonStyle.destructive,
     );
+    if (confirmed != true) {
+      slidable?.close();
+      return;
+    }
+
+    _executeDelete(slidable);
   }
 
   void _executeDelete([SlidableController? slidable]) {
@@ -355,37 +338,22 @@ class _TaskListItemState extends State<TaskListItem>
     return AppDateTimeFormat.taskDueLabel(date, isOverdue: isOverdue, isAllDay: isAllDay);
   }
 
-  void _handleStartFocus(BuildContext context) {
+  void _handleStartFocus(BuildContext context) async {
     final focusProvider = context.read<FocusProvider>();
     if ((focusProvider.timerState == TimerState.running || focusProvider.timerState == TimerState.paused) && focusProvider.selectedTask?.id != widget.task.id) {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.panelFillOf(context),
-          title: Text('Timer is running',
-              style: TextStyle(color: AppColors.textPrimaryOf(context))),
-          content: Text(
+      final confirmed = await AppConfirmDialog.show(
+        context,
+        title: 'Timer is running',
+        content:
             'You currently have an active focus session. Starting this task will reset the current timer. Do you want to proceed?',
-            style: TextStyle(color: AppColors.textSecondaryOf(context)),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel',
-                  style: TextStyle(color: AppColors.textSecondaryOf(context))),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                focusProvider.resetEntireCycle();
-                Navigator.pushNamed(context, '/focus', arguments: {'taskId': widget.task.id, 'autoStart': true});
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentPeach),
-              child: const Text('Reset & Proceed', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
+        confirmLabel: 'Reset & Proceed',
+        confirmBackgroundColor: AppColors.accentPeach,
+        confirmForegroundColor: Colors.white,
       );
+      if (confirmed == true && context.mounted) {
+        focusProvider.resetEntireCycle();
+        Navigator.pushNamed(context, '/focus', arguments: {'taskId': widget.task.id, 'autoStart': true});
+      }
     } else {
       Navigator.pushNamed(context, '/focus', arguments: {'taskId': widget.task.id, 'autoStart': true});
     }
@@ -424,32 +392,11 @@ class _TaskListItemState extends State<TaskListItem>
 
     final mainContent = Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _isCompletedLocal
-            ? AppOpacity.solidSurfaceFill(
-                context,
-                AppColors.backgroundOf(context),
-              )
-            : AppColors.projectTintOf(
-                context,
-                projectColor,
-                lightAlpha: 0.08,
-                darkAlpha: 0.12,
-              ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.projectBorderOf(context, projectColor),
-          width: 1.5,
-        ),
-        boxShadow: _isCompletedLocal
-            ? null
-            : [
-                BoxShadow(
-                  color: AppColors.projectGlowOf(context, projectColor),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+      decoration: AppColors.taskCardDecorationOf(
+        context,
+        projectColor,
+        completed: _isCompletedLocal,
+        includeShadow: true,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,58 +476,54 @@ class _TaskListItemState extends State<TaskListItem>
                             ),
                             const SizedBox(height: 4),
                           ],
-                          Wrap(
-                            spacing: 16,
-                            runSpacing: 4,
+                          // Priority
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Priority
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.flag, size: 14, color: priorityColor),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    widget.task.priority,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: priorityColor,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (widget.task.dueDate != null && !widget.hideTime)
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _isCompletedLocal
-                                          ? Icons.check_circle_outline
-                                          : Icons.schedule,
-                                      size: 14,
-                                      color: _isCompletedLocal
-                                          ? AppColors.primaryDark
-                                          : (isOverdue
-                                                ? const Color(0xFFE57373)
-                                                : AppColors.textPrimaryOf(context)),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      timeString,
-                                      style: theme.textTheme.labelMedium?.copyWith(
-                                        color: _isCompletedLocal
-                                            ? AppColors.primaryDark
-                                            : (isOverdue
-                                                  ? const Color(0xFFE57373)
-                                                  : AppColors.textPrimaryOf(context)),
-                                        fontWeight: isOverdue || _isCompletedLocal
-                                            ? FontWeight.bold
-                                            : FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                              Icon(Icons.flag, size: 14, color: priorityColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                widget.task.priority,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: priorityColor,
+                                  fontWeight: FontWeight.w600,
                                 ),
+                              ),
                             ],
                           ),
+                          if (widget.task.dueDate != null && !widget.hideTime) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _isCompletedLocal
+                                      ? Icons.check_circle_outline
+                                      : Icons.schedule,
+                                  size: 14,
+                                  color: _isCompletedLocal
+                                      ? AppColors.primaryDark
+                                      : (isOverdue
+                                            ? const Color(0xFFE57373)
+                                            : AppColors.textPrimaryOf(context)),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  timeString,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: _isCompletedLocal
+                                        ? AppColors.primaryDark
+                                        : (isOverdue
+                                              ? const Color(0xFFE57373)
+                                              : AppColors.textPrimaryOf(context)),
+                                    fontWeight: isOverdue || _isCompletedLocal
+                                        ? FontWeight.bold
+                                        : FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -774,6 +717,8 @@ class _TaskListItemState extends State<TaskListItem>
     if (_strikeAnimation == null) {
       return Text(
         widget.task.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: style?.copyWith(
           decoration:
               _isCompletedLocal ? TextDecoration.lineThrough : TextDecoration.none,
@@ -912,7 +857,12 @@ class _MultiLineStrikethroughText extends StatelessWidget {
         progress: progress,
         lineColor: lineColor,
       ),
-      child: Text(text, style: style),
+      child: Text(
+        text,
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }
@@ -937,7 +887,8 @@ class _MultiLineStrikethroughPainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
-      maxLines: null,
+      maxLines: 1,
+      ellipsis: '...',
     )..layout(maxWidth: size.width);
 
     final lines = textPainter.computeLineMetrics();
