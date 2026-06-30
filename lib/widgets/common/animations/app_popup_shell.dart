@@ -10,6 +10,11 @@ class AppPopupShell extends StatelessWidget {
   final EdgeInsets? insetPadding;
   final double? width;
   final BoxConstraints? constraints;
+  /// When set on tablet/desktop, centers the panel at this global point.
+  final Offset? centerAt;
+  /// When set on tablet/desktop, places the panel beside the tap point instead
+  /// of the default right rail or screen center.
+  final Offset? nearAnchor;
 
   const AppPopupShell({
     super.key,
@@ -18,6 +23,8 @@ class AppPopupShell extends StatelessWidget {
     this.insetPadding,
     this.width,
     this.constraints,
+    this.centerAt,
+    this.nearAnchor,
   });
 
   @override
@@ -39,12 +46,56 @@ class AppPopupShell extends StatelessWidget {
       ),
     );
 
-    if (alignment == Alignment.center) {
+    if (centerAt != null && !isMobile) {
+      final size = MediaQuery.sizeOf(context);
+      final resolvedWidth = panelWidth ?? 400.0;
+      final alignX =
+          ((centerAt!.dx / size.width) * 2 - 1).clamp(-1.0, 1.0);
+      final alignY =
+          ((centerAt!.dy / size.height) * 2 - 1).clamp(-1.0, 1.0);
+      return Positioned.fill(
+        child: Padding(
+          padding: padding,
+          child: Align(
+            alignment: Alignment(alignX, alignY),
+            child: SizedBox(width: resolvedWidth, child: panel),
+          ),
+        ),
+      );
+    }
+
+    if (nearAnchor != null && !isMobile) {
+      final resolvedWidth = panelWidth ?? 400.0;
+      final size = MediaQuery.sizeOf(context);
+      // Panel grows from the time label: top-right of panel sits near the anchor.
+      final panelLeft = (nearAnchor!.dx - resolvedWidth + 32).clamp(
+        padding.left,
+        size.width - resolvedWidth - padding.right,
+      );
+      final panelTop = (nearAnchor!.dy - 20).clamp(
+        padding.top,
+        size.height - maxHeight - padding.bottom,
+      );
       return Positioned(
-        top: padding.top,
-        left: padding.left,
-        right: padding.right,
+        top: panelTop,
+        left: panelLeft,
+        width: resolvedWidth,
         child: panel,
+      );
+    }
+
+    if (alignment == Alignment.center) {
+      final resolvedWidth = panelWidth ?? (isMobile ? null : 400.0);
+      return Positioned.fill(
+        child: Padding(
+          padding: padding,
+          child: Align(
+            alignment: Alignment.center,
+            child: resolvedWidth == null
+                ? panel
+                : SizedBox(width: resolvedWidth, child: panel),
+          ),
+        ),
       );
     }
 

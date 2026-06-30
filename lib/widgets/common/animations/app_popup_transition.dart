@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../providers/drawer_provider.dart';
 
 export 'app_popup_shell.dart';
 
@@ -21,18 +24,43 @@ Offset popupAnchorFromContext(BuildContext context) {
   return Offset(size.width / 2, size.height / 2);
 }
 
-Alignment alignmentFromGlobalOffset(BuildContext context, Offset globalOffset) {
-  final size = MediaQuery.sizeOf(context);
-  return Alignment(
-    ((globalOffset.dx / size.width) * 2 - 1).clamp(-1.0, 1.0),
-    ((globalOffset.dy / size.height) * 2 - 1).clamp(-1.0, 1.0),
-  );
+const double kDesktopLayoutBreakpoint = 768;
+const double kDesktopDrawerWidthExpanded = 280;
+const double kDesktopDrawerWidthCollapsed = 88;
+
+/// Width of the permanent desktop sidebar when present.
+double desktopDrawerWidth(BuildContext context) {
+  try {
+    final collapsed = context.read<DrawerProvider>().isDesktopCollapsed;
+    return collapsed ? kDesktopDrawerWidthCollapsed : kDesktopDrawerWidthExpanded;
+  } catch (_) {
+    return kDesktopDrawerWidthExpanded;
+  }
 }
+
+/// Screen center on mobile/tablet; center of the main content column on desktop
+/// (excludes the permanent [AppDrawer] rail).
+Offset popupContentAreaCenter(BuildContext context) {
+  final size = MediaQuery.sizeOf(context);
+  if (size.width < kDesktopLayoutBreakpoint) {
+    return Offset(size.width / 2, size.height / 2);
+  }
+  final drawerWidth = desktopDrawerWidth(context);
+  final contentWidth = size.width - drawerWidth;
+  return Offset(drawerWidth + contentWidth / 2, size.height / 2);
+}
+
+Offset popupScreenCenter(BuildContext context) {
+  final size = MediaQuery.sizeOf(context);
+  return Offset(size.width / 2, size.height / 2);
+}
+
+bool isTabletOrDesktopPopupLayout(BuildContext context) =>
+    MediaQuery.sizeOf(context).width >= 600;
 
 AppPopupRouteTransitionBuilder buildAppPopupTransition({Offset? anchor}) {
   return (context, animation, secondaryAnimation, child) {
     final resolvedAnchor = anchor ?? popupAnchorFromContext(context);
-    final alignment = alignmentFromGlobalOffset(context, resolvedAnchor);
 
     final scaleAnimation = CurvedAnimation(
       parent: animation,
@@ -45,13 +73,26 @@ AppPopupRouteTransitionBuilder buildAppPopupTransition({Offset? anchor}) {
       reverseCurve: Curves.easeIn,
     );
 
-    return FadeTransition(
-      opacity: fadeAnimation,
-      child: ScaleTransition(
-        scale: Tween<double>(begin: 0.0, end: 1.0).animate(scaleAnimation),
-        alignment: alignment,
-        child: child,
-      ),
+    return AnimatedBuilder(
+      animation: Listenable.merge([scaleAnimation, fadeAnimation]),
+      builder: (context, child) {
+        final scale = scaleAnimation.value;
+        final matrix = Matrix4.identity()
+          ..translateByDouble(resolvedAnchor.dx, resolvedAnchor.dy, 0, 1)
+          ..scaleByDouble(scale, scale, scale, 1)
+          ..translateByDouble(-resolvedAnchor.dx, -resolvedAnchor.dy, 0, 1);
+
+        return Opacity(
+          opacity: fadeAnimation.value,
+          child: Transform(
+            transform: matrix,
+            alignment: Alignment.topLeft,
+            filterQuality: FilterQuality.medium,
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   };
 }

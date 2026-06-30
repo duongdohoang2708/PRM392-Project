@@ -98,10 +98,7 @@ class AppDrawer extends StatelessWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () {
-                  if (!isPermanent) Navigator.pop(context);
-                  _openActivityModes(context);
-                },
+                onTap: () => _openActivityModes(context),
                 borderRadius: BorderRadius.circular(100),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -407,6 +404,7 @@ class AppDrawer extends StatelessWidget {
   }
 
   void _openAccountSettings(BuildContext context) {
+    final navigator = Navigator.of(context);
     if (!isPermanent) {
       Navigator.pop(context);
     }
@@ -414,27 +412,20 @@ class AppDrawer extends StatelessWidget {
       if (onNavigate != null) {
         onNavigate!('/settings/account');
       } else {
-        Future.delayed(const Duration(milliseconds: 150), () {
-          if (context.mounted) {
-            Navigator.pushNamed(context, '/settings/account');
-          }
-        });
+        navigator.pushNamed('/settings/account');
       }
     }
   }
 
   void _openActivityModes(BuildContext context) {
+    final navigator = Navigator.of(context);
     if (!isPermanent) {
       Navigator.pop(context);
     }
     if (onNavigate != null) {
       onNavigate!('/settings/activity-modes');
     } else {
-      Future.delayed(const Duration(milliseconds: 150), () {
-        if (context.mounted) {
-          Navigator.pushNamed(context, '/settings/activity-modes');
-        }
-      });
+      navigator.pushNamed('/settings/activity-modes');
     }
   }
 
