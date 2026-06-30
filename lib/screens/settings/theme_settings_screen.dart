@@ -34,7 +34,7 @@ class ThemeSettingsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             SettingsOptionCard(
               title: 'Light',
-              subtitle: 'Matcha pastel theme',
+              subtitle: 'Bright surfaces for daytime use',
               icon: Icons.light_mode_outlined,
               selected: settings.themeMode == ThemeMode.light,
               onTap: () async {
@@ -46,7 +46,7 @@ class ThemeSettingsScreen extends StatelessWidget {
             ),
             SettingsOptionCard(
               title: 'Dark',
-              subtitle: 'Dimmed surfaces with matcha accents',
+              subtitle: 'Dimmed surfaces for low-light use',
               icon: Icons.dark_mode_outlined,
               selected: settings.themeMode == ThemeMode.dark,
               onTap: () async {
@@ -58,7 +58,7 @@ class ThemeSettingsScreen extends StatelessWidget {
             ),
             SettingsOptionCard(
               title: 'System',
-              subtitle: 'Follow device appearance',
+              subtitle: 'Match your device light or dark setting',
               icon: Icons.brightness_auto_outlined,
               selected: settings.themeMode == ThemeMode.system,
               onTap: () async {

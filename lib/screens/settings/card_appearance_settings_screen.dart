@@ -5,6 +5,7 @@ import '../../providers/settings_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/settings/settings_screen_shell.dart';
+import '../../widgets/common/drawer_swipe_body.dart';
 import '../../widgets/common/tinted_accent_card.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
 
@@ -45,7 +46,7 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
                           ? 'Transparent'
                           : '$transparentPercent% transparent',
                   style: TextStyle(
-                    color: AppColors.primaryDark,
+                    color: AppColors.primaryDarkOf(context),
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
@@ -53,38 +54,45 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Slider(
-              value: solidity,
-              min: SettingsProvider.minCardFillSolidity,
-              max: SettingsProvider.maxCardFillSolidity,
-              divisions: 20,
-              label: transparentPercent == 0
-                  ? 'Solid'
-                  : '$transparentPercent% transparent',
-              activeColor: AppColors.primaryDark,
-              inactiveColor: AppColors.borderOf(context),
-              onChanged: settings.setCardFillSolidity,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Transparent',
-                  style: TextStyle(
-                    color: AppColors.textSecondaryOf(context),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+            DrawerSwipeExclude(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Slider(
+                    value: solidity,
+                    min: SettingsProvider.minCardFillSolidity,
+                    max: SettingsProvider.maxCardFillSolidity,
+                    divisions: 20,
+                    label: transparentPercent == 0
+                        ? 'Solid'
+                        : '$transparentPercent% transparent',
+                    activeColor: AppColors.primaryDarkOf(context),
+                    inactiveColor: AppColors.borderOf(context),
+                    onChanged: settings.setCardFillSolidity,
                   ),
-                ),
-                Text(
-                  'Solid',
-                  style: TextStyle(
-                    color: AppColors.textSecondaryOf(context),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Transparent',
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        'Solid',
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 20),
             Row(
@@ -101,7 +109,7 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
                 Text(
                   tintLabel,
                   style: TextStyle(
-                    color: AppColors.primaryDark,
+                    color: AppColors.primaryDarkOf(context),
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
@@ -109,36 +117,43 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Slider(
-              value: tintStrength,
-              min: SettingsProvider.minCardTintStrength,
-              max: SettingsProvider.maxCardTintStrength,
-              divisions: 20,
-              label: tintLabel,
-              activeColor: AppColors.primaryDark,
-              inactiveColor: AppColors.borderOf(context),
-              onChanged: settings.setCardTintStrength,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Subtle',
-                  style: TextStyle(
-                    color: AppColors.textSecondaryOf(context),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+            DrawerSwipeExclude(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Slider(
+                    value: tintStrength,
+                    min: SettingsProvider.minCardTintStrength,
+                    max: SettingsProvider.maxCardTintStrength,
+                    divisions: 20,
+                    label: tintLabel,
+                    activeColor: AppColors.primaryDarkOf(context),
+                    inactiveColor: AppColors.borderOf(context),
+                    onChanged: settings.setCardTintStrength,
                   ),
-                ),
-                Text(
-                  'Strong',
-                  style: TextStyle(
-                    color: AppColors.textSecondaryOf(context),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Subtle',
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        'Strong',
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             Align(
@@ -179,7 +194,7 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
                     value: '8',
                   ),
                   TintedAccentCard(
-                    accentColor: AppColors.primaryDark,
+                    accentColor: AppColors.primaryDarkOf(context),
                     icon: Icons.task_alt,
                     label: 'Tasks',
                     value: '12',

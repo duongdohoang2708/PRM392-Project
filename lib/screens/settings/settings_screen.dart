@@ -77,7 +77,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               SettingsNavTile(
                 icon: Icons.tune_outlined,
-                title: 'Activity Modes',
+                title: 'Theme Modes',
                 subtitle: activityModes.activeDefinition.name,
                 onTap: () =>
                     Navigator.pushNamed(context, '/settings/activity-modes'),

@@ -63,14 +63,14 @@ class AccountDetailsScreen extends StatelessWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryDark,
+                              color: AppColors.primaryDarkOf(context),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: AppColors.cardSurfaceFillOf(context),
                                 width: 2,
                               ),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.camera_alt_outlined,
                               color: Colors.white,
                               size: 16,
@@ -85,10 +85,10 @@ class AccountDetailsScreen extends StatelessWidget {
                 Center(
                   child: TextButton(
                     onPressed: () => AvatarPickerSheet.show(context),
-                    child: const Text(
+                    child: Text(
                       'Change avatar',
                       style: TextStyle(
-                        color: AppColors.primaryDark,
+                        color: AppColors.primaryDarkOf(context),
                         fontWeight: FontWeight.w700,
                       ),
                     ),

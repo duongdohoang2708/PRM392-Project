@@ -194,14 +194,14 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.photo_library_outlined,
-                        color: AppColors.primaryDark,
+                        color: AppColors.primaryDarkOf(context),
                       ),
                 label: Text(
                   _isPicking ? 'Opening gallery...' : 'Choose from device',
-                  style: const TextStyle(
-                    color: AppColors.primaryDark,
+                  style: TextStyle(
+                    color: AppColors.primaryDarkOf(context),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -209,7 +209,7 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
                   minimumSize: const Size.fromHeight(48),
                   side: BorderSide(
                     color: hasDeviceAvatar
-                        ? AppColors.primaryDark
+                        ? AppColors.primaryDarkOf(context)
                         : AppColors.borderOf(context),
                     width: hasDeviceAvatar ? 2 : 1,
                   ),
@@ -291,14 +291,14 @@ class _AvatarOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.primaryDark.withValues(
+                ? AppColors.primaryDarkOf(context).withValues(
                     alpha: AppColors.isDark(context) ? 0.22 : 0.1,
                   )
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: selected
-                  ? AppColors.primaryDark
+                  ? AppColors.primaryDarkOf(context)
                   : AppColors.borderOf(context),
               width: selected ? 2 : 1,
             ),

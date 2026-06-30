@@ -79,9 +79,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 hintText: 'Current password',
                 controller: _currentController,
                 obscureText: _obscureCurrent,
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.lock_outline,
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -99,9 +99,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 hintText: 'New password',
                 controller: _newController,
                 obscureText: _obscureNew,
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.lock_reset,
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -124,9 +124,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 hintText: 'Confirm new password',
                 controller: _confirmController,
                 obscureText: _obscureConfirm,
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.lock_reset,
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -150,7 +150,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryDark,
+                    backgroundColor: AppColors.primaryDarkOf(context),
                     foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(

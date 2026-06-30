@@ -128,7 +128,7 @@ class SettingsNavTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primaryDark, size: 22),
+            Icon(icon, color: AppColors.primaryDarkOf(context), size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -194,7 +194,7 @@ class SettingsFocusGoalTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.track_changes, color: AppColors.primaryDark, size: 22),
+          Icon(Icons.track_changes, color: AppColors.primaryDarkOf(context), size: 22),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -286,7 +286,7 @@ class _StepperIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onPressed,
-      icon: Icon(icon, color: AppColors.primaryDark, size: 18),
+      icon: Icon(icon, color: AppColors.primaryDarkOf(context), size: 18),
       padding: const EdgeInsets.all(8),
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       splashRadius: 18,
@@ -319,12 +319,12 @@ class SettingsSwitchTile extends StatelessWidget {
       trailing: Switch.adaptive(
         value: value,
         activeTrackColor: AppOpacity.fixed(
-          AppColors.primaryDark,
+          AppColors.primaryDarkOf(context),
           AppOpacity.textMuted,
         ),
         thumbColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? AppColors.primaryDark
+              ? AppColors.primaryDarkOf(context)
               : null,
         ),
         onChanged: onChanged,
@@ -367,7 +367,7 @@ class SettingsOptionCard extends StatelessWidget {
               color: selected
                   ? AppColors.cardFillOf(
                       context,
-                      accentColor: AppColors.primaryDark,
+                      accentColor: AppColors.primaryDarkOf(context),
                       lightTintAlpha: isDark ? 0.22 : 0.12,
                       darkTintAlpha: isDark ? 0.22 : 0.12,
                     )
@@ -375,14 +375,14 @@ class SettingsOptionCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: selected
-                    ? AppColors.primaryDark
+                    ? AppColors.primaryDarkOf(context)
                     : AppColors.borderOf(context),
                 width: selected ? 2 : 1,
               ),
             ),
             child: Row(
               children: [
-                Icon(icon, color: AppColors.primaryDark),
+                Icon(icon, color: AppColors.primaryDarkOf(context)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -411,7 +411,7 @@ class SettingsOptionCard extends StatelessWidget {
                 Icon(
                   selected ? Icons.check_circle : Icons.circle_outlined,
                   color: selected
-                      ? AppColors.primaryDark
+                      ? AppColors.primaryDarkOf(context)
                       : AppColors.textSecondaryOf(context),
                 ),
               ],

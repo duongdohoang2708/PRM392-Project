@@ -81,9 +81,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               CustomTextField(
                 hintText: 'Your name',
                 controller: _nameController,
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.person_outline,
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -106,7 +106,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: ElevatedButton(
                   onPressed: _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryDark,
+                    backgroundColor: AppColors.primaryDarkOf(context),
                     foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(

@@ -138,7 +138,7 @@ class _AvatarCropShellState extends State<_AvatarCropShell> {
                     child: ElevatedButton(
                       onPressed: _applyCrop,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryDark,
+                        backgroundColor: AppColors.primaryDarkOf(context),
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
@@ -186,9 +186,9 @@ class _AvatarCropEditor extends StatelessWidget {
           interactive: true,
           baseColor: AppColors.panelFillOf(context),
           maskColor: Colors.black.withValues(alpha: 0.62),
-          progressIndicator: const Center(
+          progressIndicator: Center(
             child: CircularProgressIndicator(
-              color: AppColors.primaryDark,
+              color: AppColors.primaryDarkOf(context),
             ),
           ),
           onCropped: onCropped,

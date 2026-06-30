@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/activity_mode_provider.dart';
 import '../../providers/drawer_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../theme/app_colors.dart';
 import '../app_drawer.dart';
 import '../background_pattern.dart';
 import '../common/app_scaffold.dart';
+import '../common/drawer_swipe_body.dart';
 
 class SettingsScreenShell extends StatelessWidget {
   final String activeRoute;
   final String title;
   final Widget child;
   final bool showBack;
+  final bool showPageTitle;
   final List<Widget>? actions;
   final bool independentBodyScroll;
 
@@ -21,12 +25,16 @@ class SettingsScreenShell extends StatelessWidget {
     required this.title,
     required this.child,
     this.showBack = false,
+    this.showPageTitle = true,
     this.actions,
     this.independentBodyScroll = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final activityModes = context.watch<ActivityModeProvider>();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 768;
@@ -42,7 +50,13 @@ class SettingsScreenShell extends StatelessWidget {
 
         final content = Stack(
           children: [
-            const BackgroundPattern(),
+            BackgroundPattern(
+              key: ValueKey(
+                '${settings.themeMode.index}_'
+                '${activityModes.activeModeId}_'
+                '${Theme.of(context).brightness}',
+              ),
+            ),
             SafeArea(
               child: Align(
                 alignment: Alignment.topCenter,
@@ -57,8 +71,10 @@ class SettingsScreenShell extends StatelessWidget {
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              titleWidget,
-                              const SizedBox(height: 20),
+                              if (showPageTitle) ...[
+                                titleWidget,
+                                const SizedBox(height: 20),
+                              ],
                               Expanded(child: child),
                             ],
                           )
@@ -66,8 +82,10 @@ class SettingsScreenShell extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                titleWidget,
-                                const SizedBox(height: 20),
+                                if (showPageTitle) ...[
+                                  titleWidget,
+                                  const SizedBox(height: 20),
+                                ],
                                 child,
                                 const SizedBox(height: 40),
                               ],
@@ -89,19 +107,7 @@ class SettingsScreenShell extends StatelessWidget {
                   activeRoute: activeRoute,
                 ),
           appBar: _buildAppBar(context, isDesktop: isDesktop, bg: bg),
-          body: isDesktop
-              ? content
-              : Builder(
-                  builder: (context) => GestureDetector(
-                    onHorizontalDragEnd: (details) {
-                      if (details.primaryVelocity != null &&
-                          details.primaryVelocity! > 300) {
-                        Scaffold.of(context).openDrawer();
-                      }
-                    },
-                    child: content,
-                  ),
-                ),
+          body: isDesktop ? content : DrawerSwipeBody(child: content),
         );
       },
     );

@@ -292,7 +292,7 @@ class _QuietHoursTimeRow extends StatelessWidget {
               Text(
                 AppDateTimeFormat.timeOfDay(time),
                 style: TextStyle(
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),

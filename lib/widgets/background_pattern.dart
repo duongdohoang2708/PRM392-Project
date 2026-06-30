@@ -35,7 +35,7 @@ class _DecorIconSpec {
   });
 }
 
-class BackgroundPattern extends StatefulWidget {
+class BackgroundPattern extends StatelessWidget {
   const BackgroundPattern({super.key});
 
   static const List<_SpectrumTone> _spectrum = [
@@ -86,73 +86,53 @@ class BackgroundPattern extends StatefulWidget {
     _DecorIconSpec(icon: Icons.sports_esports, colorIndex: 4, x: 0.84, y: 0.88, size: 36, rotation: 35),
   ];
 
-  @override
-  State<BackgroundPattern> createState() => _BackgroundPatternState();
-}
+  static _SpectrumTone _toneAt(int index) =>
+      _spectrum[index % _spectrum.length];
 
-class _BackgroundPatternState extends State<BackgroundPattern> {
-  Size? _cachedSize;
-  Brightness? _cachedBrightness;
-  bool? _cachedDecorEnabled;
-  Widget? _cachedPattern;
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final brightness = Theme.of(context).brightness;
-    final isDark = brightness == Brightness.dark;
-    final decorEnabled =
-        context.watch<SettingsProvider>().backgroundDecorIconsEnabled;
-
-    if (_cachedPattern == null ||
-        _cachedSize != size ||
-        _cachedBrightness != brightness ||
-        _cachedDecorEnabled != decorEnabled) {
-      _cachedSize = size;
-      _cachedBrightness = brightness;
-      _cachedDecorEnabled = decorEnabled;
-      _cachedPattern = _buildPattern(
-        size,
-        isDark: isDark,
-        base: AppColors.backgroundOf(context),
-        showDecorIcons: decorEnabled,
-      );
-    }
-
-    return IgnorePointer(
-      child: RepaintBoundary(
-        child: OverflowBox(
-          maxWidth: size.width,
-          maxHeight: size.height,
-          alignment: Alignment.topCenter,
-          child: _cachedPattern,
-        ),
-      ),
-    );
-  }
-
-  _SpectrumTone _toneAt(int index) =>
-      BackgroundPattern._spectrum[index % BackgroundPattern._spectrum.length];
-
-  Color _resolveColor(bool isDark, int colorIndex) {
+  static Color _resolveColor(bool isDark, int colorIndex) {
     final tone = _toneAt(colorIndex);
     if (isDark) return tone.darkNeon;
     return _vividLightColor(tone.light);
   }
 
-  Color _vividLightColor(Color color) {
+  static Color _vividLightColor(Color color) {
     final hsl = HSLColor.fromColor(color);
     final saturation = (hsl.saturation + 0.16).clamp(0.0, 0.78);
     final lightness = (hsl.lightness - 0.05).clamp(0.48, 0.68);
     return hsl.withSaturation(saturation).withLightness(lightness).toColor();
   }
 
-  double _opacity(bool isDark, double light, double dark) {
+  static double _opacity(bool isDark, double light, double dark) {
     if (!isDark) return (light + 0.06).clamp(0.0, 0.88);
     return (dark + 0.22).clamp(0.0, 0.82);
   }
 
-  Widget _buildPattern(
+  static Widget _buildPatternIcon(
+    double maxWidth,
+    double maxHeight,
+    IconData icon,
+    Color color,
+    double opacity,
+    double size,
+    double x,
+    double y,
+    double rotationDegrees,
+  ) {
+    return Positioned(
+      left: maxWidth * x,
+      top: maxHeight * y,
+      child: Transform.rotate(
+        angle: rotationDegrees * (math.pi / 180),
+        child: Icon(
+          icon,
+          color: color.withValues(alpha: opacity),
+          size: size,
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildPattern(
     Size size, {
     required bool isDark,
     required Color base,
@@ -174,7 +154,7 @@ class _BackgroundPatternState extends State<BackgroundPattern> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            for (final spec in BackgroundPattern._decorIcons)
+            for (final spec in _decorIcons)
               _buildPatternIcon(
                 size.width,
                 size.height,
@@ -192,26 +172,28 @@ class _BackgroundPatternState extends State<BackgroundPattern> {
     );
   }
 
-  Widget _buildPatternIcon(
-    double maxWidth,
-    double maxHeight,
-    IconData icon,
-    Color color,
-    double opacity,
-    double size,
-    double x,
-    double y,
-    double rotationDegrees,
-  ) {
-    return Positioned(
-      left: maxWidth * x,
-      top: maxHeight * y,
-      child: Transform.rotate(
-        angle: rotationDegrees * (math.pi / 180),
-        child: Icon(
-          icon,
-          color: color.withValues(alpha: opacity),
-          size: size,
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    context.watch<SettingsProvider>();
+    final decorEnabled =
+        context.read<SettingsProvider>().backgroundDecorIconsEnabled;
+    final pattern = _buildPattern(
+      size,
+      isDark: isDark,
+      base: AppColors.backgroundOf(context),
+      showDecorIcons: decorEnabled,
+    );
+
+    return IgnorePointer(
+      child: RepaintBoundary(
+        child: OverflowBox(
+          maxWidth: size.width,
+          maxHeight: size.height,
+          alignment: Alignment.topCenter,
+          child: pattern,
         ),
       ),
     );

@@ -147,6 +147,13 @@ class AppColors {
     );
   }
 
+  /// Neutral grayscale base for active task cards — keeps project tint readable.
+  static Color taskCardNeutralSurfaceOf(BuildContext context) {
+    return isDark(context)
+        ? const Color(0xFF2A2A2C)
+        : const Color(0xFFF3F3F4);
+  }
+
   /// Task list/detail card tinted by project accent.
   static Color taskCardOf(
     BuildContext context,
@@ -154,14 +161,12 @@ class AppColors {
     bool completed = false,
   }) {
     if (completed) {
-      final surface = isDark(context)
-          ? const Color(0xFF232A26)
-          : background;
-      return AppOpacity.solidSurfaceFill(context, surface);
+      return cardSurfaceFillOf(context);
     }
     return cardFillOf(
       context,
       accentColor: accentColor,
+      surface: taskCardNeutralSurfaceOf(context),
       lightTintAlpha: AppOpacity.surfaceTint,
       darkTintAlpha: AppOpacity.surfaceTint,
     );
@@ -246,14 +251,14 @@ class AppColors {
     if (isDark(context)) {
       return cardFillOf(
         context,
-        accentColor: primary,
+        accentColor: primaryOf(context),
         lightTintAlpha: alpha * 0.5,
         darkTintAlpha: alpha * 0.5,
       );
     }
     return cardFillOf(
       context,
-      accentColor: primaryLight,
+      accentColor: primaryLightOf(context),
       lightTintAlpha: alpha,
       darkTintAlpha: alpha,
     );
@@ -322,22 +327,22 @@ class AppColors {
   /// Completed-session check circle (focus history, session tiles).
   static Color completedCheckBgOf(BuildContext context) {
     if (isDark(context)) {
-      return AppOpacity.fixed(primary, 0.22);
+      return AppOpacity.fixed(primaryOf(context), 0.22);
     }
-    return primaryLight;
+    return primaryLightOf(context);
   }
 
   static Color completedCheckFgOf(BuildContext context) =>
-      isDark(context) ? primary : primaryDark;
+      isDark(context) ? primaryOf(context) : primaryDarkOf(context);
 
   /// In-app toast backgrounds — muted in dark mode to avoid glare.
   static Color notificationSuccessBgOf(BuildContext context) => isDark(context)
       ? const Color(0xFF2A3D2C)
-      : primaryDark;
+      : primaryDarkOf(context);
 
   static Color notificationInfoBgOf(BuildContext context) => isDark(context)
       ? cardOf(context)
-      : AppOpacity.fixed(textPrimary, AppOpacity.notificationInfo);
+      : AppOpacity.fixed(textPrimaryOf(context), AppOpacity.notificationInfo);
 
   static Color notificationErrorBgOf(BuildContext context) => isDark(context)
       ? const Color(0xFF3D2A2A)
@@ -345,7 +350,7 @@ class AppColors {
 
   static Color notificationFgOn(BuildContext context, Color background) {
     return background.computeLuminance() > 0.55
-        ? textPrimary
+        ? textPrimaryOf(context)
         : (isDark(context) ? darkTextPrimary : Colors.white);
   }
 
@@ -406,7 +411,7 @@ class AppColors {
     required double borderRadius,
   }) {
     final dark = isDark(context);
-    final accent = isRunning ? accentYellow : primary;
+    final accent = isRunning ? accentYellow : primaryOf(context);
 
     return BoxDecoration(
       color: AppOpacity.fixed(
