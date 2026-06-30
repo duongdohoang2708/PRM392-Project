@@ -127,7 +127,7 @@ class ActivityModes {
     ),
     ActivityModeDefinition(
       id: ActivityModeId.work,
-      name: 'Work Mode',
+      name: 'Work',
       icon: Icons.work_outline,
       description: 'Cool, focused palette for deep work.',
       defaultSchedule: ActivityModeSchedule(
@@ -138,7 +138,7 @@ class ActivityModes {
     ),
     ActivityModeDefinition(
       id: ActivityModeId.study,
-      name: 'Study Mode',
+      name: 'Study',
       icon: Icons.menu_book_outlined,
       description: 'Warm tones to keep you learning.',
       defaultSchedule: ActivityModeSchedule(
@@ -149,7 +149,7 @@ class ActivityModes {
     ),
     ActivityModeDefinition(
       id: ActivityModeId.chill,
-      name: 'Chill Mode',
+      name: 'Chill',
       icon: Icons.self_improvement_outlined,
       description: 'Soft rose tones for relaxed evenings.',
       defaultSchedule: ActivityModeSchedule(
@@ -160,7 +160,7 @@ class ActivityModes {
     ),
     ActivityModeDefinition(
       id: ActivityModeId.sleep,
-      name: 'Sleep Mode',
+      name: 'Sleep',
       icon: Icons.bedtime_outlined,
       description: 'Dim, calming colors for winding down.',
       defaultSchedule: ActivityModeSchedule(

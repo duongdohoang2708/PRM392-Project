@@ -104,45 +104,19 @@ class ActivityModesScreen extends StatelessWidget {
 
                     Expanded(
 
-                      child: Column(
+                      child: Text(
 
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        active.name,
 
-                        children: [
+                        style: TextStyle(
 
-                          Text(
+                          color: AppColors.textPrimaryOf(context),
 
-                            active.name,
+                          fontSize: 18,
 
-                            style: TextStyle(
+                          fontWeight: FontWeight.w800,
 
-                              color: AppColors.textPrimaryOf(context),
-
-                              fontSize: 18,
-
-                              fontWeight: FontWeight.w800,
-
-                            ),
-
-                          ),
-
-                          Text(
-
-                            activityModes.activeSourceLabel,
-
-                            style: TextStyle(
-
-                              color: AppColors.textSecondaryOf(context),
-
-                              fontSize: 12,
-
-                              fontWeight: FontWeight.w500,
-
-                            ),
-
-                          ),
-
-                        ],
+                        ),
 
                       ),
 

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/activity_mode.dart';
+import '../../navigation/app_navigator.dart';
 import '../../providers/activity_mode_provider.dart';
 import '../custom_snackbar.dart';
-
 /// Shows an in-app top banner when [ActivityModeProvider.activeModeId] changes.
 class ModeChangeNotificationListener extends StatefulWidget {
   final Widget child;
@@ -51,17 +51,23 @@ class _ModeChangeNotificationListenerState
     _lastMode = mode;
 
     if (!mounted) return;
-    final definition = ActivityModes.definitionFor(mode);
-    final message = mode == ActivityModeId.defaultMode
-        ? 'Back to Default'
-        : 'Switched to ${definition.name}';
-    AppNotification.showModeSwitch(
-      context,
-      modeId: mode,
-      message: message,
-    );
-  }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final navContext = navigatorKey.currentContext;
+      if (navContext == null) return;
 
+      final definition = ActivityModes.definitionFor(mode);
+      final message = mode == ActivityModeId.defaultMode
+          ? 'Back to Default'
+          : 'Switched to ${definition.name}';
+      AppNotification.showModeSwitch(
+        navContext,
+        modeId: mode,
+        message: message,
+        statusLabel: _provider?.heroStatusLabelFor(mode),
+      );
+    });
+  }
   @override
   void dispose() {
     _provider?.removeListener(_onProviderChanged);
