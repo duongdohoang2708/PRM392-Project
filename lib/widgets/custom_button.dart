@@ -20,20 +20,23 @@ class CustomButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isPrimary) {
+      final background = AppColors.primaryDarkOf(context);
       return ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 56), // Standard touch target
+          backgroundColor: background,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: background.withValues(alpha: 0.55),
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
+          minimumSize: const Size(double.infinity, 56),
         ),
         child: isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.textPrimaryOf(context),
-                  ),
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
             : Row(

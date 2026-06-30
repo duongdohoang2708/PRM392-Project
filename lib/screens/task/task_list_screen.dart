@@ -157,9 +157,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.only(
                             left: 24,
@@ -323,17 +325,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             ),
                             const SizedBox(height: 100), // Padding for FAB
                           ],
-                          ),
                         ),
                       ),
-                      SliverToBoxAdapter(child: KeyboardBottomSpacer()),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        );
+          ),
+        ),
+      ],
+    );
 
         Widget fab = FloatingActionButton(
           onPressed: () {

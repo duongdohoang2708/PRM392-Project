@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'common/animations/app_bottom_slide_fade.dart';
 import 'common/animations/app_top_slide_fade.dart';
+import 'common/animations/app_popup_transition.dart';
 import 'dart:async';
 import '../models/activity_mode.dart';
+import '../navigation/app_navigator.dart';
+import '../providers/drawer_provider.dart';
 import '../theme/activity_mode_palette.dart';
 import '../theme/app_colors.dart';
 
@@ -53,6 +57,7 @@ class AppNotification {
     BuildContext context, {
     required ActivityModeId modeId,
     required String message,
+    String? statusLabel,
   }) {
     if (_currentTopEntry != null) {
       try {
@@ -61,20 +66,21 @@ class AppNotification {
       _currentTopEntry = null;
     }
 
-    final overlayState = Overlay.maybeOf(context) ??
-        Navigator.maybeOf(context)?.overlay;
+    final overlayState = _resolveOverlay(context);
     if (overlayState == null) return;
 
-    final brightness = Theme.of(context).brightness;
+    final overlayContext = navigatorKey.currentContext ?? context;
+    final brightness = Theme.of(overlayContext).brightness;
     final palette =
         ActivityModePalette.forMode(modeId, brightness: brightness);
     final definition = ActivityModes.definitionFor(modeId);
-    final backgroundColor = AppColors.notificationInfoBgOf(context);
+    final backgroundColor = AppColors.notificationInfoBgOf(overlayContext);
 
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (context) => _ModeSwitchToast(
         message: message,
+        statusLabel: statusLabel,
         backgroundColor: backgroundColor,
         icon: definition.icon,
         iconBackgroundColor: palette.primaryLight,
@@ -92,6 +98,12 @@ class AppNotification {
 
     _currentTopEntry = entry;
     overlayState.insert(entry);
+  }
+
+  static OverlayState? _resolveOverlay(BuildContext context) {
+    return Overlay.maybeOf(context, rootOverlay: true) ??
+        Navigator.maybeOf(context)?.overlay ??
+        navigatorKey.currentState?.overlay;
   }
 
   static void _show(
@@ -147,6 +159,7 @@ class AppNotification {
 
 class _ModeSwitchToast extends StatefulWidget {
   final String message;
+  final String? statusLabel;
   final Color backgroundColor;
   final IconData icon;
   final Color iconBackgroundColor;
@@ -155,6 +168,7 @@ class _ModeSwitchToast extends StatefulWidget {
 
   const _ModeSwitchToast({
     required this.message,
+    this.statusLabel,
     required this.backgroundColor,
     required this.icon,
     required this.iconBackgroundColor,
@@ -194,14 +208,17 @@ class _ModeSwitchToastState extends State<_ModeSwitchToast> {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top + 12;
+    if (MediaQuery.sizeOf(context).width >= kDesktopLayoutBreakpoint) {
+      context.watch<DrawerProvider>();
+    }
+    final insets = notificationOverlayInsets(context);
     final foreground =
         AppColors.notificationFgOn(context, widget.backgroundColor);
 
     return Positioned(
-      top: topPadding,
-      left: 16,
-      right: 16,
+      top: insets.top,
+      left: insets.left,
+      right: insets.right,
       child: AppTopSlideFade(
         visible: _isVisible,
         child: Material(
@@ -237,13 +254,32 @@ class _ModeSwitchToastState extends State<_ModeSwitchToast> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    widget.message,
-                    style: TextStyle(
-                      color: foreground,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.message,
+                        style: TextStyle(
+                          color: foreground,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (widget.statusLabel != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.statusLabel!,
+                          style: TextStyle(
+                            color: foreground.withValues(alpha: 0.75),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
@@ -314,49 +350,50 @@ class _NotificationToastState extends State<_NotificationToast> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 16;
+    if (MediaQuery.sizeOf(context).width >= kDesktopLayoutBreakpoint) {
+      context.watch<DrawerProvider>();
+    }
+    final insets = notificationOverlayInsets(context);
     final foreground =
         AppColors.notificationFgOn(context, widget.backgroundColor);
 
     return Positioned(
-      bottom: bottomPadding,
-      left: 16,
-      right: 16,
-      child: SafeArea(
-        child: AppBottomSlideFade(
-          visible: _isVisible,
-          child: Material(
-            type: MaterialType.transparency,
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: widget.backgroundColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(widget.icon, color: foreground, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      widget.message,
-                      style: TextStyle(
-                        color: foreground,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+      bottom: insets.bottom,
+      left: insets.left,
+      right: insets.right,
+      child: AppBottomSlideFade(
+        visible: _isVisible,
+        child: Material(
+          type: MaterialType.transparency,
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: widget.backgroundColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(widget.icon, color: foreground, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.message,
+                    style: TextStyle(
+                      color: foreground,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

@@ -74,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDarkOf(context),
+                        color: AppColors.authBrandingTitleOf(context),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -83,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Small steps, calm days, better focus.',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.textSecondaryOf(context),
+                        color: AppColors.authBrandingSubtitleOf(context),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -162,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  Navigator.of(context).pushReplacement(
+                                  Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           const ForgotPasswordScreen(),
@@ -256,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.of(context).pushReplacement(
+                            Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (context) => const RegisterScreen(),
                               ),

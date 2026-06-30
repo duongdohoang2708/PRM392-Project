@@ -5,7 +5,6 @@ import '../../widgets/common/app_scaffold.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
-import 'login_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -73,7 +72,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDarkOf(context),
+                        color: AppColors.authBrandingTitleOf(context),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -82,7 +81,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       'Don\'t worry, we\'ll get you back on track.',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.textSecondaryOf(context),
+                        color: AppColors.authBrandingSubtitleOf(context),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -160,11 +159,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           Center(
                             child: GestureDetector(
                               onTap: () {
-                                Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                    builder: (context) => const LoginScreen(),
-                                  ),
-                                );
+                                Navigator.of(context).pop();
                               },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,

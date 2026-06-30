@@ -37,18 +37,16 @@ class KeyboardAwareSingleChildScrollView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      controller: controller,
-      physics: physics,
-      keyboardDismissBehavior: keyboardDismissBehavior,
-      padding: padding,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          child,
-          const KeyboardBottomSpacer(),
-        ],
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: SingleChildScrollView(
+        controller: controller,
+        physics: physics,
+        keyboardDismissBehavior: keyboardDismissBehavior,
+        padding: padding,
+        child: child,
       ),
     );
   }

@@ -55,6 +55,7 @@ class BackgroundPattern extends StatelessWidget {
     _DecorIconSpec(icon: Icons.star_rounded, colorIndex: 2, x: 0.54, y: 0.06, size: 30, rotation: 20, lightOpacity: 0.78),
     _DecorIconSpec(icon: Icons.schedule, colorIndex: 4, x: 0.76, y: 0.06, size: 40, rotation: -25),
     _DecorIconSpec(icon: Icons.lightbulb, colorIndex: 1, x: 0.90, y: 0.06, size: 28, rotation: 15, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.water_drop, colorIndex: 4, x: 0.02, y: 0.16, size: 30, rotation: 25),
     _DecorIconSpec(icon: Icons.local_florist, colorIndex: 3, x: 0.18, y: 0.16, size: 46, rotation: 15, lightOpacity: 0.68),
     _DecorIconSpec(icon: Icons.cloud, colorIndex: 4, x: 0.42, y: 0.16, size: 38, rotation: -10, lightOpacity: 0.52, darkOpacity: 0.40),
     _DecorIconSpec(icon: Icons.auto_awesome, colorIndex: 2, x: 0.66, y: 0.16, size: 32, rotation: 45, lightOpacity: 0.78),
@@ -64,6 +65,7 @@ class BackgroundPattern extends StatelessWidget {
     _DecorIconSpec(icon: Icons.edit, colorIndex: 6, x: 0.52, y: 0.28, size: 36, rotation: -15),
     _DecorIconSpec(icon: Icons.note, colorIndex: 5, x: 0.74, y: 0.28, size: 40, rotation: 15, lightOpacity: 0.70),
     _DecorIconSpec(icon: Icons.emoji_objects, colorIndex: 1, x: 0.92, y: 0.28, size: 30, rotation: -10, lightOpacity: 0.70),
+    _DecorIconSpec(icon: Icons.pets, colorIndex: 2, x: 0.04, y: 0.40, size: 34, rotation: -15, lightOpacity: 0.65),
     _DecorIconSpec(icon: Icons.flag, colorIndex: 3, x: 0.20, y: 0.40, size: 32, rotation: 5, lightOpacity: 0.52, darkOpacity: 0.38),
     _DecorIconSpec(icon: Icons.local_cafe, colorIndex: 1, x: 0.44, y: 0.40, size: 46, rotation: -20, lightOpacity: 0.70),
     _DecorIconSpec(icon: Icons.sentiment_satisfied_alt, colorIndex: 2, x: 0.68, y: 0.40, size: 36, rotation: 30, lightOpacity: 0.70),
@@ -72,6 +74,7 @@ class BackgroundPattern extends StatelessWidget {
     _DecorIconSpec(icon: Icons.directions_run, colorIndex: 4, x: 0.36, y: 0.52, size: 38, rotation: 20),
     _DecorIconSpec(icon: Icons.calendar_month, colorIndex: 4, x: 0.58, y: 0.52, size: 32, rotation: 45),
     _DecorIconSpec(icon: Icons.favorite, colorIndex: 0, x: 0.82, y: 0.52, size: 36, rotation: -30),
+    _DecorIconSpec(icon: Icons.local_fire_department, colorIndex: 0, x: 0.02, y: 0.64, size: 38, rotation: 20, lightOpacity: 0.60),
     _DecorIconSpec(icon: Icons.bolt, colorIndex: 1, x: 0.22, y: 0.64, size: 34, rotation: 15, lightOpacity: 0.70),
     _DecorIconSpec(icon: Icons.push_pin, colorIndex: 6, x: 0.48, y: 0.64, size: 28, rotation: -20, lightOpacity: 0.52, darkOpacity: 0.38),
     _DecorIconSpec(icon: Icons.work_outline, colorIndex: 3, x: 0.72, y: 0.64, size: 32, rotation: -10),
@@ -80,6 +83,7 @@ class BackgroundPattern extends StatelessWidget {
     _DecorIconSpec(icon: Icons.rocket_launch, colorIndex: 1, x: 0.50, y: 0.76, size: 36, rotation: 15),
     _DecorIconSpec(icon: Icons.extension, colorIndex: 5, x: 0.74, y: 0.76, size: 34, rotation: -30, lightOpacity: 0.52),
     _DecorIconSpec(icon: Icons.mic, colorIndex: 6, x: 0.90, y: 0.76, size: 28, rotation: 10),
+    _DecorIconSpec(icon: Icons.bedtime, colorIndex: 5, x: 0.04, y: 0.88, size: 32, rotation: -25, lightOpacity: 0.65),
     _DecorIconSpec(icon: Icons.music_note, colorIndex: 2, x: 0.16, y: 0.88, size: 32, rotation: -15, lightOpacity: 0.70),
     _DecorIconSpec(icon: Icons.coffee, colorIndex: 1, x: 0.40, y: 0.88, size: 38, rotation: 25),
     _DecorIconSpec(icon: Icons.spa, colorIndex: 0, x: 0.64, y: 0.88, size: 30, rotation: -10, lightOpacity: 0.70),
@@ -88,6 +92,54 @@ class BackgroundPattern extends StatelessWidget {
 
   static _SpectrumTone _toneAt(int index) =>
       _spectrum[index % _spectrum.length];
+
+  /// Max icons per designed row — keeps the full vertical grid on all screens.
+  static int _maxIconsPerRow(Size size) {
+    if (size.width < 360) return 2;
+    if (size.width < 480) return 3;
+    if (size.width < 640) return 4;
+    return _decorIcons.length;
+  }
+
+  /// Evenly picks [count] items from [icons] (sorted left → right).
+  static List<_DecorIconSpec> _pickEvenly(
+    List<_DecorIconSpec> icons,
+    int count,
+  ) {
+    if (icons.length <= count) return List<_DecorIconSpec>.of(icons);
+    if (count <= 1) return [icons[icons.length ~/ 2]];
+
+    final picked = <_DecorIconSpec>[];
+    for (var i = 0; i < count; i++) {
+      final idx = (i * (icons.length - 1) / (count - 1)).round();
+      picked.add(icons[idx]);
+    }
+    return picked;
+  }
+
+  /// Keeps every designed row; thins columns on narrow screens so spacing stays even.
+  static List<_DecorIconSpec> _iconsForSize(Size size) {
+    if (size.width >= 640) return _decorIcons;
+
+    final maxPerRow = _maxIconsPerRow(size);
+    final rows = <double, List<_DecorIconSpec>>{};
+    for (final spec in _decorIcons) {
+      (rows[spec.y] ??= []).add(spec);
+    }
+
+    final selected = <_DecorIconSpec>[];
+    for (final y in (rows.keys.toList()..sort())) {
+      final row = rows[y]!..sort((a, b) => a.x.compareTo(b.x));
+      selected.addAll(_pickEvenly(row, maxPerRow));
+    }
+    return selected;
+  }
+
+  static double _iconSizeForScreen(double baseSize, Size size) {
+    if (size.shortestSide < 400) return baseSize * 0.88;
+    if (size.shortestSide < 600) return baseSize * 0.94;
+    return baseSize;
+  }
 
   static Color _resolveColor(bool isDark, int colorIndex) {
     final tone = _toneAt(colorIndex);
@@ -154,14 +206,14 @@ class BackgroundPattern extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            for (final spec in _decorIcons)
+            for (final spec in _iconsForSize(size))
               _buildPatternIcon(
                 size.width,
                 size.height,
                 spec.icon,
                 _resolveColor(isDark, spec.colorIndex),
                 _opacity(isDark, spec.lightOpacity, spec.darkOpacity),
-                spec.size,
+                _iconSizeForScreen(spec.size, size),
                 spec.x,
                 spec.y,
                 spec.rotation,
@@ -189,10 +241,9 @@ class BackgroundPattern extends StatelessWidget {
 
     return IgnorePointer(
       child: RepaintBoundary(
-        child: OverflowBox(
-          maxWidth: size.width,
-          maxHeight: size.height,
-          alignment: Alignment.topCenter,
+        child: SizedBox(
+          width: size.width,
+          height: size.height,
           child: pattern,
         ),
       ),

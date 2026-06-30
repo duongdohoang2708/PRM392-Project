@@ -19,6 +19,7 @@ import '../../widgets/statistics/statistics_widgets.dart';
 import '../../widgets/common/app_confirm_dialog.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/common/app_scaffold.dart';
+import '../../widgets/common/screen_chrome.dart';
 
 enum _StreakView { week, month }
 
@@ -80,11 +81,23 @@ class GoalsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 768;
+        final isDesktop = ScreenChrome.isDesktopShellLayout(context);
         final goalsProvider = context.watch<GoalsProvider>();
         context.watch<SettingsProvider>();
         final taskGoal = goalsProvider.taskDailyGoal;
         final focusGoal = goalsProvider.focusDailyGoal;
+
+        final isPortrait =
+            MediaQuery.orientationOf(context) == Orientation.portrait;
+        final useSideBySide = !isPortrait && constraints.maxWidth >= 768;
+        final freezeSection = goalsProvider.shouldShowFreezeDaySection
+            ? _FreezeDaySection(
+                goalsProvider: goalsProvider,
+                onUseManualRest: goalsProvider.canUseManualRestCreditToday
+                    ? () => _confirmFreezeDay(context, goalsProvider)
+                    : null,
+              )
+            : null;
 
         final content = Stack(
           children: [
@@ -111,7 +124,7 @@ class GoalsScreen extends StatelessWidget {
                               ),
                         ),
                         const SizedBox(height: 20),
-                        if (constraints.maxWidth >= 768)
+                        if (useSideBySide)
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -122,18 +135,9 @@ class GoalsScreen extends StatelessWidget {
                                     _StreakHeroCard(
                                       goalsProvider: goalsProvider,
                                     ),
-                                    if (goalsProvider.shouldShowFreezeDaySection) ...[
+                                    if (freezeSection != null) ...[
                                       const SizedBox(height: 16),
-                                      _FreezeDaySection(
-                                        goalsProvider: goalsProvider,
-                                        onUseManualRest: goalsProvider
-                                                .canUseManualRestCreditToday
-                                            ? () => _confirmFreezeDay(
-                                                context,
-                                                goalsProvider,
-                                              )
-                                            : null,
-                                      ),
+                                      freezeSection,
                                     ],
                                     const SizedBox(height: 16),
                                     _TodayGoalsSection(
@@ -170,21 +174,12 @@ class GoalsScreen extends StatelessWidget {
                           _StreakHeroCard(
                             goalsProvider: goalsProvider,
                           ),
+                          if (freezeSection != null) ...[
+                            const SizedBox(height: 16),
+                            freezeSection,
+                          ],
                           const SizedBox(height: 16),
                           const _StreakCalendarWidget(),
-                          if (goalsProvider.shouldShowFreezeDaySection) ...[
-                            const SizedBox(height: 16),
-                            _FreezeDaySection(
-                              goalsProvider: goalsProvider,
-                              onUseManualRest:
-                                  goalsProvider.canUseManualRestCreditToday
-                                      ? () => _confirmFreezeDay(
-                                          context,
-                                          goalsProvider,
-                                        )
-                                      : null,
-                            ),
-                          ],
                           const SizedBox(height: 16),
                           _TodayGoalsSection(
                             taskGoal: taskGoal,

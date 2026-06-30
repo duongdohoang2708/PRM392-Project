@@ -13,6 +13,7 @@ import '../../widgets/background_pattern.dart';
 import '../../widgets/notifications/notification_list_item.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
 import '../../widgets/common/app_scaffold.dart';
+import '../../widgets/common/screen_chrome.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -36,7 +37,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 768;
+        final isDesktop = ScreenChrome.isDesktopShellLayout(context);
         final notificationProvider = context.watch<NotificationProvider>();
         final tasks = context.watch<TaskProvider>().tasks;
         final history = notificationProvider.filteredRecords(

@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen>
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primaryDarkOf(context),
+                      color: AppColors.authBrandingTitleOf(context),
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -93,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen>
                     'Personal Time & Focus Planner',
                     style: TextStyle(
                       fontSize: 16,
-                      color: AppColors.textSecondaryOf(context),
+                      color: AppColors.authBrandingSubtitleOf(context),
                     ),
                   ),
                   const SizedBox(height: 48),

@@ -9,6 +9,7 @@ import '../app_drawer.dart';
 import '../background_pattern.dart';
 import '../common/app_scaffold.dart';
 import '../common/drawer_swipe_body.dart';
+import '../common/screen_chrome.dart';
 
 class SettingsScreenShell extends StatelessWidget {
   final String activeRoute;
@@ -37,7 +38,7 @@ class SettingsScreenShell extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 768;
+        final isDesktop = ScreenChrome.isDesktopShellLayout(context);
         final bg = AppColors.backgroundOf(context);
 
         final titleWidget = Text(

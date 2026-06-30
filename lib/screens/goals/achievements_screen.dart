@@ -11,6 +11,7 @@ import '../../widgets/statistics/statistics_widgets.dart';
 import '../../widgets/common/accent_icon_well.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/common/app_scaffold.dart';
+import '../../widgets/common/screen_chrome.dart';
 
 class AchievementsScreen extends StatelessWidget {
   const AchievementsScreen({super.key});
@@ -19,7 +20,7 @@ class AchievementsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 768;
+        final isDesktop = ScreenChrome.isDesktopShellLayout(context);
         final goalsProvider = context.watch<GoalsProvider>();
 
         final achievements = goalsProvider.achievements;

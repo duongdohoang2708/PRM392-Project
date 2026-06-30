@@ -50,6 +50,26 @@ Offset popupContentAreaCenter(BuildContext context) {
   return Offset(drawerWidth + contentWidth / 2, size.height / 2);
 }
 
+/// Insets for in-app notification banners: on desktop, excludes the sidebar.
+EdgeInsets notificationOverlayInsets(
+  BuildContext context, {
+  double horizontal = 16,
+  double topExtra = 12,
+  double bottomExtra = 16,
+}) {
+  final padding = MediaQuery.paddingOf(context);
+  final top = padding.top + topExtra;
+  final bottom = padding.bottom + bottomExtra;
+  final size = MediaQuery.sizeOf(context);
+
+  if (size.width < kDesktopLayoutBreakpoint) {
+    return EdgeInsets.fromLTRB(horizontal, top, horizontal, bottom);
+  }
+
+  final drawerWidth = desktopDrawerWidth(context);
+  return EdgeInsets.fromLTRB(drawerWidth + horizontal, top, horizontal, bottom);
+}
+
 Offset popupScreenCenter(BuildContext context) {
   final size = MediaQuery.sizeOf(context);
   return Offset(size.width / 2, size.height / 2);

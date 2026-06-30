@@ -96,6 +96,24 @@ class AppColors {
   static Color textSecondaryOf(BuildContext context) =>
       paletteOf(context).textSecondary;
 
+  /// Auth branding title — brighter in default dark mode on decor backgrounds.
+  static Color authBrandingTitleOf(BuildContext context) {
+    final palette = paletteOf(context);
+    if (isDark(context) && palette.modeId == ActivityModeId.defaultMode) {
+      return palette.primary;
+    }
+    return palette.primaryDark;
+  }
+
+  /// Auth branding tagline — slightly lifted in default dark mode.
+  static Color authBrandingSubtitleOf(BuildContext context) {
+    final palette = paletteOf(context);
+    if (isDark(context) && palette.modeId == ActivityModeId.defaultMode) {
+      return Color.lerp(palette.textSecondary, palette.textPrimary, 0.45)!;
+    }
+    return palette.textSecondary;
+  }
+
   /// Drawer header strip behind profile greeting.
   static Color drawerHeaderOf(BuildContext context) =>
       paletteOf(context).drawerHeader;

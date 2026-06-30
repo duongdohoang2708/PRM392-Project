@@ -10,6 +10,7 @@ import '../../widgets/background_pattern.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
+import '../../widgets/common/screen_chrome.dart';
 
 class FocusHistoryScreen extends StatelessWidget {
   const FocusHistoryScreen({super.key});
@@ -18,7 +19,7 @@ class FocusHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 768;
+        final isDesktop = ScreenChrome.isDesktopShellLayout(context);
         final statsProvider = context.watch<StatisticsProvider>();
         final sessions = statsProvider.allSessions;
 

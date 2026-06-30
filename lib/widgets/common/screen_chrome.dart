@@ -9,6 +9,14 @@ import 'notification_bell_button.dart';
 class ScreenChrome {
   ScreenChrome._();
 
+  /// Breakpoint where [MainShell] shows the permanent sidebar.
+  static const double desktopBreakpoint = 768;
+
+  /// Uses full screen width — not [LayoutBuilder] constraints, which exclude
+  /// the drawer column inside [MainShell] and would duplicate the sidebar.
+  static bool isDesktopShellLayout(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= desktopBreakpoint;
+
   static Color scaffoldBackground(BuildContext context) =>
       AppColors.backgroundOf(context);
 
@@ -35,7 +43,7 @@ class ScreenChrome {
               builder: (context) => IconButton(
                 icon: Icon(Icons.menu),
                 onPressed: () {
-                  if (MediaQuery.sizeOf(context).width >= 768) {
+                  if (ScreenChrome.isDesktopShellLayout(context)) {
                     context.read<DrawerProvider>().toggleDesktopCollapse();
                   } else {
                     Scaffold.of(context).openDrawer();

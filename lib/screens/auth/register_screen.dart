@@ -6,7 +6,6 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/common/google_logo_icon.dart';
-import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -80,7 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDarkOf(context),
+                        color: AppColors.authBrandingTitleOf(context),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -89,7 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       'Start managing your time and focus today.',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.textSecondaryOf(context),
+                        color: AppColors.authBrandingSubtitleOf(context),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -269,11 +268,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
-                              ),
-                            );
+                            Navigator.of(context).pop();
                           },
                           child: Text(
                             'Log in',
