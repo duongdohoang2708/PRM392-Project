@@ -31,7 +31,7 @@ class HomeScreen extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = MediaQuery.of(context).size.width >= 768;
-        final bool showTwoColumns = constraints.maxWidth >= 600;
+        final bool showTwoColumns = constraints.maxWidth >= 900;
 
         Widget mainContent = Stack(
           children: [
@@ -134,6 +134,11 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       );
+    }
+
+    for (final sectionId in layout.desktopBottomFullWidth) {
+      children.add(const SizedBox(height: _sectionSpacing));
+      children.add(_buildSection(context, layout, sectionId));
     }
 
     return Column(

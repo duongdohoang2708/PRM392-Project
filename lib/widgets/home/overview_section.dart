@@ -25,8 +25,14 @@ class OverviewSection extends StatelessWidget {
         const SizedBox(height: 16),
         LayoutBuilder(
           builder: (context, constraints) {
-            final crossAxisCount = constraints.maxWidth >= 600 ? 4 : 2;
-            final aspectRatio = constraints.maxWidth >= 600 ? 3.0 : 2.5;
+            final width = constraints.maxWidth;
+            final crossAxisCount = width >= 900 ? 4 : 2;
+            // Wider 2-column rails (tablet portrait) get a higher ratio → shorter cards.
+            final aspectRatio = width >= 900
+                ? 3.0
+                : width >= 560
+                    ? 4.2
+                    : 2.8;
             return GridView.count(
               crossAxisCount: crossAxisCount,
               shrinkWrap: true,

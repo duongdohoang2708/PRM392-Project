@@ -75,113 +75,258 @@ class ActiveFocusSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        InkWell(
-          onTap: () {
-            Navigator.pushNamed(context, '/focus');
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.cardSurfaceFillOf(context),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow = constraints.maxWidth < 420;
+            return InkWell(
+              onTap: () {
+                Navigator.pushNamed(context, '/focus');
+              },
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isDark
-                    ? AppOpacity.fixed(AppColors.primaryOf(context), 0.3)
-                    : AppColors.borderOf(context),
-              ),
-              boxShadow: isDark
-                  ? null
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-            ),
-            child: Row(
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 6,
-                        backgroundColor: progressTrack,
-                        valueColor: AlwaysStoppedAnimation<Color>(accent),
-                      ),
-                    ),
-                    Icon(Icons.timer, color: accent, size: 24),
-                  ],
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        timeString,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: titleColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: subtitleColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.cardSurfaceFillOf(context),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark
+                        ? AppOpacity.fixed(AppColors.primaryOf(context), 0.3)
+                        : AppColors.borderOf(context),
                   ),
+                  boxShadow: isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                 ),
-                const SizedBox(width: 12),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _FocusControlButton(
-                      icon: Icons.refresh,
-                      onPressed: () {
-                        context.read<FocusProvider>().resetEntireCycle();
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _FocusControlButton(
-                      icon: isRunning
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_filled,
-                      size: 40,
-                      iconSize: 40,
-                      onPressed: () {
-                        if (isRunning) {
-                          context.read<FocusProvider>().pauseTimer();
-                        } else {
-                          context.read<FocusProvider>().startTimer();
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _FocusControlButton(
-                      icon: Icons.skip_next,
-                      onPressed: () {
-                        context.read<FocusProvider>().skipPhase();
-                      },
-                    ),
-                  ],
+                child: narrow
+                    ? _buildNarrowFocusContent(
+                        context,
+                        progress: progress,
+                        progressTrack: progressTrack,
+                        accent: accent,
+                        timeString: timeString,
+                        title: title,
+                        titleColor: titleColor,
+                        subtitleColor: subtitleColor,
+                        isRunning: isRunning,
+                      )
+                    : _buildWideFocusContent(
+                        context,
+                        progress: progress,
+                        progressTrack: progressTrack,
+                        accent: accent,
+                        timeString: timeString,
+                        title: title,
+                        titleColor: titleColor,
+                        subtitleColor: subtitleColor,
+                        isRunning: isRunning,
+                      ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWideFocusContent(
+    BuildContext context, {
+    required double progress,
+    required Color progressTrack,
+    required Color accent,
+    required String timeString,
+    required String title,
+    required Color titleColor,
+    required Color subtitleColor,
+    required bool isRunning,
+  }) {
+    return Row(
+      children: [
+        _FocusProgressRing(
+          progress: progress,
+          progressTrack: progressTrack,
+          accent: accent,
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _FocusTimeLabel(timeString: timeString, color: titleColor),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: subtitleColor,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
+        ),
+        const SizedBox(width: 12),
+        _FocusControlButtons(isRunning: isRunning),
+      ],
+    );
+  }
+
+  Widget _buildNarrowFocusContent(
+    BuildContext context, {
+    required double progress,
+    required Color progressTrack,
+    required Color accent,
+    required String timeString,
+    required String title,
+    required Color titleColor,
+    required Color subtitleColor,
+    required bool isRunning,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _FocusProgressRing(
+          progress: progress,
+          progressTrack: progressTrack,
+          accent: accent,
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: _FocusTimeLabel(
+                      timeString: timeString,
+                      color: titleColor,
+                    ),
+                  ),
+                  _FocusControlButtons(isRunning: isRunning),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: subtitleColor,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FocusTimeLabel extends StatelessWidget {
+  final String timeString;
+  final Color color;
+
+  const _FocusTimeLabel({required this.timeString, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          timeString,
+          maxLines: 1,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusProgressRing extends StatelessWidget {
+  final double progress;
+  final Color progressTrack;
+  final Color accent;
+
+  const _FocusProgressRing({
+    required this.progress,
+    required this.progressTrack,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: 60,
+          height: 60,
+          child: CircularProgressIndicator(
+            value: progress,
+            strokeWidth: 6,
+            backgroundColor: progressTrack,
+            valueColor: AlwaysStoppedAnimation<Color>(accent),
+          ),
+        ),
+        Icon(Icons.timer, color: accent, size: 24),
+      ],
+    );
+  }
+}
+
+class _FocusControlButtons extends StatelessWidget {
+  final bool isRunning;
+
+  const _FocusControlButtons({required this.isRunning});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _FocusControlButton(
+          icon: Icons.refresh,
+          onPressed: () {
+            context.read<FocusProvider>().resetEntireCycle();
+          },
+        ),
+        const SizedBox(width: 8),
+        _FocusControlButton(
+          icon: isRunning ? Icons.pause_circle_filled : Icons.play_circle_filled,
+          size: 40,
+          iconSize: 40,
+          onPressed: () {
+            if (isRunning) {
+              context.read<FocusProvider>().pauseTimer();
+            } else {
+              context.read<FocusProvider>().startTimer();
+            }
+          },
+        ),
+        const SizedBox(width: 8),
+        _FocusControlButton(
+          icon: Icons.skip_next,
+          onPressed: () {
+            context.read<FocusProvider>().skipPhase();
+          },
         ),
       ],
     );
