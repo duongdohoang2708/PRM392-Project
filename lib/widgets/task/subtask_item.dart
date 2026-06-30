@@ -115,7 +115,7 @@ class _SubTaskItemState extends State<SubTaskItem> with SingleTickerProviderStat
               scale: _isCompletedLocal ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 250),
               curve: Curves.elasticOut,
-              child: const Icon(Icons.check, size: 14, color: Colors.white),
+              child: Icon(Icons.check, size: 14, color: Colors.white),
             ),
           ),
         ),

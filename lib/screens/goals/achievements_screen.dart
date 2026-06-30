@@ -219,7 +219,7 @@ class _UnlockedSummaryCard extends StatelessWidget {
       context,
       alpha: isDark ? 0.56 : 0.45,
     );
-    final percentBadgeText = isDark ? AppColors.primary : AppColors.primaryDark;
+    final percentBadgeText = isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context);
 
     return StatPanel(
       child: Column(
@@ -273,7 +273,7 @@ class _UnlockedSummaryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
                     color: AppOpacity.fixed(
-                      AppColors.primary,
+                      AppColors.primaryOf(context),
                       isDark ? 0.55 : AppOpacity.borderAccent,
                     ),
                   ),
@@ -300,7 +300,7 @@ class _UnlockedSummaryCard extends StatelessWidget {
                 0.6,
               ),
               valueColor: AlwaysStoppedAnimation<Color>(
-                isDark ? AppColors.primary : AppColors.primaryDark,
+                isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context),
               ),
             ),
           ),
@@ -347,7 +347,7 @@ class _AchievementGroupSection extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                color: isDark ? AppColors.primary : AppColors.primaryDark,
+                color: isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context),
                 size: 18,
               ),
             ),
@@ -384,7 +384,7 @@ class _AchievementGroupSection extends StatelessWidget {
                 color: isDark
                     ? AppColors.cardFillOf(
                         context,
-                        accentColor: AppColors.primary,
+                        accentColor: AppColors.primaryOf(context),
                         lightTintAlpha: 0.22,
                         darkTintAlpha: 0.22,
                       )
@@ -392,14 +392,14 @@ class _AchievementGroupSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: isDark
-                      ? AppOpacity.fixed(AppColors.primary, 0.45)
+                      ? AppOpacity.fixed(AppColors.primaryOf(context), 0.45)
                       : AppColors.borderOf(context),
                 ),
               ),
               child: Text(
                 '$unlocked/${achievements.length}',
                 style: TextStyle(
-                  color: isDark ? AppColors.primary : AppColors.primaryDark,
+                  color: isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context),
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
@@ -467,13 +467,13 @@ class _AchievementCard extends StatelessWidget {
     final unlocked = achievement.isUnlocked;
     final isDark = AppColors.isDark(context);
     final accent = unlocked
-        ? (isDark ? AppColors.primary : AppColors.primaryDark)
+        ? (isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context))
         : AppColors.textSecondaryOf(context);
     final bgColor = unlocked
         ? AppColors.primaryLightTintOf(context, alpha: isDark ? 0.35 : 0.45)
         : AppColors.cardSurfaceFillOf(context);
     final iconAccent =
-        unlocked ? AppColors.primaryDark : AppColors.textSecondaryOf(context);
+        unlocked ? AppColors.primaryDarkOf(context) : AppColors.textSecondaryOf(context);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -482,7 +482,7 @@ class _AchievementCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: unlocked
-              ? AppOpacity.fixed(AppColors.primary, AppOpacity.borderStrong)
+              ? AppOpacity.fixed(AppColors.primaryOf(context), AppOpacity.borderStrong)
               : AppColors.borderOf(context),
           width: unlocked ? 1.5 : 1,
         ),
@@ -507,7 +507,7 @@ class _AchievementCard extends StatelessWidget {
               Icon(
                 unlocked ? Icons.check_circle : Icons.lock_outline,
                 color: unlocked
-                    ? (isDark ? AppColors.primary : AppColors.primaryDark)
+                    ? (isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context))
                     : AppColors.textSecondaryOf(context),
                 size: 17,
               ),

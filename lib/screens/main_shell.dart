@@ -27,6 +27,7 @@ import 'settings/calendar_display_settings_screen.dart';
 import 'settings/activity_modes_screen.dart';
 import 'settings/activity_mode_detail_screen.dart';
 import '../../models/activity_mode.dart';
+import '../widgets/common/theme_rebuild_scope.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -81,6 +82,9 @@ class _MainShellState extends State<MainShell> {
                       if (nav != null) {
                         if (route == '/home') {
                           nav.pushNamedAndRemoveUntil('/home', (r) => false);
+                        } else if (route.startsWith('/settings/') &&
+                            route != '/settings') {
+                          nav.pushNamed(route);
                         } else {
                           nav.pushReplacementNamed(route);
                         }
@@ -225,7 +229,7 @@ class _MainShellState extends State<MainShell> {
         page = const HomeScreen();
     }
     return MaterialPageRoute(
-      builder: (context) => page,
+      builder: (context) => ThemeRebuildScope(child: page),
       settings: settings,
     );
   }

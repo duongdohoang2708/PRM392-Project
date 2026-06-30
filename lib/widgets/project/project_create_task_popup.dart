@@ -202,7 +202,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
         id: '',
         name: '',
         description: '',
-        colorValue: AppColors.primary.toARGB32(),
+        colorValue: AppColors.primaryOf(context).toARGB32(),
       ),
     );
     final Color projectColor = Color(project.colorValue);
@@ -354,7 +354,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimaryOf(context),
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Task title...',
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -446,8 +446,8 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
             label: 'All Day',
             child: Switch(
               value: _isAllDay,
-              activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
-              activeThumbColor: AppColors.primaryDark,
+              activeTrackColor: AppColors.primaryDarkOf(context).withValues(alpha: 0.5),
+              activeThumbColor: AppColors.primaryDarkOf(context),
               onChanged: (val) {
                 setState(() {
                   _isAllDay = val;
@@ -499,7 +499,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppColors.primaryDark),
+        Icon(icon, size: 20, color: AppColors.primaryDarkOf(context)),
         const SizedBox(width: 12),
         Text(
           label,

@@ -62,7 +62,7 @@ class AppConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final confirmBg =
-        confirmBackgroundColor ?? AppColors.primaryDark;
+        confirmBackgroundColor ?? AppColors.primaryDarkOf(context);
     final confirmFg = confirmForegroundColor ?? Colors.white;
 
     Widget confirmButton;

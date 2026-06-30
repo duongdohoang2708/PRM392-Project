@@ -11,15 +11,16 @@ Future<String?> showCustomReminderPopup(
   required bool isAllDay,
   String? initialReminder,
   Offset? anchor,
-  Color accentColor = AppColors.primaryDark,
+  Color? accentColor,
 }) {
+  final resolvedAccent = accentColor ?? AppColors.primaryDarkOf(context);
   return showAppPopup<String>(
     context: context,
     anchor: anchor,
     child: CustomReminderPopup(
       isAllDay: isAllDay,
       initialReminder: initialReminder,
-      accentColor: accentColor,
+      accentColor: resolvedAccent,
     ),
   );
 }
@@ -33,7 +34,7 @@ class CustomReminderPopup extends StatefulWidget {
     super.key,
     required this.isAllDay,
     this.initialReminder,
-    this.accentColor = AppColors.primaryDark,
+    required this.accentColor,
   });
 
   @override

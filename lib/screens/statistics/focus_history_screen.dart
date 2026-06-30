@@ -210,7 +210,7 @@ class _HistorySummary extends StatelessWidget {
             child: _SummaryItem(
               label: 'Sessions',
               value: '$totalSessions',
-              color: AppColors.primaryDark,
+              color: AppColors.primaryDarkOf(context),
             ),
           ),
           _divider(context),

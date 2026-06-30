@@ -302,7 +302,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           floatingActionButton: FloatingActionButton(
             key: _createTaskFabKey,
             onPressed: _showCreateTaskPopup,
-            child: const Icon(Icons.add),
+            child: Icon(Icons.add),
           ),
         );
       },
@@ -358,8 +358,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
             TextButton(
               onPressed: _goToToday,
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.primaryDark,
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                foregroundColor: AppColors.primaryDarkOf(context),
+                textStyle: TextStyle(fontWeight: FontWeight.bold),
               ),
               child: const Text('Today'),
             ),
@@ -376,7 +376,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget _buildTasksHeader(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.today, color: AppColors.primaryDark),
+        Icon(Icons.today, color: AppColors.primaryDarkOf(context)),
         const SizedBox(width: 8),
         Text(
           'Tasks for ${AppDateTimeFormat.weekdayMonthDay(_selectedDate)}',
@@ -514,7 +514,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: dayTasks.take(3).map((task) {
-                                Color dotColor = AppColors.primaryDark;
+                                Color dotColor = AppColors.primaryDarkOf(context);
                                 if (task.priority == 'High') {
                                   dotColor = AppColors.accentPeach;
                                 } else if (task.priority == 'Medium') {
@@ -635,9 +635,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 child: Container(
                                   width: 12,
                                   height: 12,
-                                  decoration: const BoxDecoration(
+                                  decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: AppColors.primaryDark,
+                                    color: AppColors.primaryDarkOf(context),
                                   ),
                                 ),
                               ),
@@ -694,7 +694,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: AppOpacity.fixed(AppColors.primary, 0.04),
+            color: AppOpacity.fixed(AppColors.primaryOf(context), 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -714,7 +714,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             Icon(
               Icons.spa_outlined,
               size: 48,
-              color: AppOpacity.fixed(AppColors.primaryDark, 0.4),
+              color: AppOpacity.fixed(AppColors.primaryDarkOf(context), 0.4),
             ),
             const SizedBox(height: 12),
             Text(

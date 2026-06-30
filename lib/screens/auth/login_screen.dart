@@ -69,12 +69,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Header Branding
-                    const Text(
+                    Text(
                       'TaskFlow',
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark,
+                        color: AppColors.primaryDarkOf(context),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             hintText: 'your@email.com',
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
-                            prefixIcon: const Icon(Icons.mail_outline),
+                            prefixIcon: Icon(Icons.mail_outline),
                           ),
                           const SizedBox(height: 20),
 
@@ -169,12 +169,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Forgot password?',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.primaryDark,
+                                    color: AppColors.primaryDarkOf(context),
                                   ),
                                 ),
                               ),
@@ -262,12 +262,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             'Create account',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primaryDark,
+                              color: AppColors.primaryDarkOf(context),
                             ),
                           ),
                         ),

@@ -458,12 +458,12 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                             ? AppColors.accentPeach
                             : (_priority == 'Medium'
                                   ? AppColors.accentYellow
-                                  : AppColors.primaryDark),
+                                  : AppColors.primaryDarkOf(context)),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
                         '$_priority Priority',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -564,8 +564,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             label: 'All Day',
             child: Switch(
               value: _isAllDay,
-              activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
-              activeThumbColor: AppColors.primaryDark,
+              activeTrackColor: AppColors.primaryDarkOf(context).withValues(alpha: 0.5),
+              activeThumbColor: AppColors.primaryDarkOf(context),
               onChanged: (val) {
                 setState(() {
                   _isAllDay = val;
@@ -598,7 +598,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                       Text(
                         '+ Add Project',
                         style: TextStyle(
-                          color: AppColors.primaryDark,
+                          color: AppColors.primaryDarkOf(context),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -674,7 +674,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppColors.primaryDark),
+        Icon(icon, size: 20, color: AppColors.primaryDarkOf(context)),
         const SizedBox(width: 12),
         Text(
           label,
@@ -701,7 +701,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.checklist, color: AppColors.primaryDark),
+              Icon(Icons.checklist, color: AppColors.primaryDarkOf(context)),
               const SizedBox(width: 8),
               Text(
                 'Subtasks',
@@ -739,11 +739,11 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: subtask.isCompleted
-                              ? AppColors.primaryDark
+                              ? AppColors.primaryDarkOf(context)
                               : Colors.transparent,
                           border: Border.all(
                             color: subtask.isCompleted
-                                ? AppColors.primaryDark
+                                ? AppColors.primaryDarkOf(context)
                                 : AppColors.textSecondaryOf(context).withValues(
                                     alpha: 0.5,
                                   ),
@@ -791,9 +791,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: _addNewSubTask,
-            icon: const Icon(Icons.add, size: 18),
+            icon: Icon(Icons.add, size: 18),
             label: const Text('Add subtask'),
-            style: TextButton.styleFrom(foregroundColor: AppColors.primaryDark),
+            style: TextButton.styleFrom(foregroundColor: AppColors.primaryDarkOf(context)),
           ),
         ],
       ),
@@ -810,7 +810,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             padding: const EdgeInsets.only(left: 20, top: 20, bottom: 8),
             child: Row(
               children: [
-                const Icon(Icons.edit_note, color: AppColors.primaryDark),
+                Icon(Icons.edit_note, color: AppColors.primaryDarkOf(context)),
                 const SizedBox(width: 8),
                 Text(
                   'Notes',
@@ -859,11 +859,11 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       children: [
         ElevatedButton.icon(
           onPressed: _createTask,
-          icon: const Icon(Icons.check),
+          icon: Icon(Icons.check),
           label: const Text('Create Task'),
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 52),
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.primaryOf(context),
             foregroundColor: AppColors.textPrimaryOf(context),
           ),
         ),

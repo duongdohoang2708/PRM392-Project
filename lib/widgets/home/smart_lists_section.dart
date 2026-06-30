@@ -51,7 +51,7 @@ class SmartListsSection extends StatelessWidget {
                   Icons.event_outlined,
                   'Tomorrow',
                   taskProvider.getCountForFilter('Tomorrow').toString(),
-                  AppColors.primary,
+                  AppColors.primaryOf(context),
                 ),
                 _buildListFilter(
                   context,
@@ -65,7 +65,7 @@ class SmartListsSection extends StatelessWidget {
                   Icons.schedule,
                   'Scheduled',
                   taskProvider.getCountForFilter('Scheduled').toString(),
-                  AppColors.primaryDark,
+                  AppColors.primaryDarkOf(context),
                 ),
                 _buildListFilter(
                   context,

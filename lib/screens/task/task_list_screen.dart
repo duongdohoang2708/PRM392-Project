@@ -339,7 +339,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           onPressed: () {
             Navigator.pushNamed(context, '/create-task');
           },
-          child: const Icon(Icons.add),
+          child: Icon(Icons.add),
         );
 
         if (isDesktop) {

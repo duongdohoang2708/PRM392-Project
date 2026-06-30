@@ -143,7 +143,7 @@ class _RestDaysSettingsSheetState extends State<RestDaysSettingsSheet> {
                         },
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
-                          backgroundColor: AppColors.primaryDark,
+                          backgroundColor: AppColors.primaryDarkOf(context),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),

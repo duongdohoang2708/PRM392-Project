@@ -24,7 +24,7 @@ class AppCupertinoDatePicker extends StatelessWidget {
   final DateTime maximumDate;
   final ValueChanged<DateTime> onDateChanged;
   final double height;
-  final Color accentColor;
+  final Color? accentColor;
 
   const AppCupertinoDatePicker({
     super.key,
@@ -33,19 +33,20 @@ class AppCupertinoDatePicker extends StatelessWidget {
     required this.maximumDate,
     required this.onDateChanged,
     this.height = 180,
-    this.accentColor = AppColors.primaryDark,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final initial = _clampDate(date, minimumDate, maximumDate);
+    final resolvedAccent = accentColor ?? AppColors.primaryDarkOf(context);
 
     return SizedBox(
       height: height,
       child: CupertinoTheme(
         data: CupertinoThemeData(
           brightness: Brightness.light,
-          primaryColor: accentColor,
+          primaryColor: resolvedAccent,
           textTheme: CupertinoTextThemeData(
             dateTimePickerTextStyle: TextStyle(
               fontSize: 20,
@@ -74,9 +75,10 @@ Future<DateTime?> showAppDatePicker(
   required DateTime firstDate,
   required DateTime lastDate,
   String title = 'Select date',
-  Color accentColor = AppColors.primaryDark,
+  Color? accentColor,
   Offset? anchor,
 }) {
+  final resolvedAccent = accentColor ?? AppColors.primaryDarkOf(context);
   return showAppPopup<DateTime>(
     context: context,
     anchor: anchor,
@@ -85,7 +87,7 @@ Future<DateTime?> showAppDatePicker(
       firstDate: firstDate,
       lastDate: lastDate,
       title: title,
-      accentColor: accentColor,
+      accentColor: resolvedAccent,
     ),
   );
 }

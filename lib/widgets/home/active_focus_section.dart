@@ -55,7 +55,7 @@ class ActiveFocusSection extends StatelessWidget {
     }
 
     final isDark = AppColors.isDark(context);
-    final accent = isDark ? AppColors.primary : AppColors.primaryDark;
+    final accent = isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context);
     final titleColor = AppColors.textPrimaryOf(context);
     final subtitleColor = AppColors.textSecondaryOf(context);
     final progressTrack = AppColors.primaryLightTintOf(
@@ -87,7 +87,7 @@ class ActiveFocusSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isDark
-                    ? AppOpacity.fixed(AppColors.primary, 0.3)
+                    ? AppOpacity.fixed(AppColors.primaryOf(context), 0.3)
                     : AppColors.borderOf(context),
               ),
               boxShadow: isDark
@@ -204,7 +204,7 @@ class _FocusControlButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppColors.isDark(context);
-    final accent = isDark ? AppColors.primary : AppColors.primaryDark;
+    final accent = isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context);
 
     return Material(
       color: isDark

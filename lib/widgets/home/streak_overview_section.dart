@@ -33,7 +33,7 @@ class StreakOverviewSection extends StatelessWidget {
             SectionActionButton(
               label: 'View goals',
               onPressed: () => Navigator.pushNamed(context, '/goals'),
-              foregroundColor: AppColors.primaryDark,
+              foregroundColor: AppColors.primaryDarkOf(context),
             ),
           ],
         ),

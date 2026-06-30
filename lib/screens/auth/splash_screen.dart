@@ -79,12 +79,12 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'TaskFlow',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primaryDark,
+                      color: AppColors.primaryDarkOf(context),
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -97,13 +97,13 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 48),
-                  const SizedBox(
+                  SizedBox(
                     height: 24,
                     width: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
+                        AppColors.primaryOf(context),
                       ),
                     ),
                   ),

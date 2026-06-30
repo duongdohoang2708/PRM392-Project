@@ -19,11 +19,11 @@ class SectionActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = foregroundColor ?? AppColors.primaryDark;
+    final fg = foregroundColor ?? AppColors.primaryDarkOf(context);
     final bg = backgroundColor ??
         AppColors.cardFillOf(
           context,
-          accentColor: AppColors.primary,
+          accentColor: AppColors.primaryOf(context),
           lightTintAlpha: 0.14,
           darkTintAlpha: 0.16,
         );
@@ -40,8 +40,8 @@ class SectionActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
             color: AppColors.isDark(context)
-                ? AppOpacity.fixed(AppColors.primary, 0.35)
-                : AppOpacity.fixed(AppColors.primary, 0.22),
+                ? AppOpacity.fixed(AppColors.primaryOf(context), 0.35)
+                : AppOpacity.fixed(AppColors.primaryOf(context), 0.22),
           ),
         ),
       ),

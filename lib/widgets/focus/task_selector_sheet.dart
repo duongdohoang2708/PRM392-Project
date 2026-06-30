@@ -146,7 +146,7 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
                               ? AppColors.accentPeach
                               : task.priority == 'Medium'
                                   ? AppColors.accentYellow
-                                  : AppColors.primary,
+                                  : AppColors.primaryOf(context),
                         ),
                         title: Text(
                           task.title,
@@ -235,7 +235,7 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (item == safeValue) ...[
-                  Icon(icon, size: 14, color: AppColors.primary),
+                  Icon(icon, size: 14, color: AppColors.primaryOf(context)),
                   const SizedBox(width: 6),
                 ],
                 Text(item),

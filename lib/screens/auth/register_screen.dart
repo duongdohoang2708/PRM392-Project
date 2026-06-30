@@ -34,9 +34,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Account created successfully!'),
-            backgroundColor: AppColors.primaryDark,
+            backgroundColor: AppColors.primaryDarkOf(context),
           ),
         );
       }
@@ -75,12 +75,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Header Branding
-                    const Text(
+                    Text(
                       'TaskFlow',
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark,
+                        color: AppColors.primaryDarkOf(context),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -142,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: 'John Doe',
                             controller: _nameController,
                             keyboardType: TextInputType.name,
-                            prefixIcon: const Icon(Icons.person_outline),
+                            prefixIcon: Icon(Icons.person_outline),
                           ),
                           const SizedBox(height: 20),
 
@@ -160,7 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: 'your@email.com',
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
-                            prefixIcon: const Icon(Icons.mail_outline),
+                            prefixIcon: Icon(Icons.mail_outline),
                           ),
                           const SizedBox(height: 20),
 
@@ -178,9 +178,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: '••••••••',
                             controller: _passwordController,
                             obscureText: true,
-                            prefixIcon: const Icon(Icons.lock_outline),
+                            prefixIcon: Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
-                              icon: const Icon(Icons.visibility_off_outlined),
+                              icon: Icon(Icons.visibility_off_outlined),
                               onPressed: () {},
                             ),
                           ),
@@ -202,7 +202,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             obscureText: true,
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
-                              icon: const Icon(Icons.visibility_off_outlined),
+                              icon: Icon(Icons.visibility_off_outlined),
                               onPressed: () {},
                             ),
                           ),
@@ -275,12 +275,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             'Log in',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primaryDark,
+                              color: AppColors.primaryDarkOf(context),
                             ),
                           ),
                         ),

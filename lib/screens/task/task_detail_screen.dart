@@ -234,7 +234,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         id: '',
         name: '',
         description: '',
-        colorValue: AppColors.primary.toARGB32(),
+        colorValue: AppColors.primaryOf(context).toARGB32(),
       ),
     );
     final Color rawProjectColor = Color(projectObj.colorValue);
@@ -462,7 +462,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 ),
               ),
               child: _isCompleted
-                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  ? Icon(Icons.check, size: 16, color: Colors.white)
                   : null,
             ),
           ),
@@ -537,12 +537,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                             ? AppColors.accentPeach
                             : (_priority == 'Medium'
                                   ? AppColors.accentYellow
-                                  : AppColors.primaryDark),
+                                  : AppColors.primaryDarkOf(context)),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
                         '$_priority Priority',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -1250,7 +1250,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       children: [
         ElevatedButton.icon(
           onPressed: _saveChanges,
-          icon: const Icon(Icons.save),
+          icon: Icon(Icons.save),
           label: const Text('Save Changes'),
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 52),

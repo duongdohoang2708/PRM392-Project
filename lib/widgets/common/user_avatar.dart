@@ -24,7 +24,7 @@ class UserAvatar extends StatelessWidget {
     return CircleAvatar(
       key: ValueKey(avatarUrl ?? initials),
       radius: radius,
-      backgroundColor: backgroundColor ?? AppColors.primary,
+      backgroundColor: backgroundColor ?? AppColors.primaryOf(context),
       backgroundImage: image,
       child: image == null
           ? Text(

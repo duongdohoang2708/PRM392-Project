@@ -109,7 +109,7 @@ class TaskSortDropdowns extends StatelessWidget {
             color: AppColors.textSecondaryOf(context),
           ),
           style: theme.textTheme.labelMedium?.copyWith(
-            color: AppColors.primaryDark,
+            color: AppColors.primaryDarkOf(context),
             fontWeight: FontWeight.bold,
           ),
           onChanged: (val) {
@@ -145,7 +145,7 @@ class TaskSortDropdowns extends StatelessWidget {
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
+            color: AppColors.primaryOf(context).withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -171,7 +171,7 @@ class TaskSortDropdowns extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (val == value) ...[
-                  Icon(icon, size: 14, color: AppColors.primary),
+                  Icon(icon, size: 14, color: AppColors.primaryOf(context)),
                   const SizedBox(width: 4),
                 ],
                 Text(val.startsWith('All') ? label : val),

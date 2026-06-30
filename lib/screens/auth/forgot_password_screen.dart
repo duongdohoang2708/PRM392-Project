@@ -30,9 +30,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Password reset link sent to your email!'),
-            backgroundColor: AppColors.primaryDark,
+            backgroundColor: AppColors.primaryDarkOf(context),
           ),
         );
       }
@@ -68,12 +68,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Header Branding
-                    const Text(
+                    Text(
                       'TaskFlow',
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark,
+                        color: AppColors.primaryDarkOf(context),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -166,13 +166,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                 );
                               },
-                              child: const Row(
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     Icons.arrow_back,
                                     size: 16,
-                                    color: AppColors.primaryDark,
+                                    color: AppColors.primaryDarkOf(context),
                                   ),
                                   SizedBox(width: 8),
                                   Text(
@@ -180,7 +180,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.primaryDark,
+                                      color: AppColors.primaryDarkOf(context),
                                     ),
                                   ),
                                 ],

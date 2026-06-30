@@ -244,7 +244,7 @@ class _SegmentButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected
-                ? AppColors.primaryDark
+                ? AppColors.primaryDarkOf(context)
                 : AppColors.borderOf(context),
           ),
         ),
@@ -320,10 +320,10 @@ class _RangeChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryDark : AppColors.backgroundOf(context),
+          color: selected ? AppColors.primaryDarkOf(context) : AppColors.backgroundOf(context),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: selected ? AppColors.primaryDark : AppColors.borderOf(context),
+            color: selected ? AppColors.primaryDarkOf(context) : AppColors.borderOf(context),
           ),
         ),
         child: Text(
@@ -430,10 +430,10 @@ class _PeriodNavigator extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.calendar_today_outlined,
                     size: 16,
-                    color: AppColors.primaryDark,
+                    color: AppColors.primaryDarkOf(context),
                   ),
                   const SizedBox(width: 8),
                   Flexible(
@@ -493,7 +493,7 @@ class _PeriodNavButton extends StatelessWidget {
           icon,
           size: 20,
           color: enabled
-              ? AppColors.primaryDark
+              ? AppColors.primaryDarkOf(context)
               : AppOpacity.fixed(
                   AppColors.textSecondaryOf(context),
                   0.4,
@@ -565,7 +565,7 @@ class _FocusStatisticsContent extends StatelessWidget {
                   title: 'Sessions',
                   value: '${data.sessions}',
                   icon: Icons.repeat,
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                   lightBgAlpha: 0.52,
                   darkBgAlpha: 0.26,
                 ),
@@ -636,7 +636,7 @@ class _TaskStatisticsContent extends StatelessWidget {
                   title: 'Completed',
                   value: '${data.completed}',
                   icon: Icons.check_circle_outline,
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                   lightBgAlpha: 0.52,
                   darkBgAlpha: 0.26,
                 ),
@@ -659,8 +659,8 @@ class _TaskStatisticsContent extends StatelessWidget {
               title: 'Task Completion by $granularity',
               trailing: Text(
                 '${data.completionRate}%',
-                style: const TextStyle(
-                  color: AppColors.primaryDark,
+                style: TextStyle(
+                  color: AppColors.primaryDarkOf(context),
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
                 ),
@@ -749,7 +749,7 @@ class _SessionsSection extends StatelessWidget {
                   icon: Icons.done_all,
                   label: 'Completed',
                   value: '$totalSessions total',
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                 ),
               ),
               const SizedBox(width: 12),

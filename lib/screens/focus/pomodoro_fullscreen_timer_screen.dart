@@ -415,7 +415,7 @@ class _PomodoroFullscreenTimerScreenState
     final phaseMeta = switch (currentPhase) {
       PhaseType.focus => (
           label: 'Focus Session',
-          color: AppColors.primary,
+          color: AppColors.primaryOf(context),
           total: focusProvider.focusMinutes * 60,
         ),
       PhaseType.shortBreak => (

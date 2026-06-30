@@ -28,9 +28,9 @@ class PomodoroSessionProgressCard extends StatelessWidget {
     this.scale = 1,
   });
 
-  Color _phaseColor(PhaseType phase) {
+  Color _phaseColor(BuildContext context, PhaseType phase) {
     return switch (phase) {
-      PhaseType.focus => AppColors.primary,
+      PhaseType.focus => AppColors.primaryOf(context),
       PhaseType.shortBreak => AppColors.accentPeach,
       PhaseType.longBreak => AppColors.accentYellow,
     };
@@ -97,8 +97,8 @@ class PomodoroSessionProgressCard extends StatelessWidget {
         ? null
         : sequence[currentPhaseIndex];
     final phaseColor = currentPhase != null
-        ? _phaseColor(currentPhase)
-        : AppColors.primary;
+        ? _phaseColor(context, currentPhase)
+        : AppColors.primaryOf(context);
     final progress = allCompleted ? 1.0 : phaseProgress.clamp(0.0, 1.0);
     final progressPercent = (progress * 100).round();
     final nextLabel = _nextLabel();

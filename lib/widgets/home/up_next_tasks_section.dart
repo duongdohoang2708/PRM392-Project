@@ -49,7 +49,7 @@ class UpNextTasksSection extends StatelessWidget {
             SectionActionButton(
               label: 'View All',
               onPressed: () => Navigator.pushNamed(context, '/task-list'),
-              foregroundColor: AppColors.primaryDark,
+              foregroundColor: AppColors.primaryDarkOf(context),
             ),
           ],
         ),

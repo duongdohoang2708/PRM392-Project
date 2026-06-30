@@ -333,7 +333,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           floatingActionButton: FloatingActionButton(
             key: _settingsFabKey,
             onPressed: _showSettingsPopup,
-            child: const Icon(Icons.settings),
+            child: Icon(Icons.settings),
           ),
         );
       },
@@ -374,13 +374,13 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
     final currentPhase = sequence[focusProvider.currentPhaseIndex];
     String label = '';
-    Color phaseColor = AppColors.primary;
+    Color phaseColor = AppColors.primaryOf(context);
     int totalSeconds = 1;
 
     switch (currentPhase) {
       case PhaseType.focus:
         label = 'Focus Session';
-        phaseColor = AppColors.primary;
+        phaseColor = AppColors.primaryOf(context);
         totalSeconds = focusProvider.focusMinutes * 60;
         break;
       case PhaseType.shortBreak:
@@ -523,7 +523,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: AppOpacity.fixed(AppColors.primary, 10 / 255),
+            color: AppOpacity.fixed(AppColors.primaryOf(context), 10 / 255),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -543,17 +543,17 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     color: AppColors.primaryLightTintOf(context, alpha: 0.39),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.emoji_events,
-                    color: AppColors.primaryDark,
+                    color: AppColors.primaryDarkOf(context),
                     size: 40,
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'EXCELLENT WORK!',
                   style: TextStyle(
-                    color: AppColors.primaryDark,
+                    color: AppColors.primaryDarkOf(context),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
@@ -607,8 +607,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     children: [
                       Text(
                         '${focusTime}M',
-                        style: const TextStyle(
-                          color: AppColors.primaryDark,
+                        style: TextStyle(
+                          color: AppColors.primaryDarkOf(context),
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -642,8 +642,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     children: [
                       Text(
                         '$rounds',
-                        style: const TextStyle(
-                          color: AppColors.primaryDark,
+                        style: TextStyle(
+                          color: AppColors.primaryDarkOf(context),
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -677,8 +677,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                     children: [
                       Text(
                         '$breaks',
-                        style: const TextStyle(
-                          color: AppColors.primaryDark,
+                        style: TextStyle(
+                          color: AppColors.primaryDarkOf(context),
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -714,17 +714,17 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             onPressed: () {
               context.read<FocusProvider>().resetEntireCycle();
             },
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh),
             label: const Text(
               'Start New Session',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.primaryOf(context),
               foregroundColor: Colors.white,
               elevation: 4,
               shadowColor: AppOpacity.fixed(
-                AppColors.primary,
+                AppColors.primaryOf(context),
                 100 / 255,
               ),
               shape: RoundedRectangleBorder(
@@ -867,7 +867,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             border: Border.all(color: AppColors.borderOf(context)),
             boxShadow: [
               BoxShadow(
-                color: AppOpacity.fixed(AppColors.primary, 10 / 255),
+                color: AppOpacity.fixed(AppColors.primaryOf(context), 10 / 255),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -908,10 +908,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.folder_outlined,
                                     size: 14,
-                                    color: AppColors.primaryDark,
+                                    color: AppColors.primaryDarkOf(context),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
@@ -956,7 +956,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                                         ? AppColors.accentPeach
                                         : (selectedTask.priority == 'Medium'
                                               ? AppColors.accentYellow
-                                              : AppColors.primary),
+                                              : AppColors.primaryOf(context)),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
@@ -988,7 +988,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 onPressed: () => _handleChangeTask(context, _openTaskSelector),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.cardSurfaceFillOf(context),
-                  foregroundColor: AppColors.primary,
+                  foregroundColor: AppColors.primaryOf(context),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(100),
@@ -1087,7 +1087,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               shape: BoxShape.circle,
               border: AppColors.isDark(context)
                   ? Border.all(
-                      color: AppColors.statCardBorderOf(context, AppColors.primary),
+                      color: AppColors.statCardBorderOf(context, AppColors.primaryOf(context)),
                     )
                   : null,
             ),

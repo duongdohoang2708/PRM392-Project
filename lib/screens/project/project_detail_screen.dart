@@ -595,7 +595,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             backgroundColor: projectColor,
             foregroundColor: Colors.white,
             onPressed: () => _showCreateTaskPopup(context, project.name),
-            child: const Icon(Icons.add),
+            child: Icon(Icons.add),
           ),
         );
       },

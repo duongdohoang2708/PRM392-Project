@@ -10,14 +10,14 @@ class AppCupertinoTimePicker extends StatelessWidget {
   final TimeOfDay time;
   final ValueChanged<TimeOfDay> onTimeChanged;
   final double height;
-  final Color accentColor;
+  final Color? accentColor;
 
   const AppCupertinoTimePicker({
     super.key,
     required this.time,
     required this.onTimeChanged,
     this.height = 180,
-    this.accentColor = AppColors.primaryDark,
+    this.accentColor,
   });
 
   static DateTime _dateTimeFromTime(TimeOfDay value) {
@@ -27,12 +27,13 @@ class AppCupertinoTimePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedAccent = accentColor ?? AppColors.primaryDarkOf(context);
     return SizedBox(
       height: height,
       child: CupertinoTheme(
         data: CupertinoThemeData(
           brightness: Brightness.light,
-          primaryColor: accentColor,
+          primaryColor: resolvedAccent,
           textTheme: CupertinoTextThemeData(
             dateTimePickerTextStyle: TextStyle(
               fontSize: 20,
@@ -58,16 +59,21 @@ Future<TimeOfDay?> showAppTimePicker(
   BuildContext context, {
   required TimeOfDay initialTime,
   String title = 'Select time',
-  Color accentColor = AppColors.primaryDark,
+  Color? accentColor,
   Offset? anchor,
+  Alignment? shellAlignment,
+  Offset? shellNearAnchor,
 }) {
+  final resolvedAccent = accentColor ?? AppColors.primaryDarkOf(context);
   return showAppPopup<TimeOfDay>(
     context: context,
     anchor: anchor,
     child: _AppTimePickerDialog(
       initialTime: initialTime,
       title: title,
-      accentColor: accentColor,
+      accentColor: resolvedAccent,
+      shellAlignment: shellAlignment,
+      shellNearAnchor: shellNearAnchor,
     ),
   );
 }
@@ -76,11 +82,15 @@ class _AppTimePickerDialog extends StatefulWidget {
   final TimeOfDay initialTime;
   final String title;
   final Color accentColor;
+  final Alignment? shellAlignment;
+  final Offset? shellNearAnchor;
 
   const _AppTimePickerDialog({
     required this.initialTime,
     required this.title,
     required this.accentColor,
+    this.shellAlignment,
+    this.shellNearAnchor,
   });
 
   @override
@@ -104,7 +114,8 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
         : AppColors.textPrimaryOf(context);
 
     return AppPopupShell(
-      alignment: Alignment.centerRight,
+      alignment: widget.shellAlignment ?? Alignment.centerRight,
+      nearAnchor: widget.shellNearAnchor,
       child: PopupSurface(
         borderRadius: BorderRadius.circular(24),
         boxShadow: [

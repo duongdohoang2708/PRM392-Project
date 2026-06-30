@@ -70,7 +70,7 @@ class StatPanel extends StatelessWidget {
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(
+            color: AppColors.primaryOf(context).withValues(
               alpha: AppColors.isDark(context) ? 0.04 : 0.08,
             ),
             blurRadius: 12,
@@ -516,7 +516,7 @@ class FocusGoalProgressPanel extends StatelessWidget {
       valueText: _valueText,
       captionText: _captionText,
       progress: data.isSingleDay && data.isRestDay ? 1 : data.progress,
-      accent: AppColors.primaryDark,
+      accent: AppColors.primaryDarkOf(context),
       icon: Icons.flag_rounded,
     );
   }
@@ -560,7 +560,7 @@ class TaskDueInsightPanel extends StatelessWidget {
                 child: _DueMetricTile(
                   label: 'Completed',
                   value: '${data.completedCount}',
-                  color: AppColors.primary,
+                  color: AppColors.primaryOf(context),
                 ),
               ),
               const SizedBox(width: 10),
@@ -583,8 +583,8 @@ class TaskDueInsightPanel extends StatelessWidget {
                 AppColors.borderOf(context),
                 0.6,
               ),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primaryDark,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                AppColors.primaryDarkOf(context),
               ),
             ),
           ),
@@ -615,7 +615,7 @@ class TaskDueInsightPanel extends StatelessWidget {
                 child: _DueMetricTile(
                   label: 'On-time rate',
                   value: '${data.onTimeRate}%',
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                 ),
               ),
               const SizedBox(width: 10),
@@ -623,7 +623,7 @@ class TaskDueInsightPanel extends StatelessWidget {
                 child: _DueMetricTile(
                   label: 'On-time',
                   value: '${data.onTimeCount}',
-                  color: AppColors.primary,
+                  color: AppColors.primaryOf(context),
                 ),
               ),
               const SizedBox(width: 10),
@@ -750,7 +750,10 @@ class SessionTile extends StatelessWidget {
               shape: BoxShape.circle,
               border: AppColors.isDark(context)
                   ? Border.all(
-                      color: AppColors.statCardBorderOf(context, AppColors.primary),
+                      color: AppColors.statCardBorderOf(
+                        context,
+                        AppColors.primaryOf(context),
+                      ),
                     )
                   : null,
             ),
@@ -833,7 +836,7 @@ class PriorityBreakdownChart extends StatelessWidget {
     final segments = [
       ('High', data['High'] ?? 0, AppColors.accentPeach),
       ('Medium', data['Medium'] ?? 0, AppColors.accentYellow),
-      ('Low', data['Low'] ?? 0, AppColors.primary),
+      ('Low', data['Low'] ?? 0, AppColors.primaryOf(context)),
     ];
 
     return Column(

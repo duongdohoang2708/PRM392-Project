@@ -251,7 +251,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: Icon(Icons.chevron_left),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -272,7 +272,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         border: Border.all(color: AppColors.borderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
+            color: AppColors.primaryOf(context).withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -289,7 +289,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.edit_outlined, color: AppColors.primaryDark, size: 20),
+              Icon(Icons.edit_outlined, color: AppColors.primaryDarkOf(context), size: 20),
               const SizedBox(width: 8),
               Text(
                 'Project Name',
@@ -335,7 +335,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.description_outlined, color: AppColors.primaryDark, size: 20),
+              Icon(Icons.description_outlined, color: AppColors.primaryDarkOf(context), size: 20),
               const SizedBox(width: 8),
               Text(
                 'Description',
@@ -383,7 +383,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.emoji_emotions_outlined, color: AppColors.primaryDark, size: 20),
+              Icon(Icons.emoji_emotions_outlined, color: AppColors.primaryDarkOf(context), size: 20),
               const SizedBox(width: 8),
               Text(
                 'Project Icon',
@@ -443,13 +443,13 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                   onPressed: () => setState(() => _showAllIcons = !_showAllIcons),
                   icon: Icon(
                     _showAllIcons ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.primaryDark,
+                    color: AppColors.primaryDarkOf(context),
                     size: 20,
                   ),
                   label: Text(
                     _showAllIcons ? 'Show Less' : 'Show More',
-                    style: const TextStyle(
-                      color: AppColors.primaryDark,
+                    style: TextStyle(
+                      color: AppColors.primaryDarkOf(context),
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -473,7 +473,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.palette_outlined, color: AppColors.primaryDark, size: 20),
+              Icon(Icons.palette_outlined, color: AppColors.primaryDarkOf(context), size: 20),
               const SizedBox(width: 8),
               Text(
                 'Project Color',
@@ -538,13 +538,13 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                   onPressed: () => setState(() => _showAllColors = !_showAllColors),
                   icon: Icon(
                     _showAllColors ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.primaryDark,
+                    color: AppColors.primaryDarkOf(context),
                     size: 20,
                   ),
                   label: Text(
                     _showAllColors ? 'Show Less' : 'Show More',
-                    style: const TextStyle(
-                      color: AppColors.primaryDark,
+                    style: TextStyle(
+                      color: AppColors.primaryDarkOf(context),
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -562,7 +562,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
       onPressed: _saveChanges,
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 52),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.primaryOf(context),
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),

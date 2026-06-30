@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'common/animations/app_bottom_slide_fade.dart';
+import 'common/animations/app_top_slide_fade.dart';
 import 'dart:async';
+import '../models/activity_mode.dart';
+import '../theme/activity_mode_palette.dart';
 import '../theme/app_colors.dart';
 
 class AppNotification {
   static OverlayEntry? _currentEntry;
+  static OverlayEntry? _currentTopEntry;
 
   static void showSuccess(BuildContext context, String message) {
     _show(
@@ -43,6 +47,51 @@ class AppNotification {
       backgroundColor: AppColors.notificationInfoBgOf(context),
       icon: Icons.info_outline,
     );
+  }
+
+  static void showModeSwitch(
+    BuildContext context, {
+    required ActivityModeId modeId,
+    required String message,
+  }) {
+    if (_currentTopEntry != null) {
+      try {
+        _currentTopEntry!.remove();
+      } catch (_) {}
+      _currentTopEntry = null;
+    }
+
+    final overlayState = Overlay.maybeOf(context) ??
+        Navigator.maybeOf(context)?.overlay;
+    if (overlayState == null) return;
+
+    final brightness = Theme.of(context).brightness;
+    final palette =
+        ActivityModePalette.forMode(modeId, brightness: brightness);
+    final definition = ActivityModes.definitionFor(modeId);
+    final backgroundColor = AppColors.notificationInfoBgOf(context);
+
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => _ModeSwitchToast(
+        message: message,
+        backgroundColor: backgroundColor,
+        icon: definition.icon,
+        iconBackgroundColor: palette.primaryLight,
+        iconColor: palette.primaryDark,
+        onDismiss: () {
+          if (_currentTopEntry == entry) {
+            try {
+              entry.remove();
+            } catch (_) {}
+            _currentTopEntry = null;
+          }
+        },
+      ),
+    );
+
+    _currentTopEntry = entry;
+    overlayState.insert(entry);
   }
 
   static void _show(
@@ -93,6 +142,116 @@ class AppNotification {
 
     _currentEntry = entry;
     overlayState.insert(entry);
+  }
+}
+
+class _ModeSwitchToast extends StatefulWidget {
+  final String message;
+  final Color backgroundColor;
+  final IconData icon;
+  final Color iconBackgroundColor;
+  final Color iconColor;
+  final VoidCallback onDismiss;
+
+  const _ModeSwitchToast({
+    required this.message,
+    required this.backgroundColor,
+    required this.icon,
+    required this.iconBackgroundColor,
+    required this.iconColor,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_ModeSwitchToast> createState() => _ModeSwitchToastState();
+}
+
+class _ModeSwitchToastState extends State<_ModeSwitchToast> {
+  bool _isVisible = false;
+  Timer? _dismissTimer;
+  Timer? _removeTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _isVisible = true);
+    });
+    _dismissTimer = Timer(const Duration(seconds: 3), _dismiss);
+  }
+
+  void _dismiss() {
+    if (mounted) setState(() => _isVisible = false);
+    _removeTimer = Timer(const Duration(milliseconds: 250), widget.onDismiss);
+  }
+
+  @override
+  void dispose() {
+    _dismissTimer?.cancel();
+    _removeTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top + 12;
+    final foreground =
+        AppColors.notificationFgOn(context, widget.backgroundColor);
+
+    return Positioned(
+      top: topPadding,
+      left: 16,
+      right: 16,
+      child: AppTopSlideFade(
+        visible: _isVisible,
+        child: Material(
+          type: MaterialType.transparency,
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: widget.backgroundColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: widget.iconBackgroundColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    widget.icon,
+                    color: widget.iconColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.message,
+                    style: TextStyle(
+                      color: foreground,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

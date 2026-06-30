@@ -33,7 +33,7 @@ class ScreenChrome {
           if (showMenuIcon)
             Builder(
               builder: (context) => IconButton(
-                icon: const Icon(Icons.menu),
+                icon: Icon(Icons.menu),
                 onPressed: () {
                   if (MediaQuery.sizeOf(context).width >= 768) {
                     context.read<DrawerProvider>().toggleDesktopCollapse();

@@ -36,7 +36,7 @@ class NotificationListItem extends StatelessWidget {
   Color _accentColor(BuildContext context) {
     switch (record.category) {
       case NotificationCategory.taskReminder:
-        return AppColors.primaryDark;
+        return AppColors.primaryDarkOf(context);
       case NotificationCategory.taskDue:
         return AppColors.accentPeach;
       case NotificationCategory.focus:

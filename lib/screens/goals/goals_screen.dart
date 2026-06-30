@@ -486,7 +486,7 @@ class _StreakHeroCard extends StatelessWidget {
                 child: _HeroMetric(
                   label: 'Current streak',
                   value: '$current days',
-                  color: AppColors.primaryDark,
+                  color: AppColors.primaryDarkOf(context),
                 ),
               ),
               Expanded(
@@ -678,7 +678,7 @@ class _TodayGoalsSection extends StatelessWidget {
             valueText: '${focusGoal.current}/${focusGoal.goal} min',
             captionText: _focusCaption,
             progress: focusGoal.progress,
-            accent: isRestDay ? freezeAccent : AppColors.primaryDark,
+            accent: isRestDay ? freezeAccent : AppColors.primaryDarkOf(context),
             icon: Icons.timer_outlined,
           ),
         ];
@@ -933,7 +933,7 @@ class _SwitchButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected
-                ? AppColors.primaryDark
+                ? AppColors.primaryDarkOf(context)
                 : AppColors.borderOf(context),
           ),
         ),

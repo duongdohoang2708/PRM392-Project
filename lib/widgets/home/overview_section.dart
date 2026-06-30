@@ -42,7 +42,7 @@ class OverviewSection extends StatelessWidget {
                   value: '${taskProvider.tasksTodayCount}',
                 ),
                 TintedAccentCard(
-                  accentColor: AppColors.primaryDark,
+                  accentColor: AppColors.primaryDarkOf(context),
                   icon: Icons.check_circle_outline,
                   label: 'Completed',
                   value: '${taskProvider.completedTodayCount}',

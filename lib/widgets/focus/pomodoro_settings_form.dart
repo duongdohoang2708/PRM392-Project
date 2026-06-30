@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_opacity.dart';
+import '../common/drawer_swipe_body.dart';
 
 class PomodoroSettingsForm extends StatefulWidget {
   final int initialFocusMinutes;
@@ -148,7 +149,7 @@ class _PomodoroSettingsFormState extends State<PomodoroSettingsForm> {
           title: 'Work',
           subtitle: 'Focus time',
           icon: Icons.menu_book,
-          color: AppColors.primary,
+          color: AppColors.primaryOf(context),
           value: _focusMinutes,
           min: 5,
           max: 60,
@@ -217,7 +218,7 @@ class _PomodoroSettingsFormState extends State<PomodoroSettingsForm> {
             child: ElevatedButton(
               onPressed: _persistChanges,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryDark,
+                backgroundColor: AppColors.primaryDarkOf(context),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -226,7 +227,7 @@ class _PomodoroSettingsFormState extends State<PomodoroSettingsForm> {
               ),
               child: Text(
                 widget.saveLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
@@ -244,18 +245,18 @@ class _PomodoroSettingsFormState extends State<PomodoroSettingsForm> {
     final selectedBg = isDark
         ? AppColors.cardFillOf(
             context,
-            accentColor: AppColors.primary,
+            accentColor: AppColors.primaryOf(context),
             lightTintAlpha: 0.22,
             darkTintAlpha: 0.22,
           )
         : AppColors.primaryLightTintOf(context, alpha: 0.55);
     final selectedBorder =
-        isDark ? AppColors.primary : AppColors.primaryDark;
+        isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context);
     final selectedTitleColor =
-        isDark ? AppColors.textPrimaryOf(context) : AppColors.primaryDark;
+        isDark ? AppColors.textPrimaryOf(context) : AppColors.primaryDarkOf(context);
     final selectedSubtitleColor = isDark
         ? AppColors.textSecondaryOf(context)
-        : AppOpacity.fixed(AppColors.primaryDark, 0.75);
+        : AppOpacity.fixed(AppColors.primaryDarkOf(context), 0.75);
 
     return GestureDetector(
       onTap: () => _applyPreset(title),
@@ -328,7 +329,8 @@ class PomodoroSettingSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DrawerSwipeExclude(
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardSurfaceFillOf(context),
@@ -379,12 +381,12 @@ class PomodoroSettingSlider extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.remove, size: 18),
+                icon: Icon(Icons.remove, size: 18),
                 color: AppColors.textSecondaryOf(context),
                 onPressed: value > min ? () => onChanged(value - 1) : null,
               ),
               IconButton(
-                icon: const Icon(Icons.add, size: 18),
+                icon: Icon(Icons.add, size: 18),
                 color: AppColors.textSecondaryOf(context),
                 onPressed: value < max ? () => onChanged(value + 1) : null,
               ),
@@ -446,6 +448,7 @@ class PomodoroSettingSlider extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -516,7 +519,7 @@ class PomodoroSettingStepper extends StatelessWidget {
           ),
           IconButton(
             onPressed: value > min ? () => onChanged(value - 1) : null,
-            icon: const Icon(Icons.remove, size: 18),
+            icon: Icon(Icons.remove, size: 18),
             color: AppColors.textSecondaryOf(context),
           ),
           Text(
@@ -529,7 +532,7 @@ class PomodoroSettingStepper extends StatelessWidget {
           ),
           IconButton(
             onPressed: value < max ? () => onChanged(value + 1) : null,
-            icon: const Icon(Icons.add, size: 18),
+            icon: Icon(Icons.add, size: 18),
             color: AppColors.textSecondaryOf(context),
           ),
         ],
@@ -558,7 +561,7 @@ class DottedSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onPanUpdate: (details) {
+      onHorizontalDragUpdate: (details) {
         _handleGesture(context, details.localPosition.dx);
       },
       onTapDown: (details) {

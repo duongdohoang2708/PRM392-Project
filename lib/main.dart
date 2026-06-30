@@ -17,6 +17,7 @@ import 'providers/user_provider.dart';
 import 'services/notification_service.dart';
 import 'navigation/app_navigator.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'widgets/theme/mode_change_notification_listener.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -104,23 +105,26 @@ class MyApp extends StatelessWidget {
           final darkPalette = activityModes.paletteFor(Brightness.dark);
 
           return SlidableAutoCloseBehavior(
-            child: MaterialApp(
-              navigatorKey: navigatorKey,
-              title: 'TaskFlow',
-              theme: AppTheme.build(
-                brightness: Brightness.light,
-                palette: lightPalette,
+            child: ModeChangeNotificationListener(
+              child: MaterialApp(
+                key: ValueKey(activityModes.activeModeId),
+                navigatorKey: navigatorKey,
+                title: 'TaskFlow',
+                theme: AppTheme.build(
+                  brightness: Brightness.light,
+                  palette: lightPalette,
+                ),
+                darkTheme: AppTheme.build(
+                  brightness: Brightness.dark,
+                  palette: darkPalette,
+                ),
+                themeMode: settings.themeMode,
+                debugShowCheckedModeBanner: false,
+                home: const SplashScreen(),
+                routes: {
+                  '/main': (context) => const MainShell(),
+                },
               ),
-              darkTheme: AppTheme.build(
-                brightness: Brightness.dark,
-                palette: darkPalette,
-              ),
-              themeMode: settings.themeMode,
-              debugShowCheckedModeBanner: false,
-              home: const SplashScreen(),
-              routes: {
-                '/main': (context) => const MainShell(),
-              },
             ),
           );
         },

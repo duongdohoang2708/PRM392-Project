@@ -14,7 +14,7 @@ class AppDropdown<T> extends StatelessWidget {
   final bool isDense;
   final double? itemHeight;
   final Widget? hint;
-  final Color accentColor;
+  final Color? accentColor;
   final bool solidShell;
 
   const AppDropdown({
@@ -30,7 +30,7 @@ class AppDropdown<T> extends StatelessWidget {
     this.isDense = false,
     this.itemHeight,
     this.hint,
-    this.accentColor = AppColors.primaryDark,
+    this.accentColor,
     this.solidShell = false,
   });
 
@@ -69,7 +69,7 @@ class AppDropdown<T> extends StatelessWidget {
   }) {
     Widget content = child;
     if (child is Text && textColor != null) {
-      final baseStyle = child.style ?? const TextStyle();
+      final baseStyle = child.style ?? TextStyle();
       content = Text(
         child.data ?? '',
         style: baseStyle.copyWith(color: textColor),
@@ -89,6 +89,7 @@ class AppDropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final menuFill = AppColors.dropdownMenuFillOf(context);
+    final resolvedAccent = accentColor ?? AppColors.primaryDarkOf(context);
 
     Widget dropdown = Theme(
       data: Theme.of(context).copyWith(
@@ -99,9 +100,9 @@ class AppDropdown<T> extends StatelessWidget {
             surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
           ),
         ),
-        hoverColor: accentColor.withValues(alpha: 0.08),
-        focusColor: accentColor.withValues(alpha: 0.12),
-        highlightColor: accentColor.withValues(alpha: 0.10),
+        hoverColor: resolvedAccent.withValues(alpha: 0.08),
+        focusColor: resolvedAccent.withValues(alpha: 0.12),
+        highlightColor: resolvedAccent.withValues(alpha: 0.10),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(

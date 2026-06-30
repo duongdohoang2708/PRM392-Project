@@ -204,7 +204,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.primaryDark
+                      ? AppColors.primaryDarkOf(context)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(

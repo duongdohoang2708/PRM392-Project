@@ -130,12 +130,12 @@ class ProjectsScreen extends StatelessWidget {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.primaryOf(context),
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
             onPressed: () {
               Navigator.pushNamed(context, '/create-project');
             },
-            child: const Icon(Icons.add),
+            child: Icon(Icons.add),
           ),
         );
       },
@@ -542,7 +542,7 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: AppColors.primaryOf(context),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       alignment: Alignment.center,
@@ -819,7 +819,7 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      color: AppColors.primaryOf(context),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     alignment: Alignment.center,
@@ -873,10 +873,10 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
 class _ProjectFilterChips extends StatelessWidget {
   const _ProjectFilterChips();
 
-  static const List<Map<String, dynamic>> _filters = [
+  List<Map<String, dynamic>> _filters(BuildContext context) => [
     {
       'label': 'In Progress',
-      'activeColor': AppColors.primaryDark,
+      'activeColor': AppColors.primaryDarkOf(context),
       'activeTextColor': Colors.white,
     },
     {
@@ -891,12 +891,13 @@ class _ProjectFilterChips extends StatelessWidget {
     final theme = Theme.of(context);
     final provider = context.watch<ProjectProvider>();
     final activeFilter = provider.activeFilter;
+    final filters = _filters(context);
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: List.generate(_filters.length, (index) {
-          final filter = _filters[index];
+        children: List.generate(filters.length, (index) {
+          final filter = filters[index];
           final isSelected = activeFilter == filter['label'];
 
           Color bgColor = isSelected

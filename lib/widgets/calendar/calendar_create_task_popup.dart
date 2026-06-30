@@ -340,7 +340,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimaryOf(context),
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Task title...',
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -421,8 +421,8 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                   }
                 });
               },
-              activeTrackColor: AppColors.primaryDark.withValues(alpha: 0.5),
-              activeThumbColor: AppColors.primaryDark,
+              activeTrackColor: AppColors.primaryDarkOf(context).withValues(alpha: 0.5),
+              activeThumbColor: AppColors.primaryDarkOf(context),
             ),
           ),
           Divider(color: AppColors.borderOf(context), height: 24),
@@ -447,7 +447,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                       Text(
                         '+ Add Project',
                         style: TextStyle(
-                          color: AppColors.primaryDark,
+                          color: AppColors.primaryDarkOf(context),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -538,7 +538,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
         children: [
           Row(
             children: [
-              const Icon(Icons.checklist, color: AppColors.primaryDark, size: 20),
+              Icon(Icons.checklist, color: AppColors.primaryDarkOf(context), size: 20),
               const SizedBox(width: 8),
               Text(
                 'Subtasks',
@@ -573,11 +573,11 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: subtask.isCompleted
-                              ? AppColors.primaryDark
+                              ? AppColors.primaryDarkOf(context)
                               : Colors.transparent,
                           border: Border.all(
                             color: subtask.isCompleted
-                                ? AppColors.primaryDark
+                                ? AppColors.primaryDarkOf(context)
                                 : AppColors.textSecondaryOf(context).withValues(
                                     alpha: 0.5,
                                   ),
@@ -621,10 +621,10 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: _addNewSubTask,
-            icon: const Icon(Icons.add, size: 16),
+            icon: Icon(Icons.add, size: 16),
             label: const Text('Add subtask', style: TextStyle(fontSize: 14)),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.primaryDark,
+              foregroundColor: AppColors.primaryDarkOf(context),
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 0),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -649,7 +649,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
             padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
             child: Row(
               children: [
-                const Icon(Icons.edit_note, color: AppColors.primaryDark, size: 20),
+                Icon(Icons.edit_note, color: AppColors.primaryDarkOf(context), size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Notes',
@@ -701,7 +701,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           onPressed: _createTask,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 48),
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.primaryOf(context),
             foregroundColor: AppColors.textPrimaryOf(context),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(100),

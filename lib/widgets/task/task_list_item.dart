@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/project_provider.dart';
 import '../../providers/focus_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/activity_mode_provider.dart';
 import '../../screens/task/task_detail_screen.dart';
 // Removed focus_session_screen import
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -321,7 +323,7 @@ class _TaskListItemState extends State<TaskListItem>
       case 'Medium':
         return const Color(0xFFF5B041); // Darker orange
       case 'Low':
-        return AppColors.primaryDark; // Deep green
+        return AppColors.primaryDarkOf(context); // Deep green
       default:
         return AppColors.textSecondaryOf(context);
     }
@@ -361,6 +363,8 @@ class _TaskListItemState extends State<TaskListItem>
 
   @override
   Widget build(BuildContext context) {
+    context.watch<SettingsProvider>();
+    context.watch<ActivityModeProvider>();
     final theme = Theme.of(context);
     final priorityColor = _getPriorityColor(context);
 
@@ -384,7 +388,7 @@ class _TaskListItemState extends State<TaskListItem>
         id: '',
         name: '',
         description: '',
-        colorValue: AppColors.primary.toARGB32(),
+        colorValue: AppColors.primaryOf(context).toARGB32(),
       ),
     );
     final Color projectColor = Color(project.colorValue);
@@ -506,7 +510,7 @@ class _TaskListItemState extends State<TaskListItem>
                                       : Icons.schedule,
                                   size: 14,
                                   color: _isCompletedLocal
-                                      ? AppColors.primaryDark
+                                      ? AppColors.primaryDarkOf(context)
                                       : (isOverdue
                                             ? const Color(0xFFE57373)
                                             : AppColors.textPrimaryOf(context)),
@@ -516,7 +520,7 @@ class _TaskListItemState extends State<TaskListItem>
                                   timeString,
                                   style: theme.textTheme.labelMedium?.copyWith(
                                     color: _isCompletedLocal
-                                        ? AppColors.primaryDark
+                                        ? AppColors.primaryDarkOf(context)
                                         : (isOverdue
                                               ? const Color(0xFFE57373)
                                               : AppColors.textPrimaryOf(context)),
@@ -819,7 +823,7 @@ class _EditableSubTaskRowState extends State<_EditableSubTaskRow> {
               fontSize: 14,
               color: AppColors.textPrimaryOf(context),
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Enter subtask...',
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
