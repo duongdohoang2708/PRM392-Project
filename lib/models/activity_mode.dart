@@ -25,6 +25,12 @@ class ActivityModeSchedule {
     );
   }
 
+  /// True when [at] is the first minute of a schedule window (start boundary).
+  bool isStartMinute(DateTime at) {
+    if (!enabled) return false;
+    return at.hour == start.hour && at.minute == start.minute;
+  }
+
   bool containsTime(DateTime at) {
     if (!enabled) return false;
     final nowMinutes = at.hour * 60 + at.minute;
@@ -38,6 +44,53 @@ class ActivityModeSchedule {
     }
     // Overnight window (e.g. 23:00 – 07:00)
     return nowMinutes >= startMinutes || nowMinutes < endMinutes;
+  }
+
+  /// When [at] falls inside this schedule, returns when the current window began.
+  DateTime? currentWindowStart(DateTime at) {
+    if (!containsTime(at)) return null;
+
+    final nowMinutes = at.hour * 60 + at.minute;
+    final startMinutes = start.hour * 60 + start.minute;
+    final endMinutes = end.hour * 60 + end.minute;
+
+    if (startMinutes < endMinutes) {
+      return DateTime(
+        at.year,
+        at.month,
+        at.day,
+        start.hour,
+        start.minute,
+      );
+    }
+
+    if (nowMinutes >= startMinutes) {
+      return DateTime(
+        at.year,
+        at.month,
+        at.day,
+        start.hour,
+        start.minute,
+      );
+    }
+
+    final yesterday = DateTime(at.year, at.month, at.day)
+        .subtract(const Duration(days: 1));
+    return DateTime(
+      yesterday.year,
+      yesterday.month,
+      yesterday.day,
+      start.hour,
+      start.minute,
+    );
+  }
+
+  /// True when [other] has the exact same start and end times.
+  bool hasSameWindowAs(ActivityModeSchedule other) {
+    return start.hour == other.start.hour &&
+        start.minute == other.start.minute &&
+        end.hour == other.end.hour &&
+        end.minute == other.end.minute;
   }
 }
 
@@ -60,13 +113,6 @@ class ActivityModeDefinition {
 class ActivityModes {
   ActivityModes._();
 
-  static const List<ActivityModeId> schedulePriority = [
-    ActivityModeId.sleep,
-    ActivityModeId.chill,
-    ActivityModeId.study,
-    ActivityModeId.work,
-  ];
-
   static const List<ActivityModeDefinition> presets = [
     ActivityModeDefinition(
       id: ActivityModeId.defaultMode,
@@ -85,7 +131,7 @@ class ActivityModes {
       icon: Icons.work_outline,
       description: 'Cool, focused palette for deep work.',
       defaultSchedule: ActivityModeSchedule(
-        enabled: true,
+        enabled: false,
         start: TimeOfDay(hour: 9, minute: 0),
         end: TimeOfDay(hour: 17, minute: 0),
       ),
@@ -96,7 +142,7 @@ class ActivityModes {
       icon: Icons.menu_book_outlined,
       description: 'Warm tones to keep you learning.',
       defaultSchedule: ActivityModeSchedule(
-        enabled: true,
+        enabled: false,
         start: TimeOfDay(hour: 17, minute: 30),
         end: TimeOfDay(hour: 21, minute: 0),
       ),
@@ -105,9 +151,9 @@ class ActivityModes {
       id: ActivityModeId.chill,
       name: 'Chill Mode',
       icon: Icons.self_improvement_outlined,
-      description: 'Soft lavender for relaxed evenings.',
+      description: 'Soft rose tones for relaxed evenings.',
       defaultSchedule: ActivityModeSchedule(
-        enabled: true,
+        enabled: false,
         start: TimeOfDay(hour: 21, minute: 0),
         end: TimeOfDay(hour: 23, minute: 0),
       ),
@@ -118,7 +164,7 @@ class ActivityModes {
       icon: Icons.bedtime_outlined,
       description: 'Dim, calming colors for winding down.',
       defaultSchedule: ActivityModeSchedule(
-        enabled: true,
+        enabled: false,
         start: TimeOfDay(hour: 23, minute: 0),
         end: TimeOfDay(hour: 7, minute: 0),
       ),
