@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
@@ -18,20 +20,35 @@ import '../../widgets/common/animations/app_fade_transition.dart';
 import '../../widgets/common/animations/app_scale_transition.dart';
 import '../../widgets/common/animations/app_delete_transition.dart';
 import '../../widgets/common/app_confirm_dialog.dart';
+import '../../navigation/app_navigator.dart';
 
-void _confirmDeleteProject(BuildContext parentContext, Project project, VoidCallback onConfirmDelete) async {
+Future<void> _handleDeleteProject(
+  BuildContext context,
+  Project project,
+  VoidCallback onConfirmDelete,
+) async {
+  if (!context.mounted) return;
+
+  final slidable = Slidable.of(context);
+  final dialogContext = navigatorKey.currentContext ?? context;
+
   final confirmed = await AppConfirmDialog.show(
-    parentContext,
+    dialogContext,
     title: 'Delete Project',
     content:
         'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
     confirmLabel: 'Delete',
     confirmButtonStyle: AppConfirmButtonStyle.destructive,
-    fillColor: AppColors.popupPanelOverlayFillOf(parentContext),
+    fillColor: AppColors.popupPanelOverlayFillOf(dialogContext),
   );
-  if (confirmed == true) {
-    onConfirmDelete();
+
+  if (confirmed != true) {
+    slidable?.close();
+    return;
   }
+
+  if (!context.mounted) return;
+  onConfirmDelete();
 }
 
 class ProjectsScreen extends StatelessWidget {
@@ -130,8 +147,8 @@ class ProjectsScreen extends StatelessWidget {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            backgroundColor: AppColors.primaryOf(context),
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            backgroundColor: AppColors.prominentActionFillOf(context),
+            foregroundColor: AppColors.prominentActionForegroundOf(context),
             onPressed: () {
               Navigator.pushNamed(context, '/create-project');
             },
@@ -254,13 +271,10 @@ class _ProjectCollection extends StatelessWidget {
           const double itemHeight = 155.0;
           final double maxWidth = constraints.maxWidth;
 
-          // Calculate columns based on maxCrossAxisExtent of 260
           int cols = ((maxWidth + spacing) / (260.0 + spacing)).ceil();
           if (cols < 1) cols = 1;
 
-          // Calculate the exact item width dynamically to match GridView behavior
           final double calculatedItemWidth = (maxWidth - (cols - 1) * spacing) / cols;
-
           final double rowHeight = itemHeight + spacing;
           final int rows = (projects.length / cols).ceil();
           final double totalHeight = rows > 0 ? (rows * rowHeight - spacing) : 0;
@@ -286,6 +300,7 @@ class _ProjectCollection extends StatelessWidget {
                   height: itemHeight,
                   child: StaggeredListEntry(
                     index: index,
+                    disableEntranceAnimation: true,
                     child: _ProjectGridCard(project: project),
                   ),
                 );
@@ -295,16 +310,18 @@ class _ProjectCollection extends StatelessWidget {
         },
       );
     } else {
-      content = ListView.separated(
+      content = ListView.builder(
         key: ValueKey('list_${provider.activeFilter}'),
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: projects.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
+          final project = projects[index];
           return StaggeredListEntry(
+            key: ValueKey('proj_list_${project.id}'),
             index: index,
-            child: _ProjectListItem(project: projects[index]),
+            disableEntranceAnimation: true,
+            child: _ProjectListItem(project: project),
           );
         },
       );
@@ -329,6 +346,7 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
   late Animation<double> _fadeAnimation;
   late Animation<double> _sizeAnimation;
   bool _isAnimating = false;
+  bool _deleteTriggered = false;
 
   @override
   void initState() {
@@ -349,46 +367,64 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
     super.dispose();
   }
 
-  void _startDeleteAnimation() {
+  void _executeDelete() {
+    if (_isAnimating) return;
+
+    _deleteTriggered = false;
     setState(() {
       _isAnimating = true;
     });
 
     _animationController.forward().then((_) {
-      if (mounted) {
-        _executeDelete();
-      }
+      if (!mounted || _deleteTriggered) return;
+      _deleteTriggered = true;
+      unawaited(_performDelete());
     });
 
     // Fallback
     Future.delayed(const Duration(milliseconds: 650), () {
-      if (mounted && _isAnimating) {
-        _executeDelete();
-        _animationController.reset();
-        setState(() {
-          _isAnimating = false;
-        });
-      }
+      if (!mounted || _deleteTriggered) return;
+      _deleteTriggered = true;
+      unawaited(_performDelete());
     });
   }
 
-  void _executeDelete() {
-    final taskProvider = context.read<TaskProvider>();
-    final tasksToDelete = taskProvider.tasks
-        .where((t) => t.project == widget.project.name)
-        .toList();
-    for (var t in tasksToDelete) {
-      taskProvider.deleteTask(t.id);
+  Future<void> _performDelete() async {
+    final projectName = widget.project.name;
+    final projectId = widget.project.id;
+    final notificationContext = navigatorKey.currentContext ?? context;
+    final projectProvider = context.read<ProjectProvider>();
+    try {
+      AppNotification.showError(
+        notificationContext,
+        'Project "$projectName" deleted',
+      );
+      await projectProvider.deleteProject(projectId);
+    } catch (_) {
+      if (!mounted) return;
+      _deleteTriggered = false;
+      _animationController.reset();
+      setState(() {
+        _isAnimating = false;
+      });
+      final retryContext = navigatorKey.currentContext;
+      if (retryContext != null && retryContext.mounted) {
+        AppNotification.showError(
+          retryContext,
+          'Failed to delete project. Please try again.',
+        );
+      }
     }
-    context.read<ProjectProvider>().deleteProject(widget.project.id);
-    AppNotification.showError(context, 'Project "${widget.project.name}" deleted');
   }
 
   @override
   Widget build(BuildContext context) {
-    final taskProvider = context.watch<TaskProvider>();
-    final taskCount = taskProvider.getProjectTaskCount(widget.project.name);
-    final progress = taskProvider.getProjectProgress(widget.project.name);
+    final taskCount = context.select<TaskProvider, int>(
+      (provider) => provider.getProjectTaskCount(widget.project.id),
+    );
+    final progress = context.select<TaskProvider, double>(
+      (provider) => provider.getProjectProgress(widget.project.id),
+    );
     final doneCount = (taskCount * progress).round();
     final Color accentColor = Color(widget.project.colorValue);
 
@@ -557,7 +593,11 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
                 const SizedBox(width: 8),
                 Expanded(
                   child: InkWell(
-                    onTap: () => _confirmDeleteProject(context, widget.project, _startDeleteAnimation),
+                    onTap: () => _handleDeleteProject(
+                      context,
+                      widget.project,
+                      _executeDelete,
+                    ),
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
                       decoration: BoxDecoration(
@@ -604,18 +644,19 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
   late Animation<double> _fadeAnimation;
   late Animation<double> _sizeAnimation;
   bool _isAnimating = false;
+  bool _deleteTriggered = false;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: kAppScaleDeleteDuration,
+      duration: kAppCollapseDeleteDuration,
     );
 
-    final deleteAnimations = AppScaleDeleteAnimations(_animationController);
+    final deleteAnimations = AppCollapseDeleteAnimations(_animationController);
     _fadeAnimation = deleteAnimations.fade;
-    _sizeAnimation = deleteAnimations.scale;
+    _sizeAnimation = deleteAnimations.size;
   }
 
   @override
@@ -624,21 +665,26 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
     super.dispose();
   }
 
-  void _startDeleteAnimation() {
+  void _executeDelete() {
+    if (_isAnimating) return;
+
+    Slidable.of(context)?.close();
+    _deleteTriggered = false;
     setState(() {
       _isAnimating = true;
     });
 
     _animationController.forward().then((_) {
-      if (mounted) {
-        _executeDelete();
+      if (mounted && !_deleteTriggered) {
+        _deleteTriggered = true;
+        unawaited(_performDelete());
       }
     });
 
-    // Fallback
-    Future.delayed(const Duration(milliseconds: 650), () {
-      if (mounted && _isAnimating) {
-        _executeDelete();
+    Future.delayed(const Duration(milliseconds: 550), () {
+      if (mounted && _isAnimating && !_deleteTriggered) {
+        _deleteTriggered = true;
+        unawaited(_performDelete());
         _animationController.reset();
         setState(() {
           _isAnimating = false;
@@ -647,23 +693,42 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
     });
   }
 
-  void _executeDelete() {
-    final taskProvider = context.read<TaskProvider>();
-    final tasksToDelete = taskProvider.tasks
-        .where((t) => t.project == widget.project.name)
-        .toList();
-    for (var t in tasksToDelete) {
-      taskProvider.deleteTask(t.id);
+  Future<void> _performDelete() async {
+    final projectName = widget.project.name;
+    final projectId = widget.project.id;
+    final notificationContext = navigatorKey.currentContext ?? context;
+    final projectProvider = context.read<ProjectProvider>();
+    try {
+      AppNotification.showError(
+        notificationContext,
+        'Project "$projectName" deleted',
+      );
+      await projectProvider.deleteProject(projectId);
+    } catch (_) {
+      if (!mounted) return;
+      _deleteTriggered = false;
+      _animationController.reset();
+      setState(() {
+        _isAnimating = false;
+      });
+      final retryContext = navigatorKey.currentContext;
+      if (retryContext != null && retryContext.mounted) {
+        AppNotification.showError(
+          retryContext,
+          'Failed to delete project. Please try again.',
+        );
+      }
     }
-    context.read<ProjectProvider>().deleteProject(widget.project.id);
-    AppNotification.showError(context, 'Project "${widget.project.name}" deleted');
   }
 
   @override
   Widget build(BuildContext context) {
-    final taskProvider = context.watch<TaskProvider>();
-    final taskCount = taskProvider.getProjectTaskCount(widget.project.name);
-    final progress = taskProvider.getProjectProgress(widget.project.name);
+    final taskCount = context.select<TaskProvider, int>(
+      (provider) => provider.getProjectTaskCount(widget.project.id),
+    );
+    final progress = context.select<TaskProvider, double>(
+      (provider) => provider.getProjectProgress(widget.project.id),
+    );
     final doneCount = (taskCount * progress).round();
     final Color accentColor = Color(widget.project.colorValue);
 
@@ -833,9 +898,13 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: InkWell(
-                  onTap: () => _confirmDeleteProject(context, widget.project, _startDeleteAnimation),
-                  borderRadius: BorderRadius.circular(14),
+                child: GestureDetector(
+                  onTap: () => _handleDeleteProject(
+                    context,
+                    widget.project,
+                    _executeDelete,
+                  ),
+                  behavior: HitTestBehavior.opaque,
                   child: Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFEF5350),
@@ -857,12 +926,11 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
       },
     );
 
-    return SizeTransition(
-      sizeFactor: _sizeAnimation,
-      axis: Axis.vertical,
-      axisAlignment: -1.0,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
+    return AppCollapseDeleteTransition(
+      fade: _fadeAnimation,
+      size: _sizeAnimation,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
         child: slidableContent,
       ),
     );

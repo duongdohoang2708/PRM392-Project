@@ -5,6 +5,7 @@ import '../../models/activity_mode.dart';
 import '../../navigation/app_navigator.dart';
 import '../../providers/activity_mode_provider.dart';
 import '../custom_snackbar.dart';
+import 'mode_change_notification_suppression.dart';
 /// Shows an in-app top banner when [ActivityModeProvider.activeModeId] changes.
 class ModeChangeNotificationListener extends StatefulWidget {
   final Widget child;
@@ -50,9 +51,9 @@ class _ModeChangeNotificationListenerState
     if (_lastMode == mode) return;
     _lastMode = mode;
 
-    if (!mounted) return;
+    if (!mounted || ModeChangeNotificationSuppression.isSuppressed) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted || ModeChangeNotificationSuppression.isSuppressed) return;
       final navContext = navigatorKey.currentContext;
       if (navContext == null) return;
 

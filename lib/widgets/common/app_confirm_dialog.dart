@@ -46,6 +46,8 @@ class AppConfirmDialog extends StatelessWidget {
   }) {
     return showDialog<bool>(
       context: context,
+      barrierDismissible: true,
+      useRootNavigator: true,
       builder: (dialogContext) => AppConfirmDialog(
         title: title,
         content: content,

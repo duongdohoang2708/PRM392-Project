@@ -17,6 +17,7 @@ import '../../widgets/project/create_project_popup.dart';
 import '../../widgets/task/reminder_selector.dart';
 import '../task/subtask_title_field.dart';
 import '../../utils/reminder/task_reminder.dart';
+import '../../utils/project_task_utils.dart';
 import '../../utils/project_accent_color.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 
@@ -120,7 +121,7 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     });
   }
 
-  void _createTask() {
+  Future<void> _createTask() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       _showSnackBar('Task title cannot be empty');
@@ -156,10 +157,13 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
     final taskProvider = context.read<TaskProvider>();
     final taskId = 'task_cal_${DateTime.now().millisecondsSinceEpoch}';
 
+    final projectProvider = context.read<ProjectProvider>();
+    final projectId = projectIdForName(projectProvider.projects, _project);
+
     final newTask = Task(
       id: taskId,
       title: title,
-      project: _project,
+      projectId: projectId,
       priority: _priority,
       dueDate: finalDueDate,
       isCompleted: false,
@@ -170,7 +174,9 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
       reminder: _reminder,
     );
 
-    if (!taskProvider.addTask(newTask)) {
+    final created = await taskProvider.addTask(newTask);
+    if (!context.mounted) return;
+    if (!created) {
       AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
       return;
     }
@@ -701,8 +707,8 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           onPressed: _createTask,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 48),
-            backgroundColor: AppColors.primaryOf(context),
-            foregroundColor: AppColors.textPrimaryOf(context),
+            backgroundColor: AppColors.prominentActionFillOf(context),
+            foregroundColor: AppColors.prominentActionForegroundOf(context),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(100),
             ),

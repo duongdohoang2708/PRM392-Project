@@ -8,6 +8,7 @@ import '../common/app_popup_transition.dart';
 import '../common/animations/app_bottom_slide_fade.dart';
 import '../common/popup_surface.dart';
 import '../custom_snackbar.dart';
+import '../../constants/project_icons.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 
 class CreateProjectPopup extends StatefulWidget {
@@ -36,28 +37,7 @@ class CreateProjectPopup extends StatefulWidget {
     Color(0xFF78909C),
   ];
 
-  static const List<IconData> projectIcons = [
-    Icons.folder_outlined,
-    Icons.work_outline,
-    Icons.school_outlined,
-    Icons.home_outlined,
-    Icons.favorite_outline,
-    Icons.fitness_center,
-    Icons.code,
-    Icons.brush_outlined,
-    Icons.book_outlined,
-    Icons.flight_outlined,
-    Icons.restaurant_outlined,
-    Icons.music_note_outlined,
-    Icons.shopping_bag_outlined,
-    Icons.people_outline,
-    Icons.star_outline,
-    Icons.rocket_launch_outlined,
-    Icons.lightbulb_outline,
-    Icons.camera_alt_outlined,
-    Icons.sports_esports_outlined,
-    Icons.pets_outlined,
-  ];
+  static const List<IconData> projectIcons = ProjectIcons.all;
 
   @override
   State<CreateProjectPopup> createState() => _CreateProjectPopupState();
@@ -547,8 +527,8 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
       onPressed: _createProject,
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 48),
-        backgroundColor: AppColors.primaryOf(context),
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: AppColors.prominentActionFillOf(context),
+        foregroundColor: AppColors.prominentActionForegroundOf(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),

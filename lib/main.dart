@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/splash_screen.dart';
 
@@ -21,6 +24,10 @@ import 'widgets/theme/mode_change_notification_listener.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+  );
   await NotificationService.init();
 
   final settingsProvider = SettingsProvider();
@@ -55,25 +62,62 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: settingsProvider),
-        ChangeNotifierProvider.value(value: activityModeProvider),
+        // Must be first — ProxyProviders below read UserProvider during mount.
         ChangeNotifierProvider.value(value: userProvider),
-        ChangeNotifierProxyProvider<SettingsProvider, TaskProvider>(
+        ChangeNotifierProxyProvider<UserProvider, SettingsProvider>(
+          create: (_) => settingsProvider,
+          update: (_, user, previous) {
+            previous!.bindUser(user.uid);
+            return previous;
+          },
+        ),
+        ChangeNotifierProxyProvider<UserProvider, ActivityModeProvider>(
+          create: (_) => activityModeProvider,
+          update: (_, user, previous) {
+            previous!.bindUser(user.uid);
+            return previous;
+          },
+        ),
+        ChangeNotifierProxyProvider2<UserProvider, SettingsProvider, TaskProvider>(
           create: (_) => TaskProvider(),
-          update: (_, settings, taskProvider) =>
-              taskProvider!..bindSettings(settings),
+          update: (_, user, settings, taskProvider) {
+            final provider = taskProvider ?? TaskProvider();
+            provider
+              ..bindUser(user.uid)
+              ..bindSettings(settings);
+            return provider;
+          },
         ),
         ChangeNotifierProvider(create: (_) => DrawerProvider()),
-        ChangeNotifierProxyProvider<TaskProvider, ProjectProvider>(
+        ChangeNotifierProxyProvider2<UserProvider, TaskProvider, ProjectProvider>(
           create: (_) => ProjectProvider(),
-          update: (_, taskProvider, projectProvider) =>
-              projectProvider!..update(taskProvider),
+          update: (_, user, taskProvider, projectProvider) {
+            final provider = projectProvider ?? ProjectProvider();
+            provider
+              ..bindUser(user.uid)
+              ..update(taskProvider);
+            taskProvider.bindProjects(provider);
+            return provider;
+          },
         ),
-        ChangeNotifierProvider(create: (_) => FocusProvider(navigatorKey)),
-        ChangeNotifierProxyProvider2<TaskProvider, FocusProvider, GoalsProvider>(
+        ChangeNotifierProxyProvider<UserProvider, FocusProvider>(
+          create: (_) => FocusProvider(navigatorKey),
+          update: (_, user, focusProvider) {
+            final provider = focusProvider ?? FocusProvider(navigatorKey);
+            provider.bindUser(user.uid);
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider3<UserProvider, TaskProvider, FocusProvider,
+            GoalsProvider>(
           create: (_) => GoalsProvider(),
-          update: (_, taskProvider, focusProvider, goalsProvider) =>
-              goalsProvider!..updateSources(taskProvider, focusProvider),
+          update: (_, user, taskProvider, focusProvider, goalsProvider) {
+            final provider = goalsProvider ?? GoalsProvider();
+            provider
+              ..bindUser(user.uid)
+              ..updateSources(taskProvider, focusProvider);
+            return provider;
+          },
         ),
         ChangeNotifierProxyProvider3<TaskProvider, FocusProvider, GoalsProvider,
             StatisticsProvider>(
@@ -83,18 +127,20 @@ class MyApp extends StatelessWidget {
               statisticsProvider!
                 ..updateSources(taskProvider, focusProvider, goalsProvider),
         ),
-        ChangeNotifierProxyProvider4<TaskProvider, FocusProvider, GoalsProvider,
-            SettingsProvider, NotificationProvider>(
+        ChangeNotifierProxyProvider5<UserProvider, TaskProvider, FocusProvider,
+            GoalsProvider, SettingsProvider, NotificationProvider>(
           create: (_) => NotificationProvider(),
-          update: (_, taskProvider, focusProvider, goalsProvider,
+          update: (_, user, taskProvider, focusProvider, goalsProvider,
               settingsProvider, notificationProvider) {
-            notificationProvider!.bindSources(
+            final provider = notificationProvider ?? NotificationProvider();
+            provider.bindUser(user.uid);
+            provider.bindSources(
               taskProvider: taskProvider,
               focusProvider: focusProvider,
               goalsProvider: goalsProvider,
               settingsProvider: settingsProvider,
             );
-            return notificationProvider;
+            return provider;
           },
         ),
       ],

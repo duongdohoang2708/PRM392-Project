@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/drawer_provider.dart';
-import '../../providers/focus_provider.dart';
+import '../../models/focus_session_model.dart';
 import '../../providers/statistics_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';

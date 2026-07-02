@@ -532,8 +532,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       onPressed: _createProject,
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 52),
-        backgroundColor: AppColors.primaryOf(context),
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: AppColors.prominentActionFillOf(context),
+        foregroundColor: AppColors.prominentActionForegroundOf(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),

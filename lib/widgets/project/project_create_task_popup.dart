@@ -21,11 +21,13 @@ import '../common/popup_surface.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 
 class ProjectCreateTaskPopup extends StatefulWidget {
+  final String projectId;
   final String projectName;
   final DateTime? selectedDate;
 
   const ProjectCreateTaskPopup({
     super.key,
+    required this.projectId,
     required this.projectName,
     this.selectedDate,
   });
@@ -133,7 +135,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     });
   }
 
-  void _createTask() {
+  Future<void> _createTask() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       _showSnackBar('Task title cannot be empty');
@@ -172,7 +174,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     final newTask = Task(
       id: taskId,
       title: title,
-      project: widget.projectName,
+      projectId: widget.projectId,
       priority: _priority,
       dueDate: finalDueDate,
       isCompleted: false,
@@ -183,7 +185,9 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
       reminder: _reminder,
     );
 
-    if (!taskProvider.addTask(newTask)) {
+    final created = await taskProvider.addTask(newTask);
+    if (!context.mounted) return;
+    if (!created) {
       AppNotification.showError(context, TaskDeadlineRules.createDeadlineError);
       return;
     }

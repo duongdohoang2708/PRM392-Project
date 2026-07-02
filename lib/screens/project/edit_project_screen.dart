@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../models/project_model.dart';
 import '../../providers/project_provider.dart';
 import '../../providers/drawer_provider.dart';
-import '../../providers/task_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/background_pattern.dart';
@@ -62,7 +61,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     super.dispose();
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       AppNotification.showError(context, 'Please enter a project name');
@@ -70,19 +69,10 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     }
 
     final projectProvider = context.read<ProjectProvider>();
-    final originalProject = projectProvider.projects.firstWhere(
-      (p) => p.id == widget.projectId,
-    );
-
-    // Update tasks project name if project name changed
-    final taskProvider = context.read<TaskProvider>();
-    if (originalProject.name != name) {
-      final tasksToRename = taskProvider.tasks
-          .where((t) => t.project == originalProject.name)
-          .toList();
-      for (var t in tasksToRename) {
-        taskProvider.updateTask(t.copyWith(project: name));
-      }
+    final originalProject = projectProvider.findById(widget.projectId);
+    if (originalProject == null) {
+      AppNotification.showError(context, 'Project not found');
+      return;
     }
 
     final updatedProject = originalProject.copyWith(
@@ -92,11 +82,15 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
       icon: CreateProjectScreen.projectIcons[_selectedIconIndex],
     );
 
-    projectProvider.updateProject(updatedProject);
-
-    AppNotification.showSuccess(context, 'Project "${updatedProject.name}" updated!');
-
-    Navigator.pop(context);
+    try {
+      await projectProvider.updateProject(updatedProject);
+      if (!context.mounted) return;
+      AppNotification.showSuccess(context, 'Project "${updatedProject.name}" updated!');
+      Navigator.pop(context);
+    } catch (_) {
+      if (!context.mounted) return;
+      AppNotification.showError(context, 'Failed to update project. Please try again.');
+    }
   }
 
   @override
@@ -266,30 +260,20 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   Widget _buildCard({required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurfaceFillOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryOf(context).withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: AppColors.taskCardDecorationOf(context, _accentColor),
       child: child,
     );
   }
 
   Widget _buildNameCard() {
+    final accent = AppColors.projectAccentOf(context, _accentColor);
     return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.edit_outlined, color: AppColors.primaryDarkOf(context), size: 20),
+              Icon(Icons.edit_outlined, color: accent, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Project Name',
@@ -329,13 +313,14 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   }
 
   Widget _buildDescriptionCard() {
+    final accent = AppColors.projectAccentOf(context, _accentColor);
     return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.description_outlined, color: AppColors.primaryDarkOf(context), size: 20),
+              Icon(Icons.description_outlined, color: accent, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Description',
@@ -376,6 +361,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     final visibleCount = isCompact && !_showAllIcons
         ? _collapsedCount
         : CreateProjectScreen.projectIcons.length;
+    final accent = AppColors.projectAccentOf(context, _accentColor);
 
     return _buildCard(
       child: Column(
@@ -383,7 +369,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.emoji_emotions_outlined, color: AppColors.primaryDarkOf(context), size: 20),
+              Icon(Icons.emoji_emotions_outlined, color: accent, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Project Icon',
@@ -466,6 +452,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     final visibleCount = isCompact && !_showAllColors
         ? _collapsedCount
         : CreateProjectScreen.projectColors.length;
+    final accent = AppColors.projectAccentOf(context, _accentColor);
 
     return _buildCard(
       child: Column(
@@ -473,7 +460,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.palette_outlined, color: AppColors.primaryDarkOf(context), size: 20),
+              Icon(Icons.palette_outlined, color: accent, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Project Color',
@@ -558,12 +545,16 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   }
 
   Widget _buildActionButtons() {
+    final accent = AppColors.projectAccentOf(context, _accentColor);
     return ElevatedButton(
       onPressed: _saveChanges,
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 52),
-        backgroundColor: AppColors.primaryOf(context),
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: accent,
+        foregroundColor: ThemeData.estimateBrightnessForColor(accent) ==
+                Brightness.dark
+            ? Colors.white
+            : AppColors.textPrimaryOf(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),

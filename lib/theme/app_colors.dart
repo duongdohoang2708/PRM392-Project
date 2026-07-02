@@ -80,6 +80,26 @@ class AppColors {
   static Color primaryDarkOf(BuildContext context) =>
       paletteOf(context).primaryDark;
 
+  /// Filled corner actions (FAB +/gear, Create Task/Project) — deeper in dark
+  /// mode so white icon/label stays readable. Not used on project detail FAB.
+  static Color prominentActionFillOf(BuildContext context) {
+    if (!isDark(context)) return primaryOf(context);
+    return Color.lerp(primaryDarkOf(context), Colors.black, 0.15)!;
+  }
+
+  static Color prominentActionFillFromPalette(
+    ActivityModePalette palette, {
+    required Brightness brightness,
+  }) {
+    if (brightness == Brightness.light) return palette.primary;
+    return Color.lerp(palette.primaryDark, Colors.black, 0.15)!;
+  }
+
+  static Color prominentActionForegroundOf(BuildContext context) {
+    if (isDark(context)) return Colors.white;
+    return Theme.of(context).colorScheme.onPrimary;
+  }
+
   static Color primaryLightOf(BuildContext context) =>
       paletteOf(context).primaryLight;
 
@@ -190,28 +210,78 @@ class AppColors {
     );
   }
 
+  /// Neutral task card (no project) — active matches project list panels.
+  static Color neutralTaskCardFillOf(
+    BuildContext context, {
+    required bool completed,
+  }) {
+    if (!completed) {
+      return panelFillOf(context);
+    }
+    final solidity =
+        AppOpacity.cardFillSolidityOf(context) * AppOpacity.surfaceCompleted;
+    return cardOf(context).withValues(alpha: solidity.clamp(0.0, 1.0));
+  }
+
+  /// Border for neutral task cards — softer when completed.
+  static Color neutralTaskCardBorderOf(
+    BuildContext context, {
+    required bool completed,
+  }) {
+    if (!completed) {
+      return borderOf(context);
+    }
+    return AppOpacity.fixed(borderOf(context), AppOpacity.surfaceCompleted);
+  }
+
   /// Shared shell for task list/detail/create cards — project tint + border.
   static BoxDecoration taskCardDecorationOf(
     BuildContext context,
     Color accentColor, {
     bool completed = false,
     bool includeShadow = false,
+    bool tinted = true,
   }) {
+    final Color fill;
+    if (tinted) {
+      fill = taskCardOf(context, accentColor, completed: completed);
+    } else {
+      fill = neutralTaskCardFillOf(context, completed: completed);
+    }
+
+    final Color borderColor;
+    final double borderWidth;
+    if (!tinted) {
+      borderColor = neutralTaskCardBorderOf(context, completed: completed);
+      borderWidth = 1;
+    } else {
+      borderColor = projectBorderOf(context, accentColor);
+      borderWidth = 1.5;
+    }
+
     return BoxDecoration(
-      color: taskCardOf(context, accentColor, completed: completed),
+      color: fill,
       borderRadius: BorderRadius.circular(16),
       border: Border.all(
-        color: projectBorderOf(context, accentColor),
-        width: 1.5,
+        color: borderColor,
+        width: borderWidth,
       ),
       boxShadow: includeShadow && !completed
-          ? [
-              BoxShadow(
-                color: projectGlowOf(context, accentColor),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ]
+          ? tinted
+              ? [
+                  BoxShadow(
+                    color: projectGlowOf(context, accentColor),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
           : null,
     );
   }

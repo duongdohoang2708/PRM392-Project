@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/drawer_provider.dart';
-import '../../providers/focus_provider.dart';
+import '../../models/focus_session_model.dart';
 import '../../providers/statistics_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/common/tinted_accent_card.dart';

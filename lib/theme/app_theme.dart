@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/activity_mode.dart';
 import 'activity_mode_palette.dart';
+import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData get lightTheme => build(
@@ -91,8 +92,11 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: palette.primary,
-        foregroundColor: palette.textPrimary,
+        backgroundColor: AppColors.prominentActionFillFromPalette(
+          palette,
+          brightness: brightness,
+        ),
+        foregroundColor: dark ? Colors.white : palette.textPrimary,
         elevation: 4,
       ),
       inputDecorationTheme: InputDecorationTheme(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/task_provider.dart';
+import '../../providers/project_provider.dart';
+import '../../utils/project_task_utils.dart';
 import '../../providers/focus_provider.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../theme/app_colors.dart';
@@ -35,6 +37,7 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
     final focusProvider = context.read<FocusProvider>();
+    final projectProvider = context.watch<ProjectProvider>();
 
     // Get available projects
     final List<String> projectOptions = ['All', ...taskProvider.availableProjects.where((p) => p != 'All Projects')];
@@ -72,7 +75,10 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
     }
 
     if (_selectedProject != 'All') {
-      filteredTasks = filteredTasks.where((t) => t.project == _selectedProject).toList();
+      final projectId = projectIdForName(projectProvider.projects, _selectedProject);
+      filteredTasks = filteredTasks
+          .where((t) => projectId != null && t.projectId == projectId)
+          .toList();
     }
 
     if (_selectedPriority != 'All') {
@@ -161,7 +167,7 @@ class _TaskSelectorSheetState extends State<TaskSelectorSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              task.project,
+                              projectNameForTask(task, projectProvider.projects),
                               style: TextStyle(
                                 color: AppColors.textSecondaryOf(context),
                                 fontSize: 12,

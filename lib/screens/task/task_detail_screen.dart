@@ -21,6 +21,7 @@ import '../../widgets/common/app_confirm_dialog.dart';
 import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../utils/reminder/task_reminder.dart';
+import '../../utils/project_task_utils.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 import '../../widgets/common/app_scaffold.dart';
 
@@ -54,19 +55,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   void initState() {
     super.initState();
     final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
     final task = taskProvider.tasks.firstWhere(
       (t) => t.id == widget.taskId,
       orElse: () => Task(
         id: '',
         title: 'Task not found',
-        project: 'None',
         priority: 'Low',
       ),
     );
 
     _titleController = TextEditingController(text: task.title);
     _notesController = TextEditingController(text: task.notes);
-    _project = task.project;
+    _project = projectNameForTask(task, projectProvider.projects);
     _priority = task.priority;
     _dueDate = task.dueDate;
     _isCompleted = task.isCompleted;
@@ -90,20 +91,24 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     super.dispose();
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
     if (_titleController.text.trim().isEmpty) {
       AppNotification.showError(context, 'Task title cannot be empty');
       return;
     }
 
     final taskProvider = context.read<TaskProvider>();
+    final projectProvider = context.read<ProjectProvider>();
     final originalTask = taskProvider.tasks.firstWhere(
       (t) => t.id == widget.taskId,
     );
 
+    final resolvedProjectId =
+        projectIdForName(projectProvider.projects, _project);
+
     final updatedTask = originalTask.copyWith(
       title: _titleController.text.trim(),
-      project: _project,
+      projectId: resolvedProjectId,
       priority: _priority,
       dueDate: _dueDate,
       isCompleted: _isCompleted,
@@ -114,20 +119,25 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       reminder: _reminder,
     );
 
-    taskProvider.updateTask(updatedTask);
+    try {
+      await taskProvider.updateTask(updatedTask);
 
-    final focusProvider = context.read<FocusProvider>();
-    focusProvider.updateSettings(
-      focus: _focusMinutes,
-      shortBreak: _breakMinutes,
-      longBreak: _longBreakMinutes,
-      rounds: _sessions,
-      interval: _longBreakInterval,
-    );
+      final focusProvider = context.read<FocusProvider>();
+      focusProvider.updateSettings(
+        focus: _focusMinutes,
+        shortBreak: _breakMinutes,
+        longBreak: _longBreakMinutes,
+        rounds: _sessions,
+        interval: _longBreakInterval,
+      );
 
-    AppNotification.showSuccess(context, 'Changes saved successfully');
-
-    Navigator.pop(context);
+      if (!context.mounted) return;
+      AppNotification.showSuccess(context, 'Changes saved successfully');
+      Navigator.pop(context);
+    } catch (_) {
+      if (!context.mounted) return;
+      AppNotification.showError(context, 'Failed to save changes. Please try again.');
+    }
   }
 
   void _confirmDeleteTask(BuildContext parentContext) async {

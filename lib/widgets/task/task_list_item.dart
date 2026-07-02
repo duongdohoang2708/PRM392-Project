@@ -6,6 +6,7 @@ import '../common/animations/app_delete_transition.dart';
 import '../../utils/formatters/app_date_time_format.dart';
 import '../../models/task_model.dart';
 import '../../models/project_model.dart';
+import '../../utils/project_task_utils.dart';
 import 'package:provider/provider.dart';
 import '../../providers/task_provider.dart';
 import '../../providers/project_provider.dart';
@@ -382,17 +383,19 @@ class _TaskListItemState extends State<TaskListItem>
     final timeString = _formatDate(widget.task.dueDate, isOverdue, widget.task.isAllDay);
 
     final projectProvider = Provider.of<ProjectProvider>(context);
-    final project = projectProvider.projects.firstWhere(
-      (p) => p.name == widget.task.project,
-      orElse: () => Project(
-        id: '',
-        name: '',
-        description: '',
-        colorValue: AppColors.primaryOf(context).toARGB32(),
-      ),
-    );
+    final project = projectForTask(widget.task, projectProvider.projects) ??
+        Project(
+          id: '',
+          name: '',
+          description: '',
+          colorValue: AppColors.primaryOf(context).toARGB32(),
+        );
+    final projectLabel = projectNameForTask(widget.task, projectProvider.projects);
     final Color projectColor = Color(project.colorValue);
-    final showProject = _hasAssignedProject(widget.task.project, project);
+    final showProject = _hasAssignedProject(projectLabel, project);
+    final accent = showProject
+        ? AppColors.projectAccentOf(context, projectColor)
+        : AppColors.primaryDarkOf(context);
 
     final mainContent = Container(
       padding: const EdgeInsets.all(16),
@@ -401,6 +404,7 @@ class _TaskListItemState extends State<TaskListItem>
         projectColor,
         completed: _isCompletedLocal,
         includeShadow: true,
+        tinted: showProject,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -418,12 +422,14 @@ class _TaskListItemState extends State<TaskListItem>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _isCompletedLocal
-                        ? projectColor
+                        ? accent
                         : Colors.transparent,
                     border: Border.all(
                       color: _isCompletedLocal
-                          ? projectColor
-                          : AppColors.projectMutedAccentOf(context, projectColor),
+                          ? accent
+                          : showProject
+                              ? AppColors.projectMutedAccentOf(context, projectColor)
+                              : AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
                       width: 2,
                     ),
                   ),
@@ -473,7 +479,7 @@ class _TaskListItemState extends State<TaskListItem>
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
-                                    widget.task.project,
+                                    projectLabel,
                                     style: theme.textTheme.labelMedium?.copyWith(
                                       color: projectColor,
                                       fontWeight: FontWeight.w600,
@@ -574,7 +580,7 @@ class _TaskListItemState extends State<TaskListItem>
                                 AppColors.textSecondaryOf(context),
                                 AppOpacity.textMuted,
                               )
-                            : projectColor,
+                            : accent,
                       ),
                     ),
                     const SizedBox(width: 8),

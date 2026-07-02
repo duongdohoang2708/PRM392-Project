@@ -14,6 +14,11 @@ import '../../widgets/common/app_popup_transition.dart';
 import '../../widgets/custom_snackbar.dart';
 import '../../widgets/common/notification_bell_button.dart';
 import '../../widgets/staggered_list_entry.dart';
+import '../../navigation/app_navigator.dart';
+
+void _navigateBackToProjects(BuildContext context) {
+  Navigator.of(context).pushNamedAndRemoveUntil('/projects', (route) => false);
+}
 
 class ProjectDetailScreen extends StatefulWidget {
   final String projectId;
@@ -29,44 +34,51 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   Set<String> _knownActiveIds = {};
   Set<String> _knownCompletedIds = {};
   bool _isFirstBuild = true;
+  Project? _lastKnownProject;
   final GlobalKey _createTaskFabKey = GlobalKey();
 
-  void _showCreateTaskPopup(BuildContext context, String projectName) {
+  void _showCreateTaskPopup(BuildContext context, Project project) {
     final fabContext = _createTaskFabKey.currentContext;
     showAppPopup(
       context: context,
       anchor: fabContext != null ? popupAnchorFromContext(fabContext) : null,
       child: ProjectCreateTaskPopup(
-        projectName: projectName,
+        projectId: project.id,
+        projectName: project.name,
       ),
     );
   }
 
-  void _confirmDeleteProject(BuildContext parentContext, Project project) async {
+  Future<void> _confirmDeleteProject(BuildContext parentContext, Project project) async {
+    final dialogContext = navigatorKey.currentContext ?? parentContext;
     final confirmed = await AppConfirmDialog.show(
-      parentContext,
+      dialogContext,
       title: 'Delete Project',
       content:
           'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
       confirmLabel: 'Delete',
       confirmButtonStyle: AppConfirmButtonStyle.destructive,
-      fillColor: AppColors.popupPanelOverlayFillOf(parentContext),
+      fillColor: AppColors.popupPanelOverlayFillOf(dialogContext),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !parentContext.mounted) return;
 
-    final taskProvider = parentContext.read<TaskProvider>();
-    final tasksToDelete = taskProvider.tasks
-        .where((t) => t.project == project.name)
-        .toList();
-    for (var t in tasksToDelete) {
-      taskProvider.deleteTask(t.id);
-    }
+    final provider = parentContext.read<ProjectProvider>();
+    final projectId = project.id;
+    final projectName = project.name;
 
-    parentContext.read<ProjectProvider>().deleteProject(project.id);
-    AppNotification.showError(parentContext, 'Project "${project.name}" deleted');
+    _navigateBackToProjects(parentContext);
 
-    if (parentContext.mounted) {
-      Navigator.pop(parentContext);
+    try {
+      await provider.deleteProject(projectId);
+      AppNotification.showError(
+        navigatorKey.currentContext ?? parentContext,
+        'Project "$projectName" deleted',
+      );
+    } catch (_) {
+      AppNotification.showError(
+        navigatorKey.currentContext ?? parentContext,
+        'Failed to delete project. Please try again.',
+      );
     }
   }
 
@@ -74,7 +86,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final projectProvider = context.watch<ProjectProvider>();
-    final project = projectProvider.projects.firstWhere(
+    final currentProject = projectProvider.projects.firstWhere(
       (p) => p.id == widget.projectId,
       orElse: () => Project(
         id: '',
@@ -84,7 +96,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       ),
     );
 
-    if (project.id.isEmpty) {
+    if (currentProject.id.isNotEmpty) {
+      _lastKnownProject = currentProject;
+    }
+
+    final project = currentProject.id.isNotEmpty ? currentProject : _lastKnownProject;
+
+    if (project == null || project.id.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.backgroundOf(context),
         appBar: AppBar(
@@ -106,7 +124,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
     final taskProvider = context.watch<TaskProvider>();
     final projectTasks = taskProvider.tasks
-        .where((t) => t.project == project.name)
+        .where((t) => t.projectId == project.id)
         .toList();
 
     final activeTasks = projectTasks.where((t) => !t.isCompleted).toList();
@@ -129,7 +147,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     _knownActiveIds = currentActiveIds;
     _knownCompletedIds = currentCompletedIds;
 
-    final progress = taskProvider.getProjectProgress(project.name);
+    final progress = taskProvider.getProjectProgress(project.id);
     final int doneCount = completedTasks.length;
     final int totalCount = projectTasks.length;
     final Color projectColor = Color(project.colorValue);
@@ -594,7 +612,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             key: _createTaskFabKey,
             backgroundColor: projectColor,
             foregroundColor: Colors.white,
-            onPressed: () => _showCreateTaskPopup(context, project.name),
+            onPressed: () => _showCreateTaskPopup(context, project),
             child: Icon(Icons.add),
           ),
         );

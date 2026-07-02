@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../navigation/auth_sign_out_navigation.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/user_avatar.dart';
@@ -9,8 +10,6 @@ import '../../widgets/settings/settings_screen_shell.dart';
 import '../../widgets/settings/settings_widgets.dart';
 import '../../widgets/common/app_confirm_dialog.dart';
 import '../../widgets/statistics/statistics_widgets.dart';
-import '../auth/login_screen.dart';
-
 class AccountDetailsScreen extends StatelessWidget {
   const AccountDetailsScreen({super.key});
 
@@ -25,10 +24,7 @@ class AccountDetailsScreen extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
+      await signOutAndNavigateToLogin(context);
     }
   }
 

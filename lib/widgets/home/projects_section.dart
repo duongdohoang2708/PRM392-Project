@@ -36,37 +36,46 @@ class ProjectsSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 140,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            itemCount: projects.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              final project = projects[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/project-detail',
-                    arguments: {'projectId': project.id},
-                  );
-                },
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: _buildProjectCard(
-                    context,
-                    title: project.name,
-                    taskCount: '${taskProvider.getProjectTaskCount(project.name)} tasks',
-                    progress: taskProvider.getProjectProgress(project.name),
-                    accentColor: Color(project.colorValue),
+        if (projects.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              'No projects yet. Create your first project!',
+              style: TextStyle(color: AppColors.textSecondaryOf(context)),
+            ),
+          )
+        else
+          SizedBox(
+            height: 140,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              itemCount: projects.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 16),
+              itemBuilder: (context, index) {
+                final project = projects[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/project-detail',
+                      arguments: {'projectId': project.id},
+                    );
+                  },
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: _buildProjectCard(
+                      context,
+                      title: project.name,
+                      taskCount: '${taskProvider.getProjectTaskCount(project.id)} tasks',
+                      progress: taskProvider.getProjectProgress(project.id),
+                      accentColor: Color(project.colorValue),
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }

@@ -96,6 +96,15 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
       if (croppedBytes == null) return;
 
       final previousPath = userProvider.avatarUrl;
+      final uploadError = await userProvider.uploadAvatarBytes(
+        bytes: croppedBytes,
+        contentType: 'image/jpeg',
+      );
+      if (uploadError == null) {
+        _showMessage(success: true, message: 'Avatar updated.');
+        return;
+      }
+
       final storedPath = await AvatarStorage.persistBytes(
         croppedBytes,
         replacePath:
