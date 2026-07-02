@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 import '../../widgets/common/app_scaffold.dart';
@@ -6,6 +9,9 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/common/google_logo_icon.dart';
+import '../../widgets/custom_snackbar.dart';
+import '../../widgets/theme/mode_change_notification_suppression.dart';
+import '../../services/google_auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,32 +20,59 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen>
+    with SuppressesModeChangeNotification {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
 
-  void _handleRegister() {
-    // Mock register logic
-    setState(() {
-      _isLoading = true;
-    });
-
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Account created successfully!'),
-            backgroundColor: AppColors.primaryDarkOf(context),
-          ),
+  Future<void> _handleRegister() async {
+    setState(() => _isLoading = true);
+    final error = await context.read<UserProvider>().signUp(
+          fullName: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+          confirmPassword: _confirmPasswordController.text,
         );
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      AppNotification.showError(context, error);
+      return;
+    }
+
+    AppNotification.showSuccess(context, 'Account created successfully!');
+    Navigator.of(context).pushReplacementNamed('/main');
+  }
+
+  Future<void> _handleGoogleSignUp() async {
+    setState(() => _isLoading = true);
+    try {
+      final tokens = await GoogleAuthService.signIn();
+      if (tokens == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
       }
-    });
+      final error = await context.read<UserProvider>().signInWithGoogle(
+            idToken: tokens.idToken,
+            accessToken: tokens.accessToken,
+          );
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      if (error != null) {
+        AppNotification.showError(context, error);
+        return;
+      }
+      Navigator.of(context).pushReplacementNamed('/main');
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        AppNotification.showError(context, 'Google sign-up failed.');
+      }
+    }
   }
 
   @override
@@ -57,10 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: AppColors.backgroundOf(context),
       body: Stack(
         children: [
-          // Background Pattern
           const BackgroundPattern(),
-
-          // Main Content
           SafeArea(
             child: Center(
               child: KeyboardAwareSingleChildScrollView(
@@ -73,7 +103,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Header Branding
                     Text(
                       'TaskFlow',
                       style: TextStyle(
@@ -85,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Start managing your time and focus today.',
+                      'Create your account and start planning calmly.',
                       style: TextStyle(
                         fontSize: 16,
                         color: AppColors.authBrandingSubtitleOf(context),
@@ -93,8 +122,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
-
-                    // Register Card
                     Container(
                       width: double.infinity,
                       constraints: const BoxConstraints(maxWidth: 480),
@@ -117,7 +144,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Create Account',
+                            'Create account',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 24,
@@ -126,10 +153,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 32),
-
-                          // Name Input
                           Text(
-                            'Full Name',
+                            'Full name',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -138,14 +163,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(height: 8),
                           CustomTextField(
-                            hintText: 'John Doe',
+                            hintText: 'Your name',
                             controller: _nameController,
-                            keyboardType: TextInputType.name,
-                            prefixIcon: Icon(Icons.person_outline),
+                            prefixIcon: const Icon(Icons.person_outline),
                           ),
                           const SizedBox(height: 20),
-
-                          // Email Input
                           Text(
                             'Email address',
                             style: TextStyle(
@@ -159,11 +181,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: 'your@email.com',
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
-                            prefixIcon: Icon(Icons.mail_outline),
+                            prefixIcon: const Icon(Icons.mail_outline),
                           ),
                           const SizedBox(height: 20),
-
-                          // Password Input
                           Text(
                             'Password',
                             style: TextStyle(
@@ -177,17 +197,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: '••••••••',
                             controller: _passwordController,
                             obscureText: true,
-                            prefixIcon: Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(Icons.visibility_off_outlined),
-                              onPressed: () {},
-                            ),
+                            prefixIcon: const Icon(Icons.lock_outline),
                           ),
                           const SizedBox(height: 20),
-
-                          // Confirm Password Input
                           Text(
-                            'Confirm Password',
+                            'Confirm password',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -200,53 +214,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             controller: _confirmPasswordController,
                             obscureText: true,
                             prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(Icons.visibility_off_outlined),
-                              onPressed: () {},
-                            ),
                           ),
                           const SizedBox(height: 32),
-
-                          // Register Button
                           CustomButton(
-                            text: 'Sign Up',
+                            text: 'Create account',
                             onPressed: _handleRegister,
                             isLoading: _isLoading,
                           ),
-
-                          // Divider
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Divider(color: AppColors.borderOf(context)),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  child: Text(
-                                    'OR',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondaryOf(context),
-                                      letterSpacing: 1,
-                                    ),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Divider(color: AppColors.borderOf(context)),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  'OR',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textSecondaryOf(context),
+                                    letterSpacing: 1,
                                   ),
                                 ),
-                                Expanded(
-                                  child: Divider(color: AppColors.borderOf(context)),
-                                ),
-                              ],
-                            ),
+                              ),
+                              Expanded(
+                                child: Divider(color: AppColors.borderOf(context)),
+                              ),
+                            ],
                           ),
-
-                          // Social Login
+                          const SizedBox(height: 24),
                           CustomButton(
                             text: 'Sign up with Google',
-                            onPressed: () {},
+                            onPressed: () {
+                              if (!_isLoading) _handleGoogleSignUp();
+                            },
                             isPrimary: false,
                             icon: const GoogleLogoIcon(),
                           ),
@@ -254,22 +257,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Footer Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Already have an account? ",
+                          'Already have an account? ',
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondaryOf(context),
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                          },
+                          onTap: () => Navigator.of(context).pop(),
                           child: Text(
                             'Log in',
                             style: TextStyle(

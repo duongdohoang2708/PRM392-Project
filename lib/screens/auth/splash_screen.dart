@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/common/animations/app_fade_transition.dart';
+import '../../widgets/theme/mode_change_notification_suppression.dart';
 import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,7 +16,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, SuppressesModeChangeNotification {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -26,9 +30,12 @@ class _SplashScreenState extends State<SplashScreen>
     _animation = createFadeInAnimation(_controller);
     _controller.forward();
 
-    // Navigate to next screen after 2.5 seconds
     Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
+      if (!mounted) return;
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.isAuthenticated) {
+        Navigator.of(context).pushReplacementNamed('/main');
+      } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
@@ -82,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     'TaskFlow',
                     style: TextStyle(
-                      fontSize: 32,
+                      fontSize: 36,
                       fontWeight: FontWeight.w700,
                       color: AppColors.authBrandingTitleOf(context),
                       letterSpacing: -0.5,
@@ -90,21 +97,19 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Personal Time & Focus Planner',
+                    'Small steps, calm days, better focus.',
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.authBrandingSubtitleOf(context),
                     ),
                   ),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
                   SizedBox(
-                    height: 24,
-                    width: 24,
+                    width: 28,
+                    height: 28,
                     child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primaryOf(context),
-                      ),
+                      strokeWidth: 2.5,
+                      color: AppColors.primaryDarkOf(context),
                     ),
                   ),
                 ],

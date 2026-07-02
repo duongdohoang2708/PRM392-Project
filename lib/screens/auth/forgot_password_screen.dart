@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 import '../../widgets/common/app_scaffold.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
+import '../../widgets/custom_snackbar.dart';
+import '../../widgets/theme/mode_change_notification_suppression.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -13,29 +17,32 @@ class ForgotPasswordScreen extends StatefulWidget {
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
+    with SuppressesModeChangeNotification {
   final _emailController = TextEditingController();
   bool _isLoading = false;
 
-  void _handleResetPassword() {
-    // Mock reset logic
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _handleResetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      AppNotification.showError(context, 'Email is required.');
+      return;
+    }
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Password reset link sent to your email!'),
-            backgroundColor: AppColors.primaryDarkOf(context),
-          ),
-        );
-      }
-    });
+    setState(() => _isLoading = true);
+    final error = await context.read<UserProvider>().sendPasswordReset(email);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      AppNotification.showError(context, error);
+      return;
+    }
+
+    AppNotification.showSuccess(
+      context,
+      'Password reset link sent to your email!',
+    );
   }
 
   @override

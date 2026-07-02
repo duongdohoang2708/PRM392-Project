@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/notification_provider.dart';
 import '../widgets/common/app_scaffold.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/custom_snackbar.dart';
 import 'home/home_screen.dart';
 import 'task/task_list_screen.dart';
 import 'task/create_task_screen.dart';
@@ -41,6 +44,23 @@ class _MainShellState extends State<MainShell> {
   String _activeRoute = '/home';
   String _initialRoute = '/home';
   bool _initialRouteResolved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowWelcome());
+  }
+
+  Future<void> _maybeShowWelcome() async {
+    if (!mounted) return;
+    final delivered =
+        await context.read<NotificationProvider>().deliverWelcomeIfNeeded();
+    if (!mounted || !delivered) return;
+    AppNotification.showInfo(
+      context,
+      'Welcome to TaskFlow! Check Notifications for tips to get started.',
+    );
+  }
 
   @override
   void didChangeDependencies() {

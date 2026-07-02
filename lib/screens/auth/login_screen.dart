@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/keyboard/keyboard_insets.dart';
 import '../../widgets/common/app_scaffold.dart';
@@ -6,6 +8,9 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/background_pattern.dart';
 import '../../widgets/common/google_logo_icon.dart';
+import '../../widgets/custom_snackbar.dart';
+import '../../widgets/theme/mode_change_notification_suppression.dart';
+import '../../services/google_auth_service.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -17,26 +22,60 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SuppressesModeChangeNotification {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  void _handleLogin() {
-    // Mock login logic
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      AppNotification.showError(context, 'Email and password are required.');
+      return;
+    }
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        // Navigate to Home Dashboard
-        Navigator.of(context).pushReplacementNamed('/main');
+    setState(() => _isLoading = true);
+    final error = await context.read<UserProvider>().signIn(
+          email: email,
+          password: password,
+        );
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      AppNotification.showError(context, error);
+      return;
+    }
+    Navigator.of(context).pushReplacementNamed('/main');
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final tokens = await GoogleAuthService.signIn();
+      if (tokens == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
       }
-    });
+      final error = await context.read<UserProvider>().signInWithGoogle(
+            idToken: tokens.idToken,
+            accessToken: tokens.accessToken,
+          );
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      if (error != null) {
+        AppNotification.showError(context, error);
+        return;
+      }
+      Navigator.of(context).pushReplacementNamed('/main');
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        AppNotification.showError(context, 'Google sign-in failed.');
+      }
+    }
   }
 
   @override
@@ -234,7 +273,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Social Login
                           CustomButton(
                             text: 'Continue with Google',
-                            onPressed: () {},
+                            onPressed: () {
+                              if (!_isLoading) _handleGoogleSignIn();
+                            },
                             isPrimary: false,
                             icon: const GoogleLogoIcon(),
                           ),
