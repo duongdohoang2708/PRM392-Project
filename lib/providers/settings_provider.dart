@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/user_settings_sync.dart';
 import '../utils/calendar_week_config.dart';
 import '../utils/formatters/app_date_time_format.dart';
 import '../utils/reminder/task_reminder.dart';
@@ -29,18 +30,18 @@ class SettingsProvider with ChangeNotifier {
 
   static const double minCardFillSolidity = 0.0;
   static const double maxCardFillSolidity = 1.0;
-  static const double defaultCardFillSolidity = 1.0;
+  static const double defaultCardFillSolidity = 0.7;
 
   static const double minCardTintStrength = 0.0;
   static const double maxCardTintStrength = 2.0;
-  static const double defaultCardTintStrength = 0.5;
+  static const double defaultCardTintStrength = 0.4;
 
   /// Legacy multiplier range — migrated to [cardFillSolidity].
   static const double minTransparencyMultiplier = 0.5;
   static const double maxTransparencyMultiplier = 1.5;
   static const double defaultTransparencyMultiplier = 1.0;
 
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.light;
   bool _notificationsEnabled = true;
   bool _taskRemindersEnabled = true;
   bool _goalsInsightsEnabled = true;
@@ -56,6 +57,55 @@ class SettingsProvider with ChangeNotifier {
   double _cardTintStrength = defaultCardTintStrength;
   bool _backgroundDecorIconsEnabled = true;
   bool _loaded = false;
+  String? _uid;
+  final UserSettingsSync _settingsSync = UserSettingsSync();
+
+  void bindUser(String? uid) {
+    if (_uid == uid) return;
+    _uid = uid;
+    if (uid != null) unawaited(_pullRemoteSettings());
+  }
+
+  Future<void> _pullRemoteSettings() async {
+    final uid = _uid;
+    if (uid == null) return;
+    final remote = await _settingsSync.pull(uid);
+    if (remote == null) {
+      await _pushSettings();
+      return;
+    }
+    _notificationsEnabled =
+        remote['notificationsEnabled'] as bool? ?? _notificationsEnabled;
+    _taskRemindersEnabled =
+        remote['taskRemindersEnabled'] as bool? ?? _taskRemindersEnabled;
+    _goalsInsightsEnabled =
+        remote['goalsInsightsEnabled'] as bool? ?? _goalsInsightsEnabled;
+    _achievementsEnabled =
+        remote['achievementsEnabled'] as bool? ?? _achievementsEnabled;
+    _quietHoursEnabled =
+        remote['quietHoursEnabled'] as bool? ?? _quietHoursEnabled;
+    _defaultTimedReminder =
+        remote['defaultTimedReminder'] as String? ?? _defaultTimedReminder;
+    _defaultAllDayReminder =
+        remote['defaultAllDayReminder'] as String? ?? _defaultAllDayReminder;
+    notifyListeners();
+  }
+
+  Future<void> _pushSettings() async {
+    final uid = _uid;
+    if (uid == null) return;
+    await _settingsSync.merge(uid, {
+      'notificationsEnabled': _notificationsEnabled,
+      'taskRemindersEnabled': _taskRemindersEnabled,
+      'goalsInsightsEnabled': _goalsInsightsEnabled,
+      'achievementsEnabled': _achievementsEnabled,
+      'quietHoursEnabled': _quietHoursEnabled,
+      'quietHoursStart': _encodeTimeOfDay(_quietHoursStart),
+      'quietHoursEnd': _encodeTimeOfDay(_quietHoursEnd),
+      'defaultTimedReminder': _defaultTimedReminder,
+      'defaultAllDayReminder': _defaultAllDayReminder,
+    });
+  }
 
   ThemeMode get themeMode => _themeMode;
 
@@ -234,12 +284,56 @@ class SettingsProvider with ChangeNotifier {
     await prefs.setInt(_themeModeKey, mode.index);
   }
 
+  bool _pendingSignOutAppearanceCommit = false;
+
+  /// Resets card/background appearance locally without rebuilding the tree.
+  /// Light/dark [ThemeMode] is preserved on sign-out.
+  Future<void> prepareDefaultAppearanceForSignOut() async {
+    final changed = _cardFillSolidity != defaultCardFillSolidity ||
+        _cardTintStrength != defaultCardTintStrength ||
+        _backgroundDecorIconsEnabled != true;
+
+    _cardFillSolidity = defaultCardFillSolidity;
+    _cardTintStrength = defaultCardTintStrength;
+    _backgroundDecorIconsEnabled = true;
+    _pendingSignOutAppearanceCommit = changed;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_cardFillSolidityKey, defaultCardFillSolidity);
+    await prefs.setDouble(_cardTintStrengthKey, defaultCardTintStrength);
+    await prefs.setBool(_backgroundDecorIconsKey, true);
+  }
+
+  /// Rebuilds the widget tree after sign-out navigation has reached login.
+  void commitDefaultAppearanceForSignOut() {
+    if (!_pendingSignOutAppearanceCommit) return;
+    _pendingSignOutAppearanceCommit = false;
+    notifyListeners();
+  }
+
+  /// Resets local appearance prefs on sign-out (cloud settings unchanged).
+  Future<void> resetAppearanceForSignOut() async {
+    await prepareDefaultAppearanceForSignOut();
+    commitDefaultAppearanceForSignOut();
+  }
+
+  @Deprecated('Use prepareDefaultAppearanceForSignOut')
+  Future<void> prepareDefaultThemeForSignOut() =>
+      prepareDefaultAppearanceForSignOut();
+
+  @Deprecated('Use commitDefaultAppearanceForSignOut')
+  void commitDefaultThemeForSignOut() => commitDefaultAppearanceForSignOut();
+
+  @Deprecated('Use resetAppearanceForSignOut')
+  Future<void> resetThemeToDefaultForSignOut() => resetAppearanceForSignOut();
+
   Future<void> setNotificationsEnabled(bool enabled) async {
     if (_notificationsEnabled == enabled) return;
     _notificationsEnabled = enabled;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_notificationsEnabledKey, enabled);
+    await _pushSettings();
   }
 
   Future<void> setTaskRemindersEnabled(bool enabled) async {
@@ -248,6 +342,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_taskRemindersKey, enabled);
+    await _pushSettings();
   }
 
   Future<void> setGoalsInsightsEnabled(bool enabled) async {
@@ -256,6 +351,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_goalsInsightsKey, enabled);
+    await _pushSettings();
   }
 
   Future<void> setAchievementsEnabled(bool enabled) async {
@@ -264,6 +360,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_achievementsKey, enabled);
+    await _pushSettings();
   }
 
   Future<void> setQuietHoursEnabled(bool enabled) async {
@@ -272,6 +369,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_quietHoursEnabledKey, enabled);
+    await _pushSettings();
   }
 
   Future<void> setQuietHoursStart(TimeOfDay value) async {
@@ -279,6 +377,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_quietHoursStartKey, _encodeTimeOfDay(value));
+    await _pushSettings();
   }
 
   Future<void> setQuietHoursEnd(TimeOfDay value) async {
@@ -286,6 +385,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_quietHoursEndKey, _encodeTimeOfDay(value));
+    await _pushSettings();
   }
 
   Future<void> setDefaultTimedReminder(String reminder) async {
@@ -294,6 +394,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_defaultTimedReminderKey, reminder);
+    await _pushSettings();
   }
 
   Future<void> setDefaultAllDayReminder(String reminder) async {
@@ -302,6 +403,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_defaultAllDayReminderKey, reminder);
+    await _pushSettings();
   }
 
   Future<void> setUse12HourClock(bool value) async {

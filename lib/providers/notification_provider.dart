@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/notification_record.dart';
 import '../models/task_model.dart';
+import '../repositories/notification_repository.dart';
+import '../repositories/user_repository.dart';
 import '../providers/focus_provider.dart';
 import '../providers/goals_provider.dart';
 import '../services/notification_service.dart';
@@ -22,6 +24,7 @@ class NotificationProvider with ChangeNotifier {
   static const String _dailyFlagsPref = 'notification_daily_flags';
   static const String _dailyDayPref = 'notification_daily_day';
   static const String _statsMilestonePref = 'notification_stats_milestone';
+  static const String _welcomeNotificationId = 'system_welcome';
   static const int _maxHistoryRecords = 100;
 
   final List<NotificationRecord> _records = [];
@@ -41,15 +44,37 @@ class NotificationProvider with ChangeNotifier {
   bool _initialized = false;
   bool _firedKeysLoaded = false;
   bool _achievementStateLoaded = false;
+  final NotificationRepository _notificationRepository = NotificationRepository();
+  final UserRepository _userRepository = UserRepository();
+  StreamSubscription<List<NotificationRecord>>? _recordsSubscription;
+  String? _uid;
 
   NotificationProvider() {
-    unawaited(_bootstrapHistory());
     _loadFiredKeys();
+  }
+
+  void bindUser(String? uid) {
+    if (_uid == uid) return;
+    _uid = uid;
+    _recordsSubscription?.cancel();
+    _records.clear();
+    if (uid == null) {
+      notifyListeners();
+      return;
+    }
+    _recordsSubscription =
+        _notificationRepository.watchNotifications(uid).listen((records) {
+      _records
+        ..clear()
+        ..addAll(records);
+      notifyListeners();
+    });
   }
 
   @override
   void dispose() {
     _watchdog?.cancel();
+    _recordsSubscription?.cancel();
     super.dispose();
   }
 
@@ -121,31 +146,6 @@ class NotificationProvider with ChangeNotifier {
       unawaited(_bootstrapDeliveredSync(goalsProvider));
       _startWatchdog();
     }
-  }
-
-  Future<void> _bootstrapHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getString(_historyPref);
-    if (stored != null && stored.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(stored);
-        if (decoded is List) {
-          _records.addAll(
-            decoded
-                .whereType<Map<String, dynamic>>()
-                .map(NotificationRecord.fromJson),
-          );
-          notifyListeners();
-          return;
-        }
-      } catch (_) {
-        // Fall through to seed mock history if storage is corrupted.
-      }
-    }
-
-    _seedMockHistory();
-    await _persistHistory();
-    notifyListeners();
   }
 
   Future<void> _bootstrapDeliveredSync(GoalsProvider goalsProvider) async {
@@ -338,17 +338,6 @@ class NotificationProvider with ChangeNotifier {
       ..clear()
       ..addAll(pruned);
     await prefs.setStringList(_firedKeysPref, pruned);
-  }
-
-  Future<void> _persistHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final sorted = List<NotificationRecord>.from(_records)
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    final capped = sorted.take(_maxHistoryRecords).toList();
-    await prefs.setString(
-      _historyPref,
-      jsonEncode(capped.map((record) => record.toJson()).toList()),
-    );
   }
 
   void _startWatchdog() {
@@ -705,20 +694,69 @@ class NotificationProvider with ChangeNotifier {
                   2),
     );
     if (duplicate) return;
+
+    final uid = _uid;
+    if (uid != null) {
+      unawaited(_notificationRepository.addNotification(uid, record));
+      return;
+    }
+
     _records.insert(0, record);
     notifyListeners();
-    unawaited(_persistHistory());
+  }
+
+  /// Delivers a one-time welcome notification for newly created accounts.
+  /// Returns `true` when a new welcome notification was created.
+  Future<bool> deliverWelcomeIfNeeded() async {
+    final uid = _uid;
+    if (uid == null) return false;
+
+    final profile = await _userRepository.fetchProfile(uid);
+    if (profile == null || profile.hasSeenWelcome != false) return false;
+
+    if (await _notificationRepository.hasNotification(uid, _welcomeNotificationId)) {
+      await _userRepository.markWelcomeSeen(uid);
+      return false;
+    }
+
+    final firstName = profile.fullName.trim().split(RegExp(r'\s+')).first;
+    final greetingName =
+        firstName.isNotEmpty ? firstName : profile.email.split('@').first;
+
+    addRecord(
+      NotificationRecord(
+        id: _welcomeNotificationId,
+        category: NotificationCategory.system,
+        title: 'Welcome to TaskFlow!',
+        body:
+            'Hi $greetingName! Your account is ready. Create a project, add your first tasks, and start a focus session whenever you\'re ready.',
+        timestamp: DateTime.now(),
+      ),
+    );
+    await _userRepository.markWelcomeSeen(uid);
+    return true;
   }
 
   void markAsRead(String id) {
     final index = _records.indexWhere((record) => record.id == id);
     if (index == -1 || _records[index].isRead) return;
-    _records[index] = _records[index].copyWith(isRead: true);
+    final updated = _records[index].copyWith(isRead: true);
+    final uid = _uid;
+    if (uid != null) {
+      unawaited(_notificationRepository.updateNotification(uid, updated));
+      return;
+    }
+    _records[index] = updated;
     notifyListeners();
-    unawaited(_persistHistory());
   }
 
   void markAllRead() {
+    final uid = _uid;
+    if (uid != null) {
+      unawaited(_notificationRepository.markAllRead(uid));
+      return;
+    }
+
     var changed = false;
     for (var i = 0; i < _records.length; i++) {
       if (!_records[i].isRead) {
@@ -726,17 +764,13 @@ class NotificationProvider with ChangeNotifier {
         changed = true;
       }
     }
-    if (changed) {
-      notifyListeners();
-      unawaited(_persistHistory());
-    }
+    if (changed) notifyListeners();
   }
 
   void clearAll() {
     if (_records.isEmpty) return;
     _records.clear();
     notifyListeners();
-    unawaited(_persistHistory());
   }
 
   Future<void> syncDeliveredReminders(List<Task> tasks) async {
@@ -808,68 +842,5 @@ class NotificationProvider with ChangeNotifier {
         taskId: taskId,
       ),
     );
-  }
-
-  void _seedMockHistory() {
-    final now = DateTime.now();
-    _records.addAll([
-      NotificationRecord(
-        id: 'mock_1',
-        category: NotificationCategory.taskReminder,
-        title: 'Finish Flutter Assignment',
-        body: 'Due at 10:00 AM',
-        timestamp: now.subtract(const Duration(hours: 2)),
-        taskId: '1',
-        isRead: true,
-      ),
-      NotificationRecord(
-        id: 'mock_2',
-        category: NotificationCategory.statistics,
-        title: 'Today in TaskFlow',
-        body: '3 tasks due today • 1 overdue',
-        timestamp: now.subtract(const Duration(hours: 6)),
-        isRead: false,
-      ),
-      NotificationRecord(
-        id: 'mock_3',
-        category: NotificationCategory.focus,
-        title: 'Focus Session Finished',
-        body: 'Great job! Take a short break.',
-        timestamp: now.subtract(const Duration(hours: 5)),
-        isRead: true,
-      ),
-      NotificationRecord(
-        id: 'mock_4',
-        category: NotificationCategory.goals,
-        title: 'Streak secured!',
-        body: '4-day streak — today\'s tasks and focus goals are complete.',
-        timestamp: now.subtract(const Duration(hours: 8)),
-        isRead: false,
-      ),
-      NotificationRecord(
-        id: 'mock_5',
-        category: NotificationCategory.achievement,
-        title: 'Achievement unlocked',
-        body: '5-day streak',
-        timestamp: now.subtract(const Duration(days: 1)),
-        isRead: true,
-      ),
-      NotificationRecord(
-        id: 'mock_6',
-        category: NotificationCategory.statistics,
-        title: 'Your week in TaskFlow',
-        body: '6 tasks completed • 180 min focused • 4-day streak',
-        timestamp: now.subtract(const Duration(days: 2)),
-        isRead: true,
-      ),
-      NotificationRecord(
-        id: 'mock_7',
-        category: NotificationCategory.system,
-        title: 'Welcome to TaskFlow notifications',
-        body: 'Task reminders, focus alerts, streaks, and achievements appear here.',
-        timestamp: now.subtract(const Duration(days: 3)),
-        isRead: true,
-      ),
-    ]);
   }
 }

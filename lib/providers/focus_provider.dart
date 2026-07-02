@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import '../models/focus_session_model.dart';
 import '../models/task_model.dart';
+import '../repositories/focus_repository.dart';
 import '../services/focus_feedback_service.dart';
 import '../services/notification_service.dart';
 import '../utils/focus_sound_options.dart';
@@ -11,20 +13,6 @@ import '../widgets/custom_snackbar.dart';
 
 enum TimerState { idle, running, paused, completed }
 enum PhaseType { focus, shortBreak, longBreak }
-
-class FocusSessionLog {
-  final String title;
-  final String? taskId;
-  final DateTime time;
-  final int durationMinutes;
-
-  FocusSessionLog({
-    required this.title,
-    this.taskId,
-    required this.time,
-    required this.durationMinutes,
-  });
-}
 
 class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
   static const String _focusMinutesKey = 'focus_focus_minutes';
@@ -68,16 +56,53 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
   Task? _selectedTask;
   Timer? _timer;
   DateTime? _expectedEndTime;
-  final List<FocusSessionLog> _focusHistory = [];
+  final List<FocusSession> _focusHistory = [];
   bool _isAppInForeground = true;
+  final FocusRepository _focusRepository = FocusRepository();
+  StreamSubscription<List<FocusSession>>? _historySubscription;
+  String? _uid;
 
   FocusProvider(this.navigatorKey) {
-    _focusHistory.addAll(_buildMockHistory());
     _generateSequence();
     _resetTimerState();
     NotificationService.setFocusProvider(this);
     WidgetsBinding.instance.addObserver(this);
     unawaited(loadSettings());
+  }
+
+  void bindUser(String? uid) {
+    if (_uid == uid) return;
+    _uid = uid;
+    _historySubscription?.cancel();
+    _focusHistory.clear();
+    if (uid == null) {
+      notifyListeners();
+      return;
+    }
+    _historySubscription = _focusRepository.watchSessions(uid).listen((sessions) {
+      _focusHistory
+        ..clear()
+        ..addAll(sessions);
+      notifyListeners();
+    });
+  }
+
+  Future<void> _recordFocusSession({
+    required String title,
+    String? taskId,
+    required int durationMinutes,
+  }) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final session = FocusSession(
+      id: 'focus_${DateTime.now().millisecondsSinceEpoch}',
+      title: title,
+      taskId: taskId,
+      time: DateTime.now(),
+      durationMinutes: durationMinutes,
+    );
+    await _focusRepository.addSession(uid, session);
   }
 
   Future<void> loadSettings() async {
@@ -149,6 +174,7 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    _historySubscription?.cancel();
     super.dispose();
   }
 
@@ -209,15 +235,11 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
       if (phaseIndex > previousIndex) {
         for (var i = previousIndex; i < phaseIndex; i++) {
           if (i < _sequence.length && _sequence[i] == PhaseType.focus) {
-            _focusHistory.insert(
-              0,
-              FocusSessionLog(
-                title: _selectedTask?.title ?? 'Focus Session',
-                taskId: _selectedTask?.id,
-                time: DateTime.now(),
-                durationMinutes: _focusMinutes,
-              ),
-            );
+            unawaited(_recordFocusSession(
+              title: _selectedTask?.title ?? 'Focus Session',
+              taskId: _selectedTask?.id,
+              durationMinutes: _focusMinutes,
+            ));
           }
         }
       }
@@ -292,7 +314,7 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
   int get remainingSeconds => _remainingSeconds;
   Task? get selectedTask => _selectedTask;
   DateTime? get expectedEndTime => _expectedEndTime;
-  List<FocusSessionLog> get focusHistory => _focusHistory;
+  List<FocusSession> get focusHistory => _focusHistory;
   int get totalFocusMinutes =>
       _focusHistory.fold(0, (sum, log) => sum + log.durationMinutes);
   int get completedSessionsCount => _focusHistory.length;
@@ -739,10 +761,9 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
         : null;
 
     if (!isSkipped && _sequence.isNotEmpty && _sequence[_currentPhaseIndex] == PhaseType.focus) {
-      _focusHistory.insert(0, FocusSessionLog(
+      unawaited(_recordFocusSession(
         title: _selectedTask?.title ?? 'Focus Session',
         taskId: _selectedTask?.id,
-        time: DateTime.now(),
         durationMinutes: _focusMinutes,
       ));
     }
@@ -816,109 +837,6 @@ class FocusProvider with ChangeNotifier, WidgetsBindingObserver {
     }
 
     notifyListeners();
-  }
-
-  List<FocusSessionLog> _buildMockHistory() {
-    final now = DateTime.now();
-
-    return [
-      FocusSessionLog(
-        title: 'Finish Flutter Assignment',
-        taskId: '1',
-        time: now.subtract(const Duration(hours: 2, minutes: 15)),
-        durationMinutes: 25,
-      ),
-      FocusSessionLog(
-        title: 'Debug layout overflow',
-        taskId: '10',
-        time: now.subtract(const Duration(hours: 4, minutes: 20)),
-        durationMinutes: 30,
-      ),
-      FocusSessionLog(
-        title: 'Review PRs',
-        taskId: '10',
-        time: now.subtract(const Duration(hours: 5, minutes: 10)),
-        durationMinutes: 15,
-      ),
-      FocusSessionLog(
-        title: 'Setup Firebase Authentication',
-        taskId: '7',
-        time: now.subtract(const Duration(days: 1, hours: 3)),
-        durationMinutes: 30,
-      ),
-      FocusSessionLog(
-        title: 'Task grooming',
-        taskId: '11',
-        time: now.subtract(const Duration(days: 1, hours: 6)),
-        durationMinutes: 35,
-      ),
-      FocusSessionLog(
-        title: 'Plan next week sprint',
-        taskId: '11',
-        time: now.subtract(const Duration(days: 2, hours: 1)),
-        durationMinutes: 45,
-      ),
-      FocusSessionLog(
-        title: 'State management deep dive',
-        taskId: '4',
-        time: now.subtract(const Duration(days: 2, hours: 7)),
-        durationMinutes: 20,
-      ),
-      FocusSessionLog(
-        title: 'Prepare slides for presentation',
-        taskId: '20',
-        time: now.subtract(const Duration(days: 3, hours: 4)),
-        durationMinutes: 35,
-      ),
-      FocusSessionLog(
-        title: 'Polish dashboard cards',
-        taskId: '2',
-        time: now.subtract(const Duration(days: 3, hours: 7)),
-        durationMinutes: 30,
-      ),
-      FocusSessionLog(
-        title: 'Write test scenarios',
-        taskId: '6',
-        time: now.subtract(const Duration(days: 4, hours: 2)),
-        durationMinutes: 60,
-      ),
-      FocusSessionLog(
-        title: 'Read Atomic Habits Ch. 1',
-        taskId: '16',
-        time: now.subtract(const Duration(days: 5, hours: 2)),
-        durationMinutes: 20,
-      ),
-      FocusSessionLog(
-        title: 'Refactor project cards',
-        taskId: '15',
-        time: now.subtract(const Duration(days: 5, hours: 6)),
-        durationMinutes: 45,
-      ),
-      FocusSessionLog(
-        title: 'Write project report',
-        taskId: '6',
-        time: now.subtract(const Duration(days: 8, hours: 5)),
-        durationMinutes: 35,
-      ),
-      FocusSessionLog(
-        title: 'UI Design Home Screen',
-        taskId: '2',
-        time: now.subtract(const Duration(days: 12, hours: 2)),
-        durationMinutes: 40,
-      ),
-      FocusSessionLog(
-        title: 'Watch Flutter Animation Tutorial',
-        taskId: '18',
-        time: now.subtract(const Duration(days: 18, hours: 3)),
-        durationMinutes: 25,
-      ),
-      FocusSessionLog(
-        title: 'Submit Q3 Expense Report',
-        taskId: '17',
-        time: now.subtract(const Duration(days: 24, hours: 6)),
-        durationMinutes: 50,
-      ),
-    ];
   }
 
   void _showNotification(String message) {

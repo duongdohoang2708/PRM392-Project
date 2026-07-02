@@ -1,17 +1,61 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../models/project_model.dart';
-import '../theme/app_colors.dart';
+import '../repositories/project_repository.dart';
+import '../repositories/task_repository.dart';
 import 'task_provider.dart';
 
 class ProjectProvider with ChangeNotifier {
   final List<Project> _projects = [];
+  final ProjectRepository _projectRepository = ProjectRepository();
+  final TaskRepository _taskRepository = TaskRepository();
   TaskProvider? _taskProvider;
-  
-  String _activeFilter = 'All'; // 'All', 'In Progress', 'Completed'
+  StreamSubscription<List<Project>>? _projectsSubscription;
+  String? _uid;
+
+  String _activeFilter = 'All';
   String _searchQuery = '';
-  String _viewMode = 'list'; // 'list' or 'grid'
-  ProjectProvider() {
-    _initializeMockProjects();
+  String _viewMode = 'list';
+
+  ProjectProvider();
+
+  void bindUser(String? uid) {
+    if (_uid == uid) return;
+    _uid = uid;
+    _projectsSubscription?.cancel();
+    _projects.clear();
+    if (uid == null) {
+      notifyListeners();
+      return;
+    }
+    _projectsSubscription = _projectRepository.watchProjects(uid).listen((projects) {
+      if (_hasSameProjectSnapshot(_projects, projects)) return;
+      _projects
+        ..clear()
+        ..addAll(projects);
+      _checkAndUpdateProjectStatuses();
+      notifyListeners();
+    });
+  }
+
+  bool _hasSameProjectSnapshot(List<Project> current, List<Project> incoming) {
+    if (current.length != incoming.length) return false;
+
+    final incomingById = {for (final project in incoming) project.id: project};
+    for (final project in current) {
+      final updated = incomingById[project.id];
+      if (updated == null) return false;
+      if (project.name != updated.name ||
+          project.description != updated.description ||
+          project.colorValue != updated.colorValue ||
+          project.icon.codePoint != updated.icon.codePoint ||
+          project.status != updated.status) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void update(TaskProvider taskProvider) {
@@ -20,15 +64,15 @@ class ProjectProvider with ChangeNotifier {
   }
 
   void _checkAndUpdateProjectStatuses() {
-    if (_taskProvider == null) return;
-    
+    if (_taskProvider == null || _uid == null) return;
+
     bool hasChanged = false;
     for (int i = 0; i < _projects.length; i++) {
       final project = _projects[i];
       final projectTasks = _taskProvider!.tasks
-          .where((t) => t.project == project.name)
+          .where((t) => t.projectId == project.id)
           .toList();
-      
+
       String newStatus;
       if (projectTasks.isEmpty) {
         newStatus = 'In Progress';
@@ -36,72 +80,20 @@ class ProjectProvider with ChangeNotifier {
         final allCompleted = projectTasks.every((t) => t.isCompleted);
         newStatus = allCompleted ? 'Completed' : 'In Progress';
       }
-      
+
       if (project.status != newStatus) {
-        _projects[i] = project.copyWith(status: newStatus);
+        final updated = project.copyWith(status: newStatus);
+        _projects[i] = updated;
         hasChanged = true;
+        unawaited(_projectRepository.updateProject(_uid!, updated));
       }
     }
-    
+
     if (hasChanged) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifyListeners();
       });
     }
-  }
-
-  void _initializeMockProjects() {
-    _projects.addAll([
-      Project(
-        id: 'p1',
-        name: 'PRM392 Mobile App',
-        description: 'Final project prototype and user testing',
-        colorValue: AppColors.primary.toARGB32(), 
-        status: 'In Progress',
-      ),
-      Project(
-        id: 'p2',
-        name: 'Apartment Hunt',
-        description: 'Researching neighborhoods and setting up viewings',
-        colorValue: AppColors.accentYellow.toARGB32(),
-        status: 'In Progress',
-      ),
-      Project(
-        id: 'p3',
-        name: 'Design Portfolio',
-        description: 'Update case studies with recent freelance work',
-        colorValue: AppColors.accentPeach.toARGB32(),
-        status: 'Completed',
-      ),
-      Project(
-        id: 'p4',
-        name: 'Reading List 2024',
-        description: 'Track books read and write short summaries',
-        colorValue: AppColors.accentPink.toARGB32(),
-        status: 'In Progress',
-      ),
-      Project(
-        id: 'p5',
-        name: 'Learn Flutter',
-        description: 'Watch tutorials and build sample apps',
-        colorValue: AppColors.primary.toARGB32(),
-        status: 'In Progress',
-      ),
-      Project(
-        id: 'p6',
-        name: 'Personal Goals',
-        description: 'Habits and health tracking',
-        colorValue: AppColors.accentYellow.toARGB32(), 
-        status: 'In Progress',
-      ),
-      Project(
-        id: 'p7',
-        name: 'Work',
-        description: 'Company tasks and assignments',
-        colorValue: AppColors.accentPeach.toARGB32(), 
-        status: 'In Progress',
-      ),
-    ]);
   }
 
   List<Project> get projects => _projects;
@@ -111,17 +103,17 @@ class ProjectProvider with ChangeNotifier {
   List<Project> get filteredProjects {
     Iterable<Project> result = _projects;
 
-    // Filter by Status
     if (_activeFilter != 'All') {
       result = result.where((p) => p.status == _activeFilter);
     }
 
-    // Search Query
     if (_searchQuery.trim().isNotEmpty) {
       final query = _searchQuery.trim().toLowerCase();
-      result = result.where((p) =>
-          p.name.toLowerCase().contains(query) ||
-          p.description.toLowerCase().contains(query));
+      result = result.where(
+        (p) =>
+            p.name.toLowerCase().contains(query) ||
+            p.description.toLowerCase().contains(query),
+      );
     }
 
     return result.toList();
@@ -148,21 +140,50 @@ class ProjectProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void addProject(Project project) {
-    _projects.add(project);
-    notifyListeners();
+  Future<void> addProject(Project project) async {
+    final uid = _uid;
+    if (uid == null) return;
+    await _projectRepository.createProject(uid, project);
   }
 
-  void updateProject(Project updated) {
-    final index = _projects.indexWhere((p) => p.id == updated.id);
+  Future<void> updateProject(Project updated) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final index = _projects.indexWhere((project) => project.id == updated.id);
     if (index != -1) {
       _projects[index] = updated;
+      _projects.sort((a, b) => a.name.compareTo(b.name));
       notifyListeners();
     }
+
+    await _projectRepository.updateProject(uid, updated);
   }
 
-  void deleteProject(String id) {
-    _projects.removeWhere((p) => p.id == id);
-    notifyListeners();
+  Future<void> deleteProject(String id) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final removedIndex = _projects.indexWhere((project) => project.id == id);
+    if (removedIndex != -1) {
+      _projects.removeAt(removedIndex);
+      notifyListeners();
+    }
+
+    await _taskRepository.deleteTasksByProjectId(uid, id);
+    await _projectRepository.deleteProject(uid, id);
+  }
+
+  Project? findById(String id) {
+    for (final project in _projects) {
+      if (project.id == id) return project;
+    }
+    return null;
+  }
+
+  @override
+  void dispose() {
+    _projectsSubscription?.cancel();
+    super.dispose();
   }
 }

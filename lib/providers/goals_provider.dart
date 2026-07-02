@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../services/user_settings_sync.dart';
+import '../models/focus_session_model.dart';
 import '../models/task_model.dart';
 import '../utils/calendar_week_config.dart';
 import 'focus_provider.dart';
@@ -118,12 +120,14 @@ class GoalsProvider with ChangeNotifier {
   static const int defaultFocusGoalMinutes = 60;
   static const int manualRestCreditsPerMonth = 3;
 
-  /// Dart [DateTime.weekday]: 1 = Mon … 7 = Sun.
-  static const Set<int> defaultRestWeekdays = {DateTime.sunday};
+  /// Dart [DateTime.weekday]: 1 = Mon … 7 = Sun. Empty = no weekly freeze day.
+  static const Set<int> defaultRestWeekdays = <int>{};
 
   TaskProvider? _taskProvider;
   FocusProvider? _focusProvider;
   Timer? _sourceNotifyDebounce;
+  final UserSettingsSync _settingsSync = UserSettingsSync();
+  String? _uid;
 
   int _focusGoal = defaultFocusGoalMinutes;
   Set<int> _restWeekdays = Set<int>.from(defaultRestWeekdays);
@@ -139,11 +143,59 @@ class GoalsProvider with ChangeNotifier {
   int get manualRestCreditsRemaining =>
       manualRestCreditsPerMonth - manualRestCreditsUsedThisMonth;
 
+  void bindUser(String? uid) {
+    if (_uid == uid) return;
+    _uid = uid;
+    if (uid == null) return;
+    unawaited(_pullRemoteGoals());
+  }
+
+  Future<void> _pullRemoteGoals() async {
+    final uid = _uid;
+    if (uid == null) return;
+    final remote = await _settingsSync.pull(uid);
+    if (remote == null) {
+      await _pushGoals();
+      return;
+    }
+    final focusGoal = remote['focusGoal'];
+    if (focusGoal is int) _focusGoal = focusGoal.clamp(15, 720);
+    final weekdays = remote['restWeekdays'];
+    if (weekdays is List) {
+      _restWeekdays = weekdays.whereType<int>().where((d) => d >= 1 && d <= 7).toSet();
+    }
+    final manualDays = remote['manualRestDays'];
+    if (manualDays is List) {
+      _manualRestDays
+        ..clear()
+        ..addAll(
+          manualDays
+              .whereType<String>()
+              .map(DateTime.tryParse)
+              .whereType<DateTime>()
+              .map(_normalizeDay),
+        );
+    }
+    notifyListeners();
+  }
+
+  Future<void> _pushGoals() async {
+    final uid = _uid;
+    if (uid == null) return;
+    await _settingsSync.merge(uid, {
+      'focusGoal': _focusGoal,
+      'restWeekdays': _restWeekdays.toList(),
+      'manualRestDays':
+          _manualRestDays.map((day) => day.toIso8601String()).toList(),
+    });
+  }
+
   void setFocusGoal(int focusGoal) {
     final nextFocusGoal = focusGoal.clamp(15, 720);
     if (_focusGoal == nextFocusGoal) return;
     _focusGoal = nextFocusGoal;
     notifyListeners();
+    unawaited(_pushGoals());
   }
 
   void setRestWeekdays(Set<int> weekdays) {
@@ -151,6 +203,7 @@ class GoalsProvider with ChangeNotifier {
     if (setEquals(_restWeekdays, next)) return;
     _restWeekdays = next;
     notifyListeners();
+    unawaited(_pushGoals());
   }
 
   bool isScheduledRestDay(DateTime day) =>
@@ -197,6 +250,7 @@ class GoalsProvider with ChangeNotifier {
     }
     _manualRestDays.add(today);
     notifyListeners();
+    unawaited(_pushGoals());
     return ManualRestResult.success;
   }
 

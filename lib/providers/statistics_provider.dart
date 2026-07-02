@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../models/focus_session_model.dart';
 import '../models/task_model.dart';
 import '../utils/calendar_week_config.dart';
 import '../utils/formatters/app_date_time_format.dart';

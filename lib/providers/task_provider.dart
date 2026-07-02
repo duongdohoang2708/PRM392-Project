@@ -1,18 +1,41 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../models/project_model.dart';
 import '../models/task_model.dart';
+import '../repositories/task_repository.dart';
+import '../utils/project_task_utils.dart';
 import '../utils/reminder/task_reminder.dart';
 import '../utils/validation/task_deadline_rules.dart';
+import 'project_provider.dart';
 import 'settings_provider.dart';
 
 class TaskProvider with ChangeNotifier {
   final List<Task> _tasks = [];
+  final TaskRepository _taskRepository = TaskRepository();
   Timer? _searchNotifyDebounce;
   SettingsProvider? _settingsProvider;
+  ProjectProvider? _projectProvider;
+  StreamSubscription<List<Task>>? _tasksSubscription;
+  String? _uid;
 
-  TaskProvider() {
-    _initializeMockTasks();
+  TaskProvider();
+
+  void bindUser(String? uid) {
+    if (_uid == uid) return;
+    _uid = uid;
+    _tasksSubscription?.cancel();
+    _tasks.clear();
+    if (uid == null) {
+      notifyListeners();
+      return;
+    }
+    _tasksSubscription = _taskRepository.watchTasks(uid).listen((tasks) {
+      _tasks
+        ..clear()
+        ..addAll(tasks);
+      notifyListeners();
+    });
   }
 
   void bindSettings(SettingsProvider settingsProvider) {
@@ -26,260 +49,15 @@ class TaskProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void _initializeMockTasks() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    _tasks.addAll([
-      Task(
-        id: '1',
-        title: 'Finish Flutter Assignment',
-        project: 'PRM392 Mobile App',
-        priority: 'High',
-        dueDate: today.add(const Duration(hours: 10)),
-        notes:
-            'Read chapters 4 and 5 in the Flutter Cookbook. Implement API service and write unit tests.',
-        subTasks: [
-          SubTask(id: '1_1', title: 'Read chapters 4 and 5', isCompleted: true),
-          SubTask(
-            id: '1_2',
-            title: 'Implement API service',
-            isCompleted: false,
-          ),
-          SubTask(id: '1_3', title: 'Write unit tests', isCompleted: false),
-        ],
-      ),
-      Task(
-        id: '2',
-        title: 'UI Design Home Screen',
-        project: 'PRM392 Mobile App',
-        priority: 'Medium',
-        dueDate: today.add(const Duration(hours: 14)),
-        isCompleted: true,
-      ),
-      Task(
-        id: '3',
-        title: 'Go to the Gym',
-        project: 'Personal Goals',
-        priority: 'Low',
-      ),
-      Task(
-        id: '4',
-        title: 'Learn Provider State Management',
-        project: 'Learn Flutter',
-        priority: 'Medium',
-        dueDate: today.add(const Duration(days: 1, hours: 10)),
-        isImportant: true,
-      ),
-      Task(
-        id: '5',
-        title: 'Read Chapter 6 - Flutter Cookbook',
-        project: 'Learn Flutter',
-        priority: 'Low',
-        dueDate: today.add(const Duration(days: 1, hours: 15)),
-      ),
-      Task(
-        id: '6',
-        title: 'Write project report',
-        project: 'PRM392 Mobile App',
-        priority: 'High',
-        dueDate: today.add(const Duration(days: 3)),
-        isAllDay: true,
-      ),
-      Task(
-        id: '7',
-        title: 'Setup Firebase Authentication',
-        project: 'PRM392 Mobile App',
-        priority: 'Medium',
-        dueDate: today.subtract(const Duration(days: 2, hours: -10)),
-      ),
-      Task(
-        id: '8',
-        title: 'Buy groceries',
-        project: 'Personal Goals',
-        priority: 'Low',
-      ),
-      Task(
-        id: '9',
-        title: 'Call mom',
-        project: 'Personal Goals',
-        priority: 'Medium',
-      ),
-      Task(
-        id: '10',
-        title: 'Review PRs',
-        project: 'PRM392 Mobile App',
-        priority: 'High',
-        dueDate: today,
-        isAllDay: true,
-      ),
-      Task(
-        id: '11',
-        title: 'Plan next week sprint',
-        project: 'Work',
-        priority: 'Medium',
-        dueDate: today.add(const Duration(days: 1, hours: 14)),
-      ),
-      Task(
-        id: '12',
-        title: 'Meditate for 10 minutes',
-        project: 'Personal Goals',
-        priority: 'Low',
-        dueDate: today.add(const Duration(hours: 22)),
-      ),
-      Task(
-        id: '13',
-        title: 'Visit Green Valley Apartment',
-        project: 'Apartment Hunt',
-        priority: 'High',
-        dueDate: today.add(const Duration(days: 2)),
-      ),
-      Task(
-        id: '14',
-        title: 'Draft email to landlord',
-        project: 'Apartment Hunt',
-        priority: 'Medium',
-        isCompleted: true,
-      ),
-      Task(
-        id: '15',
-        title: 'Update Behance profile',
-        project: 'Design Portfolio',
-        priority: 'Medium',
-        dueDate: today.add(const Duration(days: 4)),
-      ),
-      Task(
-        id: '16',
-        title: 'Read Atomic Habits Ch. 1',
-        project: 'Reading List 2024',
-        priority: 'Low',
-        dueDate: today.add(const Duration(hours: 20)),
-      ),
-      Task(
-        id: '17',
-        title: 'Submit Q3 Expense Report',
-        project: 'Work',
-        priority: 'High',
-        dueDate: today.add(const Duration(days: 5)),
-        isCompleted: true,
-      ),
-      Task(
-        id: '18',
-        title: 'Watch Flutter Animation Tutorial',
-        project: 'Learn Flutter',
-        priority: 'Medium',
-        dueDate: today.subtract(const Duration(days: 1)),
-        isCompleted: true,
-      ),
-      Task(
-        id: '19',
-        title: 'Submit Expense Report',
-        project: 'Work',
-        priority: 'High',
-        dueDate: today.subtract(const Duration(days: 3, hours: -10)),
-      ),
-      Task(
-        id: '20',
-        title: 'Prepare slides for presentation',
-        project: 'Work',
-        priority: 'High',
-        dueDate: today.add(const Duration(days: 1, hours: 16)),
-      ),
-      Task(
-        id: '21',
-        title: 'Read 20 pages of new book',
-        project: 'Personal Goals',
-        priority: 'Low',
-        dueDate: today.add(const Duration(days: 1, hours: 21)),
-        isCompleted: true,
-      ),
-    ]);
-
-    _applyMockTaskTimestamps(today);
+  void bindProjects(ProjectProvider projectProvider) {
+    _projectProvider = projectProvider;
   }
 
-  void _applyMockTaskTimestamps(DateTime today) {
-    final now = DateTime.now();
-
-    for (int index = 0; index < _tasks.length; index++) {
-      final task = _tasks[index];
-      final dueDate = task.dueDate;
-
-      final createdAt = dueDate != null
-          ? DateTime(
-              dueDate.year,
-              dueDate.month,
-              dueDate.day,
-            ).subtract(Duration(days: 2 + (index % 5))).add(
-              Duration(hours: 8 + (index % 5)),
-            )
-          : today
-                .subtract(Duration(days: (index % 12) + 1))
-                .add(Duration(hours: 9 + (index % 4)));
-
-      DateTime? completedAt;
-      if (task.isCompleted) {
-        if (dueDate != null) {
-          final suggestedCompletedAt = dueDate.subtract(
-            Duration(hours: 1 + (index % 3)),
-          );
-          completedAt = suggestedCompletedAt.isAfter(now)
-              ? now.subtract(Duration(hours: 2 + index))
-              : suggestedCompletedAt;
-        } else {
-          final suggestedCompletedAt = createdAt.add(
-            Duration(hours: 4 + (index % 3)),
-          );
-          completedAt = suggestedCompletedAt.isAfter(now)
-              ? now.subtract(Duration(hours: 2 + index))
-              : suggestedCompletedAt;
-        }
-      }
-
-      _tasks[index] = task.copyWith(
-        createdAt: createdAt,
-        completedAt: completedAt,
-        reminder: _defaultReminderFor(task),
-      );
-    }
-
-    // Keep recent mock data aligned with dynamic streak-goal rules:
-    // each streak day has all tasks due that day completed.
-    final completionPlan = <String, int>{
-      '1': 0,
-      '10': 0,
-      '4': 1,
-      '5': 1,
-      '6': 2,
-      '7': 2,
-      '8': 3,
-      '9': 3,
-      '11': 4,
-      '12': 4,
-      '13': 5,
-      '15': 5,
-    };
-
-    completionPlan.forEach((taskId, dayOffset) {
-      final index = _tasks.indexWhere((task) => task.id == taskId);
-      if (index == -1) return;
-
-      final task = _tasks[index];
-      final completionDay = DateTime(today.year, today.month, today.day)
-          .subtract(Duration(days: dayOffset));
-      final dueDate = completionDay.add(Duration(hours: 9 + (index % 5)));
-      final completedAt = completionDay.add(Duration(hours: 11 + (index % 6)));
-      final safeCreatedAt = task.createdAt.isAfter(completedAt)
-          ? completedAt.subtract(const Duration(days: 1))
-          : task.createdAt;
-
-      _tasks[index] = task.copyWith(
-        createdAt: safeCreatedAt,
-        dueDate: dueDate,
-        isCompleted: true,
-        completedAt: completedAt,
-      );
-    });
+  @override
+  void dispose() {
+    _searchNotifyDebounce?.cancel();
+    _tasksSubscription?.cancel();
+    super.dispose();
   }
 
   String _defaultReminderFor(Task task) {
@@ -307,9 +85,9 @@ class TaskProvider with ChangeNotifier {
 
   // Available dropdown options (derived from current tasks)
   List<String> get availableProjects {
-    final projects = _tasks.map((t) => t.project).toSet().toList();
-    projects.sort();
-    return ['All Projects', ...projects];
+    final projects = _projectProvider?.projects ?? const <Project>[];
+    final names = projects.map((p) => p.name).toList()..sort();
+    return ['All Projects', ...names];
   }
 
   List<String> get availablePriorities => [
@@ -407,7 +185,13 @@ class TaskProvider with ChangeNotifier {
 
     // 3. Dropdown Filters
     if (_filterProject != 'All Projects') {
-      result = result.where((t) => t.project == _filterProject);
+      final projectId = projectIdForName(
+        _projectProvider?.projects ?? const [],
+        _filterProject,
+      );
+      result = result.where(
+        (t) => projectId != null && t.projectId == projectId,
+      );
     }
     if (_filterPriority != 'All Priorities') {
       result = result.where((t) => t.priority == _filterPriority);
@@ -618,16 +402,23 @@ class TaskProvider with ChangeNotifier {
   }
 
   // Project Progress
-  double getProjectProgress(String projectName) {
-    final projectTasks = _tasks.where((t) => t.project == projectName).toList();
+  double getProjectProgress(String projectId) {
+    final projectTasks =
+        _tasks.where((t) => t.projectId == projectId).toList();
     if (projectTasks.isEmpty) return 0.0;
 
     final completed = projectTasks.where((t) => t.isCompleted).length;
     return completed / projectTasks.length;
   }
 
-  int getProjectTaskCount(String projectName) {
-    return _tasks.where((t) => t.project == projectName).length;
+  int getProjectTaskCount(String projectId) {
+    return _tasks.where((t) => t.projectId == projectId).length;
+  }
+
+  Future<void> _persistTask(Task task) async {
+    final uid = _uid;
+    if (uid == null) return;
+    await _taskRepository.updateTask(uid, task);
   }
 
   // Setters
@@ -667,21 +458,21 @@ class TaskProvider with ChangeNotifier {
 
   void toggleTaskCompletion(String id) {
     final index = _tasks.indexWhere((t) => t.id == id);
-    if (index != -1) {
-      final willBeCompleted = !_tasks[index].isCompleted;
-      
-      // Update subtasks as well
-      final updatedSubTasks = _tasks[index].subTasks.map(
-        (st) => st.copyWith(isCompleted: willBeCompleted)
-      ).toList();
+    if (index == -1) return;
 
-      _tasks[index] = _tasks[index].copyWith(
-        isCompleted: willBeCompleted,
-        completedAt: willBeCompleted ? DateTime.now() : null,
-        subTasks: updatedSubTasks,
-      );
-      notifyListeners();
-    }
+    final willBeCompleted = !_tasks[index].isCompleted;
+    final updatedSubTasks = _tasks[index].subTasks
+        .map((st) => st.copyWith(isCompleted: willBeCompleted))
+        .toList();
+
+    final updated = _tasks[index].copyWith(
+      isCompleted: willBeCompleted,
+      completedAt: willBeCompleted ? DateTime.now() : null,
+      subTasks: updatedSubTasks,
+    );
+    _tasks[index] = updated;
+    notifyListeners();
+    unawaited(_persistTask(updated));
   }
 
   void addSubTask(String taskId, {String? subTaskId}) {
@@ -693,6 +484,7 @@ class TaskProvider with ChangeNotifier {
     final subTasks = [...task.subTasks, SubTask(id: newId, title: '')];
     _tasks[taskIndex] = task.copyWith(subTasks: subTasks);
     notifyListeners();
+    unawaited(_persistTask(_tasks[taskIndex]));
   }
 
   void updateSubTaskTitle(String taskId, String subTaskId, String title) {
@@ -720,6 +512,7 @@ class TaskProvider with ChangeNotifier {
           : (allCompleted ? (task.completedAt ?? DateTime.now()) : null),
     );
     notifyListeners();
+    unawaited(_persistTask(_tasks[taskIndex]));
   }
 
   void removeSubTask(String taskId, String subTaskId) {
@@ -737,6 +530,7 @@ class TaskProvider with ChangeNotifier {
           : (allCompleted ? (task.completedAt ?? DateTime.now()) : null),
     );
     notifyListeners();
+    unawaited(_persistTask(_tasks[taskIndex]));
   }
 
   void toggleSubTaskCompletion(String taskId, String subTaskId, {bool autoCompleteParent = true}) {
@@ -757,6 +551,7 @@ class TaskProvider with ChangeNotifier {
           completedAt: (autoCompleteParent && allCompleted && !task.isCompleted) ? DateTime.now() : (allCompleted ? task.completedAt : null),
         );
         notifyListeners();
+        unawaited(_persistTask(_tasks[taskIndex]));
       }
     }
   }
@@ -768,35 +563,45 @@ class TaskProvider with ChangeNotifier {
         isImportant: !_tasks[index].isImportant,
       );
       notifyListeners();
+      unawaited(_persistTask(_tasks[index]));
     }
   }
 
-  bool addTask(Task task) {
+  Future<bool> addTask(Task task) async {
     if (!TaskDeadlineRules.isValidForCreate(task.dueDate)) {
       return false;
     }
+    final uid = _uid;
+    if (uid == null) return false;
+
     final normalizedTask = task.isCompleted && task.completedAt == null
         ? task.copyWith(completedAt: DateTime.now())
         : task;
-    _tasks.add(normalizedTask);
-    notifyListeners();
+    await _taskRepository.createTask(uid, normalizedTask);
     return true;
   }
 
-  void updateTask(Task updatedTask) {
-    final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
+  Future<void> updateTask(Task updatedTask) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final normalizedTask = updatedTask.isCompleted && updatedTask.completedAt == null
+        ? updatedTask.copyWith(completedAt: DateTime.now())
+        : updatedTask;
+
+    final index = _tasks.indexWhere((task) => task.id == normalizedTask.id);
     if (index != -1) {
-      final normalizedTask = updatedTask.isCompleted && updatedTask.completedAt == null
-          ? updatedTask.copyWith(completedAt: DateTime.now())
-          : updatedTask;
       _tasks[index] = normalizedTask;
       notifyListeners();
     }
+
+    await _taskRepository.updateTask(uid, normalizedTask);
   }
 
-  void deleteTask(String id) {
-    _tasks.removeWhere((t) => t.id == id);
-    notifyListeners();
+  Future<void> deleteTask(String id) async {
+    final uid = _uid;
+    if (uid == null) return;
+    await _taskRepository.deleteTask(uid, id);
   }
 
   // Dashboard Metrics

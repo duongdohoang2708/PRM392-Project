@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/activity_mode.dart';
 import '../theme/activity_mode_palette.dart';
 import '../utils/activity_mode_schedule_validator.dart';
+import '../services/user_settings_sync.dart';
 import '../utils/formatters/app_date_time_format.dart';
 
 class ActivityModeProvider with ChangeNotifier, WidgetsBindingObserver {
@@ -26,6 +27,14 @@ class ActivityModeProvider with ChangeNotifier, WidgetsBindingObserver {
   bool _loaded = false;
   ActivityModeId? _trackedScheduledMode;
   bool _scheduleTrackerInitialized = false;
+  String? _uid;
+  final UserSettingsSync _settingsSync = UserSettingsSync();
+
+  void bindUser(String? uid) {
+    if (_uid == uid) return;
+    _uid = uid;
+    if (uid != null && _loaded) unawaited(_pullRemoteState());
+  }
 
   ActivityModeProvider() {
     _schedules = {
@@ -151,6 +160,105 @@ class ActivityModeProvider with ChangeNotifier, WidgetsBindingObserver {
     _recomputeActiveModeFromClock(isColdStart: true);
     _loaded = true;
     notifyListeners();
+    if (_uid != null) unawaited(_pullRemoteState());
+  }
+
+  Future<void> _pullRemoteState() async {
+    final uid = _uid;
+    if (uid == null) return;
+    final remote = await _settingsSync.pull(uid);
+    if (remote == null) {
+      await _pushRemoteState();
+      return;
+    }
+    final schedules = remote['activitySchedules'];
+    if (schedules is Map) {
+      await _applyRemoteSchedules(
+        Map<String, dynamic>.from(schedules),
+      );
+      _syncSuppressionWithSchedule();
+      _recomputeActiveModeFromClock();
+      notifyListeners();
+    }
+  }
+
+  Future<void> _pushRemoteState() async {
+    final uid = _uid;
+    if (uid == null) return;
+    await _settingsSync.merge(uid, {
+      'activitySchedules': _schedulesToRemote(),
+    });
+  }
+
+  Map<String, dynamic> _schedulesToRemote() {
+    final result = <String, dynamic>{};
+    for (final preset in ActivityModes.presets) {
+      if (preset.id == ActivityModeId.defaultMode) continue;
+      final schedule = scheduleFor(preset.id);
+      final key = ActivityModes.storageKeyFor(preset.id);
+      result[key] = {
+        'enabled': schedule.enabled,
+        'start': _encodeScheduleTime(schedule.start),
+        'end': _encodeScheduleTime(schedule.end),
+      };
+    }
+    return result;
+  }
+
+  Future<void> _applyRemoteSchedules(Map<String, dynamic> raw) async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final preset in ActivityModes.presets) {
+      if (preset.id == ActivityModeId.defaultMode) continue;
+
+      final key = ActivityModes.storageKeyFor(preset.id);
+      final entry = raw[key];
+      if (entry is! Map) continue;
+
+      final enabled = entry['enabled'] as bool? ?? preset.defaultSchedule.enabled;
+      final start = _readScheduleTime(
+        entry['start'] as String?,
+        preset.defaultSchedule.start,
+      );
+      final end = _readScheduleTime(
+        entry['end'] as String?,
+        preset.defaultSchedule.end,
+      );
+
+      final schedule = ActivityModeSchedule(
+        enabled: enabled,
+        start: start,
+        end: end,
+      );
+      _schedules[preset.id] = schedule;
+      await _persistScheduleToPrefs(preset.id, schedule, prefs);
+    }
+  }
+
+  String _encodeScheduleTime(TimeOfDay value) =>
+      '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+
+  TimeOfDay _readScheduleTime(String? raw, TimeOfDay fallback) {
+    if (raw == null || !raw.contains(':')) return fallback;
+    final parts = raw.split(':');
+    if (parts.length != 2) return fallback;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return fallback;
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return fallback;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  Future<void> _persistScheduleToPrefs(
+    ActivityModeId id,
+    ActivityModeSchedule schedule,
+    SharedPreferences prefs,
+  ) async {
+    final key = ActivityModes.storageKeyFor(id);
+    await prefs.setBool('activity_${key}_schedule_enabled', schedule.enabled);
+    await prefs.setInt('activity_${key}_start_h', schedule.start.hour);
+    await prefs.setInt('activity_${key}_start_m', schedule.start.minute);
+    await prefs.setInt('activity_${key}_end_h', schedule.end.hour);
+    await prefs.setInt('activity_${key}_end_m', schedule.end.minute);
   }
 
   Future<void> _loadSuppressedWindows(SharedPreferences prefs) async {
@@ -363,6 +471,59 @@ class ActivityModeProvider with ChangeNotifier, WidgetsBindingObserver {
     await _clearManualOverride();
   }
 
+  bool _pendingSignOutThemeCommit = false;
+
+  /// Updates palette to Default without rebuilding the widget tree.
+  Future<void> prepareDefaultThemeForSignOut() async {
+    final wasDefault = _activeModeId == ActivityModeId.defaultMode &&
+        !_manualOverrideActive &&
+        _suppressedWindowStarts.isEmpty;
+
+    _manualOverrideActive = false;
+    _manualModeId = ActivityModeId.defaultMode;
+    _manualExpiresAt = null;
+    _expiryTimer?.cancel();
+    _expiryTimer = null;
+
+    final now = DateTime.now();
+    for (final preset in ActivityModes.presets) {
+      if (preset.id == ActivityModeId.defaultMode) continue;
+
+      final schedule = scheduleFor(preset.id);
+      if (!schedule.enabled || !schedule.containsTime(now)) continue;
+
+      final windowStart = schedule.currentWindowStart(now);
+      if (windowStart != null) {
+        _suppressedWindowStarts[preset.id] = windowStart;
+      }
+    }
+
+    _activeModeId = ActivityModeId.defaultMode;
+    _pendingSignOutThemeCommit = !wasDefault;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_manualOverrideKey, false);
+    await prefs.remove(_manualExpiresAtKey);
+    await prefs.setString(
+      _manualModeKey,
+      ActivityModes.storageKeyFor(ActivityModeId.defaultMode),
+    );
+    await _persistSuppressedWindows();
+  }
+
+  /// Rebuilds the widget tree after sign-out navigation has reached login.
+  void commitDefaultThemeForSignOut() {
+    if (!_pendingSignOutThemeCommit) return;
+    _pendingSignOutThemeCommit = false;
+    notifyListeners();
+  }
+
+  /// Resets palette to Default on sign-out (local only — cloud settings unchanged).
+  Future<void> resetToDefaultForSignOut() async {
+    await prepareDefaultThemeForSignOut();
+    commitDefaultThemeForSignOut();
+  }
+
   Future<void> _clearManualOverride({bool persist = true}) async {
     if (!_manualOverrideActive && _manualExpiresAt == null) return;
     _manualOverrideActive = false;
@@ -395,12 +556,8 @@ class ActivityModeProvider with ChangeNotifier, WidgetsBindingObserver {
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
-    final key = ActivityModes.storageKeyFor(id);
-    await prefs.setBool('activity_${key}_schedule_enabled', schedule.enabled);
-    await prefs.setInt('activity_${key}_start_h', schedule.start.hour);
-    await prefs.setInt('activity_${key}_start_m', schedule.start.minute);
-    await prefs.setInt('activity_${key}_end_h', schedule.end.hour);
-    await prefs.setInt('activity_${key}_end_m', schedule.end.minute);
+    await _persistScheduleToPrefs(id, schedule, prefs);
+    if (_uid != null) unawaited(_pushRemoteState());
     return null;
   }
 

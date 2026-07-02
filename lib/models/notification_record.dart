@@ -1,3 +1,4 @@
+import '../repositories/firestore_paths.dart';
 import '../utils/reminder/task_reminder.dart';
 
 enum NotificationCategory {
@@ -68,6 +69,32 @@ class NotificationRecord {
       timestamp: DateTime.parse(json['timestamp'] as String),
       isRead: json['isRead'] as bool? ?? false,
       taskId: json['taskId'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toFirestore() => {
+        'category': category.name,
+        'title': title,
+        'body': body,
+        'timestamp': dateTimeToTimestamp(timestamp),
+        'isRead': isRead,
+        'taskId': taskId,
+      };
+
+  factory NotificationRecord.fromFirestore(
+    String id,
+    Map<String, dynamic> data,
+  ) {
+    return NotificationRecord(
+      id: id,
+      category: NotificationCategory.values.byName(
+        data['category'] as String? ?? NotificationCategory.system.name,
+      ),
+      title: data['title'] as String? ?? '',
+      body: data['body'] as String? ?? '',
+      timestamp: timestampToDateTime(data['timestamp']) ?? DateTime.now(),
+      isRead: data['isRead'] as bool? ?? false,
+      taskId: data['taskId'] as String?,
     );
   }
 }
