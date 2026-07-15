@@ -25,16 +25,11 @@ class SettingsProvider with ChangeNotifier {
   static const String _transparencyMultiplierKey =
       'settings_transparency_multiplier';
   static const String _cardFillSolidityKey = 'settings_card_fill_solidity';
-  static const String _cardTintStrengthKey = 'settings_card_tint_strength';
   static const String _backgroundDecorIconsKey = 'settings_background_decor_icons';
 
   static const double minCardFillSolidity = 0.0;
   static const double maxCardFillSolidity = 1.0;
   static const double defaultCardFillSolidity = 0.7;
-
-  static const double minCardTintStrength = 0.0;
-  static const double maxCardTintStrength = 2.0;
-  static const double defaultCardTintStrength = 0.4;
 
   /// Legacy multiplier range — migrated to [cardFillSolidity].
   static const double minTransparencyMultiplier = 0.5;
@@ -54,7 +49,6 @@ class SettingsProvider with ChangeNotifier {
   bool _use12HourClock = true;
   bool _weekStartsOnMonday = true;
   double _cardFillSolidity = defaultCardFillSolidity;
-  double _cardTintStrength = defaultCardTintStrength;
   bool _backgroundDecorIconsEnabled = true;
   bool _loaded = false;
   String? _uid;
@@ -126,15 +120,11 @@ class SettingsProvider with ChangeNotifier {
   bool get use12HourClock => _use12HourClock;
   bool get weekStartsOnMonday => _weekStartsOnMonday;
   double get cardFillSolidity => _cardFillSolidity;
-  double get cardTintStrength => _cardTintStrength;
   bool get backgroundDecorIconsEnabled => _backgroundDecorIconsEnabled;
   bool get isLoaded => _loaded;
 
   /// 0 = transparent card background, 100 = fully solid.
   int get cardFillSolidityPercent => (_cardFillSolidity * 100).round();
-
-  /// 100 = default tint; 0 = no accent tint; 200 = double strength.
-  int get cardTintStrengthPercent => (_cardTintStrength * 100).round();
 
   @Deprecated('Use cardFillSolidity')
   double get transparencyMultiplier => _cardFillSolidity;
@@ -224,7 +214,6 @@ class SettingsProvider with ChangeNotifier {
     _use12HourClock = prefs.getBool(_use12HourClockKey) ?? true;
     _weekStartsOnMonday = prefs.getBool(_weekStartsMondayKey) ?? true;
     _cardFillSolidity = _readCardFillSolidity(prefs);
-    _cardTintStrength = _readCardTintStrength(prefs);
     _backgroundDecorIconsEnabled =
         prefs.getBool(_backgroundDecorIconsKey) ?? true;
 
@@ -271,12 +260,6 @@ class SettingsProvider with ChangeNotifier {
     return legacy.clamp(minCardFillSolidity, maxCardFillSolidity);
   }
 
-  double _readCardTintStrength(SharedPreferences prefs) {
-    final stored = prefs.getDouble(_cardTintStrengthKey);
-    if (stored == null) return defaultCardTintStrength;
-    return stored.clamp(minCardTintStrength, maxCardTintStrength);
-  }
-
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
@@ -290,17 +273,14 @@ class SettingsProvider with ChangeNotifier {
   /// Light/dark [ThemeMode] is preserved on sign-out.
   Future<void> prepareDefaultAppearanceForSignOut() async {
     final changed = _cardFillSolidity != defaultCardFillSolidity ||
-        _cardTintStrength != defaultCardTintStrength ||
         _backgroundDecorIconsEnabled != true;
 
     _cardFillSolidity = defaultCardFillSolidity;
-    _cardTintStrength = defaultCardTintStrength;
     _backgroundDecorIconsEnabled = true;
     _pendingSignOutAppearanceCommit = changed;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_cardFillSolidityKey, defaultCardFillSolidity);
-    await prefs.setDouble(_cardTintStrengthKey, defaultCardTintStrength);
     await prefs.setBool(_backgroundDecorIconsKey, true);
   }
 
@@ -433,15 +413,6 @@ class SettingsProvider with ChangeNotifier {
     await prefs.setDouble(_cardFillSolidityKey, clamped);
   }
 
-  Future<void> setCardTintStrength(double value) async {
-    final clamped = value.clamp(minCardTintStrength, maxCardTintStrength);
-    if (_cardTintStrength == clamped) return;
-    _cardTintStrength = clamped;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_cardTintStrengthKey, clamped);
-  }
-
   Future<void> setBackgroundDecorIconsEnabled(bool enabled) async {
     if (_backgroundDecorIconsEnabled == enabled) return;
     _backgroundDecorIconsEnabled = enabled;
@@ -452,19 +423,10 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> resetCardAppearance() async {
     await setCardFillSolidity(defaultCardFillSolidity);
-    await setCardTintStrength(defaultCardTintStrength);
   }
 
   bool get isDefaultCardAppearance =>
-      _cardFillSolidity == defaultCardFillSolidity &&
-      _cardTintStrength == defaultCardTintStrength;
-
-  /// Human-readable card tint for settings subtitles and sliders.
-  String get cardTintStrengthLabel {
-    if (_cardTintStrength == 0) return 'No tint';
-    if (_cardTintStrength == maxCardTintStrength) return 'Strong tint';
-    return '${(_cardTintStrength * 100).round()}% tint';
-  }
+      _cardFillSolidity == defaultCardFillSolidity;
 
   String get cardAppearanceSubtitle {
     final parts = <String>[];
@@ -475,7 +437,6 @@ class SettingsProvider with ChangeNotifier {
     } else {
       parts.add('${((1 - _cardFillSolidity) * 100).round()}% transparent');
     }
-    parts.add(cardTintStrengthLabel);
     return parts.join(' · ');
   }
 

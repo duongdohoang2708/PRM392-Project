@@ -30,32 +30,8 @@ class AppOpacity {
     return context.watch<SettingsProvider>().cardFillSolidity;
   }
 
-  static double cardTintStrengthOf(BuildContext context) {
-    return context.watch<SettingsProvider>().cardTintStrength;
-  }
-
   static Color fixed(Color base, double alpha) {
     return base.withValues(alpha: alpha.clamp(0.0, 1.0));
-  }
-
-  static Color scaledTint(
-    Color accent,
-    double baseAlpha,
-    BuildContext context,
-  ) {
-    return fixed(accent, baseAlpha * cardTintStrengthOf(context));
-  }
-
-  /// Card fill: accent tint (strength from Settings) over adjustable surface layer.
-  static Color cardFill(
-    BuildContext context, {
-    required Color surface,
-    required Color accent,
-    required double tintAlpha,
-  }) {
-    final tint = scaledTint(accent, tintAlpha, context);
-    final solidity = cardFillSolidityOf(context);
-    return Color.alphaBlend(tint, surface.withValues(alpha: solidity));
   }
 
   /// Solid surface only (no accent tint), opacity controlled by Settings.

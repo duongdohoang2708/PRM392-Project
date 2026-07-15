@@ -71,8 +71,11 @@ class TintedAccentCard extends StatelessWidget {
       color: cardBg,
       borderRadius: BorderRadius.circular(borderRadius),
       border: variant == TintedAccentCardVariant.action
-          ? null
-          : Border.all(color: AppColors.statCardBorderOf(context, accentColor)),
+          ? Border.all(color: AppColors.borderOf(context), width: 1.0)
+          : Border.all(
+              color: AppColors.statCardBorderOf(context, accentColor),
+              width: 2.0,
+            ),
     );
 
     final child = Container(

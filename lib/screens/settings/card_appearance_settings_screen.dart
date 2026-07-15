@@ -16,9 +16,7 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final solidity = settings.cardFillSolidity;
-    final tintStrength = settings.cardTintStrength;
     final transparentPercent = ((1 - solidity) * 100).round();
-    final tintLabel = settings.cardTintStrengthLabel;
 
     return SettingsScreenShell(
       activeRoute: '/settings',
@@ -83,67 +81,6 @@ class CardAppearanceSettingsScreen extends StatelessWidget {
                       ),
                       Text(
                         'Solid',
-                        style: TextStyle(
-                          color: AppColors.textSecondaryOf(context),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Card tint',
-                  style: TextStyle(
-                    color: AppColors.textPrimaryOf(context),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  tintLabel,
-                  style: TextStyle(
-                    color: AppColors.primaryDarkOf(context),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            DrawerSwipeExclude(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Slider(
-                    value: tintStrength,
-                    min: SettingsProvider.minCardTintStrength,
-                    max: SettingsProvider.maxCardTintStrength,
-                    divisions: 20,
-                    label: tintLabel,
-                    activeColor: AppColors.primaryDarkOf(context),
-                    inactiveColor: AppColors.borderOf(context),
-                    onChanged: settings.setCardTintStrength,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Subtle',
-                        style: TextStyle(
-                          color: AppColors.textSecondaryOf(context),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        'Strong',
                         style: TextStyle(
                           color: AppColors.textSecondaryOf(context),
                           fontSize: 11,

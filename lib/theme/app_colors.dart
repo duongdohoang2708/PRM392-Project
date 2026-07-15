@@ -166,7 +166,7 @@ class AppColors {
   static Color popupPanelOverlayFillOf(BuildContext context) =>
       panelFillOf(context);
 
-  /// Card background: fixed accent tint + adjustable opaque surface layer.
+  /// Card background: now strictly the opaque surface layer without tint.
   /// Solidity 0 = transparent (see page background); 1 = solid card fill.
   static Color cardFillOf(
     BuildContext context, {
@@ -175,21 +175,7 @@ class AppColors {
     double darkTintAlpha = 0.12,
     Color? surface,
   }) {
-    final accent = projectAccentOf(context, accentColor);
-    final tintAlpha = isDark(context) ? darkTintAlpha : lightTintAlpha;
-    return AppOpacity.cardFill(
-      context,
-      surface: surface ?? cardOf(context),
-      accent: accent,
-      tintAlpha: tintAlpha,
-    );
-  }
-
-  /// Neutral grayscale base for active task cards — keeps project tint readable.
-  static Color taskCardNeutralSurfaceOf(BuildContext context) {
-    return isDark(context)
-        ? const Color(0xFF2A2A2C)
-        : const Color(0xFFF3F3F4);
+    return AppOpacity.solidSurfaceFill(context, surface ?? cardOf(context));
   }
 
   /// Task list/detail card tinted by project accent.
@@ -198,16 +184,12 @@ class AppColors {
     Color accentColor, {
     bool completed = false,
   }) {
-    if (completed) {
-      return cardSurfaceFillOf(context);
-    }
-    return cardFillOf(
-      context,
-      accentColor: accentColor,
-      surface: taskCardNeutralSurfaceOf(context),
-      lightTintAlpha: AppOpacity.surfaceTint,
-      darkTintAlpha: AppOpacity.surfaceTint,
-    );
+    final base = panelFillOf(context);
+    if (!completed) return base;
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final blendColor = isDark ? Colors.black : Colors.grey.shade400;
+    return Color.lerp(base, blendColor, isDark ? 0.3 : 0.25) ?? base;
   }
 
   /// Neutral task card (no project) — active matches project list panels.
@@ -215,12 +197,12 @@ class AppColors {
     BuildContext context, {
     required bool completed,
   }) {
-    if (!completed) {
-      return panelFillOf(context);
-    }
-    final solidity =
-        AppOpacity.cardFillSolidityOf(context) * AppOpacity.surfaceCompleted;
-    return cardOf(context).withValues(alpha: solidity.clamp(0.0, 1.0));
+    final base = panelFillOf(context);
+    if (!completed) return base;
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final blendColor = isDark ? Colors.black : Colors.grey.shade400;
+    return Color.lerp(base, blendColor, isDark ? 0.3 : 0.25) ?? base;
   }
 
   /// Border for neutral task cards — softer when completed.
@@ -228,10 +210,11 @@ class AppColors {
     BuildContext context, {
     required bool completed,
   }) {
+    final baseBorder = projectBorderOf(context, primaryOf(context));
     if (!completed) {
-      return borderOf(context);
+      return baseBorder;
     }
-    return AppOpacity.fixed(borderOf(context), AppOpacity.surfaceCompleted);
+    return AppOpacity.fixed(baseBorder, AppOpacity.surfaceCompleted);
   }
 
   /// Shared shell for task list/detail/create cards — project tint + border.
@@ -253,10 +236,10 @@ class AppColors {
     final double borderWidth;
     if (!tinted) {
       borderColor = neutralTaskCardBorderOf(context, completed: completed);
-      borderWidth = 1;
+      borderWidth = 2.0;
     } else {
       borderColor = projectBorderOf(context, accentColor);
-      borderWidth = 1.5;
+      borderWidth = 2.0;
     }
 
     return BoxDecoration(
@@ -286,7 +269,7 @@ class AppColors {
     );
   }
 
-  /// Project/task accent — slightly lifted in dark mode for readable, vivid chips.
+  /// General accent (Greeting, Smart Lists) — slightly lifted in dark mode.
   static Color projectAccentOf(BuildContext context, Color color) {
     if (!isDark(context)) return color;
     final hsl = HSLColor.fromColor(color);
@@ -295,9 +278,18 @@ class AppColors {
     return hsl.withSaturation(saturation).withLightness(lightness).toColor();
   }
 
+  /// Project/task accent — significantly lifted in dark mode for readable, vivid chips.
+  static Color vibrantProjectAccentOf(BuildContext context, Color color) {
+    if (!isDark(context)) return color;
+    final hsl = HSLColor.fromColor(color);
+    final saturation = (hsl.saturation + 0.15).clamp(0.0, 1.0);
+    final lightness = (hsl.lightness + 0.15).clamp(0.60, 0.75);
+    return hsl.withSaturation(saturation).withLightness(lightness).toColor();
+  }
+
   /// Border color for project/task cards — fixed alpha, not affected by setting.
   static Color projectBorderOf(BuildContext context, Color accentColor) {
-    final accent = projectAccentOf(context, accentColor);
+    final accent = vibrantProjectAccentOf(context, accentColor);
     return AppOpacity.fixed(accent, AppOpacity.borderStrong);
   }
 
@@ -308,17 +300,14 @@ class AppColors {
     double lightAlpha = 0.15,
     double darkAlpha = 0.20,
   }) {
-    return cardFillOf(
-      context,
-      accentColor: accentColor,
-      lightTintAlpha: lightAlpha,
-      darkTintAlpha: darkAlpha,
-    );
+    final accent = vibrantProjectAccentOf(context, accentColor);
+    final alpha = isDark(context) ? darkAlpha : lightAlpha;
+    return AppOpacity.fixed(accent, alpha);
   }
 
   /// Subtle glow/shadow from project accent — fixed, not affected by setting.
   static Color projectGlowOf(BuildContext context, Color accentColor) {
-    final accent = projectAccentOf(context, accentColor);
+    final accent = vibrantProjectAccentOf(context, accentColor);
     if (isDark(context)) {
       return accent.withValues(alpha: 0.0);
     }
@@ -327,7 +316,7 @@ class AppColors {
 
   /// Muted accent for checkbox rings and secondary accents.
   static Color projectMutedAccentOf(BuildContext context, Color accentColor) {
-    final accent = projectAccentOf(context, accentColor);
+    final accent = vibrantProjectAccentOf(context, accentColor);
     return AppOpacity.fixed(accent, AppOpacity.textMuted);
   }
 
@@ -337,27 +326,17 @@ class AppColors {
 
   static Color primaryLightTintOf(BuildContext context, {double alpha = 0.3}) {
     if (isDark(context)) {
-      return cardFillOf(
-        context,
-        accentColor: primaryOf(context),
-        lightTintAlpha: alpha * 0.5,
-        darkTintAlpha: alpha * 0.5,
-      );
+      return AppOpacity.fixed(primaryOf(context), alpha * 0.5);
     }
-    return cardFillOf(
-      context,
-      accentColor: primaryLightOf(context),
-      lightTintAlpha: alpha,
-      darkTintAlpha: alpha,
-    );
+    return AppOpacity.fixed(primaryLightOf(context), alpha);
   }
 
   /// Tinted stat/overview card background.
   static Color statCardBgOf(
     BuildContext context,
     Color accentColor, {
-    double lightAlpha = 0.28,
-    double darkAlpha = 0.28,
+    double lightAlpha = 0.12,
+    double darkAlpha = 0.16,
   }) {
     return cardFillOf(
       context,
@@ -367,11 +346,10 @@ class AppColors {
     );
   }
 
-  /// Tinted stat/overview card border — fixed alpha.
+  /// Tinted stat/overview card border — bolder alpha to stand out.
   static Color statCardBorderOf(BuildContext context, Color accentColor) {
     final accent = projectAccentOf(context, accentColor);
-    final baseAlpha = isDark(context) ? AppOpacity.borderAccent : 0.2;
-    return AppOpacity.fixed(accent, baseAlpha);
+    return AppOpacity.fixed(accent, 0.75);
   }
 
   /// Icon well behind stat/overview card icons — fixed alpha.
