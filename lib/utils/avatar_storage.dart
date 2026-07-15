@@ -19,25 +19,80 @@ class AvatarPickException implements Exception {
 class AvatarStorage {
   AvatarStorage._();
 
+  static String? documentDirPath;
+
   static const String base64Prefix = 'base64:';
-  static const int _maxBytes = 4 * 1024 * 1024;
+  static const int _maxBytes = 8 * 1024 * 1024;
 
   static bool isNetworkUrl(String? value) =>
       value != null &&
       (value.startsWith('http://') || value.startsWith('https://'));
 
+  static bool isAssetUrl(String? value) =>
+      value != null && value.startsWith('assets/');
+
   static bool isDeviceAvatar(String? value) =>
-      value != null && value.isNotEmpty && !isNetworkUrl(value);
+      value != null && value.isNotEmpty && !isNetworkUrl(value) && !isAssetUrl(value);
 
   static bool isLocalFilePath(String? value) =>
       value != null &&
       !kIsWeb &&
       !isNetworkUrl(value) &&
+      !isAssetUrl(value) &&
       !value.startsWith(base64Prefix);
+
+  static String? _getCachePath(String url) {
+    if (documentDirPath == null) return null;
+    final cleanUrl = url.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    final filename = cleanUrl.length > 100 
+        ? '${cleanUrl.substring(0, 100)}_${url.hashCode}'
+        : cleanUrl;
+    return '$documentDirPath/avatars/cache_$filename.jpg';
+  }
+
+  static void _cacheNetworkImageInBackground(String url, String cachePath) {
+    Future.microtask(() async {
+      try {
+        final file = File(cachePath);
+        if (await file.exists()) return;
+
+        final parent = file.parent;
+        if (!await parent.exists()) {
+          await parent.create(recursive: true);
+        }
+
+        final client = HttpClient();
+        client.connectionTimeout = const Duration(seconds: 5);
+        final request = await client.getUrl(Uri.parse(url));
+        final response = await request.close();
+        
+        if (response.statusCode == 200) {
+          final bytes = await response.fold<List<int>>([], (p, e) => p..addAll(e));
+          if (bytes.isNotEmpty) {
+            await file.writeAsBytes(bytes, flush: true);
+          }
+        }
+      } catch (_) {
+        // Ignore background cache errors
+      }
+    });
+  }
 
   static ImageProvider? imageProvider(String? avatarUrl) {
     if (avatarUrl == null || avatarUrl.isEmpty) return null;
-    if (isNetworkUrl(avatarUrl)) return NetworkImage(avatarUrl);
+    if (isNetworkUrl(avatarUrl)) {
+      final cachePath = _getCachePath(avatarUrl);
+      if (cachePath != null && File(cachePath).existsSync()) {
+        return FileImage(File(cachePath));
+      }
+      if (cachePath != null) {
+        _cacheNetworkImageInBackground(avatarUrl, cachePath);
+      }
+      return NetworkImage(avatarUrl);
+    }
+    if (avatarUrl.startsWith('assets/')) {
+      return AssetImage(avatarUrl);
+    }
     if (avatarUrl.startsWith(base64Prefix)) {
       return MemoryImage(
         base64Decode(avatarUrl.substring(base64Prefix.length)),
@@ -88,7 +143,7 @@ class AvatarStorage {
   }) async {
     if (bytes.length > _maxBytes) {
       throw AvatarPickException(
-        'Image is too large. Please choose a photo under 4 MB.',
+        'Image is too large. Please choose a photo under 8 MB.',
       );
     }
 

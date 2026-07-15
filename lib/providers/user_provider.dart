@@ -1,13 +1,17 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../repositories/auth_repository.dart';
 import '../repositories/user_repository.dart';
 import '../repositories/storage_repository.dart';
 import '../utils/avatar_storage.dart';
 import '../services/google_auth_service.dart';
+import '../services/notification_service.dart';
 
 class UserProvider with ChangeNotifier {
   UserProvider({
@@ -29,6 +33,7 @@ class UserProvider with ChangeNotifier {
   String _fullName = '';
   String _email = '';
   String? _avatarUrl;
+  String? _localPendingAvatar;
   bool _loaded = false;
 
   User? get firebaseUser => _firebaseUser;
@@ -36,7 +41,8 @@ class UserProvider with ChangeNotifier {
   bool get isAuthenticated => _firebaseUser != null;
   String get fullName => _fullName.isNotEmpty ? _fullName : 'User';
   String get email => _email;
-  String? get avatarUrl => _avatarUrl;
+  String? get avatarUrl => _localPendingAvatar ?? _avatarUrl;
+  String? get googleAvatarUrl => _firebaseUser?.photoURL;
   bool get isLoaded => _loaded;
 
   String get initials {
@@ -47,6 +53,16 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> load() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      AvatarStorage.documentDirPath = dir.path;
+    } catch (_) {}
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _localPendingAvatar = prefs.getString('pending_avatar_path');
+    } catch (_) {}
+
     _authSubscription?.cancel();
     _authSubscription = _authRepository.authStateChanges().listen(_onAuthChanged);
     _onAuthChanged(_authRepository.currentUser);
@@ -78,6 +94,10 @@ class UserProvider with ChangeNotifier {
       }
       _loaded = true;
       notifyListeners();
+
+      if (_localPendingAvatar != null) {
+        _syncPendingAvatar(user.uid, _localPendingAvatar!).ignore();
+      }
     });
   }
 
@@ -142,6 +162,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    await NotificationService.cancelAll();
     await Future.wait([
       _authRepository.signOut(),
       GoogleAuthService.signOutCompletely(),
@@ -152,10 +173,21 @@ class UserProvider with ChangeNotifier {
     final uid = this.uid;
     if (uid == null) return;
 
+    final pending = _localPendingAvatar;
+    if (pending != null) {
+      _localPendingAvatar = null;
+      SharedPreferences.getInstance().then((p) => p.remove('pending_avatar_path'));
+      try {
+        final file = File(pending);
+        if (file.existsSync()) file.deleteSync();
+        AvatarStorage.evictFromCache(pending);
+      } catch (_) {}
+    }
+
     final previous = _avatarUrl;
     _avatarUrl = avatarUrl == null || avatarUrl.isEmpty ? null : avatarUrl;
 
-    await _userRepository.updateProfile(uid: uid, avatarUrl: _avatarUrl);
+    _userRepository.updateProfile(uid: uid, avatarUrl: _avatarUrl).ignore();
 
     if (previous != null && previous != _avatarUrl) {
       AvatarStorage.evictFromCache(previous);
@@ -179,12 +211,13 @@ class UserProvider with ChangeNotifier {
       _avatarUrl = avatarUrl.isEmpty ? null : avatarUrl;
     }
 
-    await _userRepository.updateProfile(
+    _userRepository.updateProfile(
       uid: uid,
       fullName: _fullName,
       avatarUrl: _avatarUrl,
-    );
-    await _firebaseUser?.updateDisplayName(_fullName);
+    ).ignore();
+    _firebaseUser?.updateDisplayName(_fullName).ignore();
+    
     notifyListeners();
   }
 
@@ -218,15 +251,43 @@ class UserProvider with ChangeNotifier {
     if (uid == null) return 'You must be signed in to upload an avatar.';
 
     try {
-      final url = await _storageRepository.uploadUserAvatar(
+      final localPath = await AvatarStorage.persistBytes(
+        Uint8List.fromList(bytes),
+        replacePath: _localPendingAvatar,
+      );
+      _localPendingAvatar = localPath;
+      notifyListeners();
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pending_avatar_path', localPath);
+
+      _syncPendingAvatar(uid, localPath).ignore();
+      return null;
+    } catch (e, stack) {
+      debugPrint('Error saving avatar locally: $e');
+      debugPrint('Stacktrace: $stack');
+      return 'Failed to save avatar locally: $e';
+    }
+  }
+
+  Future<void> _syncPendingAvatar(String uid, String localPath) async {
+    try {
+      final url = await _storageRepository.uploadUserAvatarFile(
         uid: uid,
-        bytes: bytes,
-        contentType: contentType,
+        filePath: localPath,
+        contentType: 'image/jpeg',
       );
       await updateAvatar(url);
-      return null;
+
+      if (_localPendingAvatar == localPath) {
+        _localPendingAvatar = null;
+        notifyListeners();
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('pending_avatar_path');
+      }
     } catch (_) {
-      return 'Failed to upload avatar.';
+      // Ignored. The upload failed (e.g. offline). 
+      // It stays in localPendingAvatar and can be retried later.
     }
   }
 

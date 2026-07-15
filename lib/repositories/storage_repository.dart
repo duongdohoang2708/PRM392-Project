@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:firebase_storage/firebase_storage.dart';
@@ -16,6 +17,20 @@ class StorageRepository {
     final ref = _storage.ref().child('users/$uid/avatar.jpg');
     await ref.putData(
       Uint8List.fromList(bytes),
+      SettableMetadata(contentType: contentType),
+    );
+    return ref.getDownloadURL();
+  }
+
+  Future<String> uploadUserAvatarFile({
+    required String uid,
+    required String filePath,
+    required String contentType,
+  }) async {
+    final ref = _storage.ref().child('users/$uid/avatar.jpg');
+    final file = File(filePath);
+    await ref.putFile(
+      file,
       SettableMetadata(contentType: contentType),
     );
     return ref.getDownloadURL();

@@ -23,27 +23,33 @@ class AvatarPickerSheet extends StatefulWidget {
   static const _presetAvatars = [
     (
       label: 'Mint',
-      url: 'https://api.dicebear.com/7.x/avataaars/png?seed=Mint&backgroundColor=b6e3f4',
+      url: 'assets/images/avatars/mint.png',
+      color: Color(0xFFb6e3f4),
     ),
     (
       label: 'Coral',
-      url: 'https://api.dicebear.com/7.x/avataaars/png?seed=Coral&backgroundColor=ffd5dc',
+      url: 'assets/images/avatars/coral.png',
+      color: Color(0xFFffd5dc),
     ),
     (
       label: 'Sage',
-      url: 'https://api.dicebear.com/7.x/avataaars/png?seed=Sage&backgroundColor=c0f0d8',
+      url: 'assets/images/avatars/sage.png',
+      color: Color(0xFFc0f0d8),
     ),
     (
       label: 'Lilac',
-      url: 'https://api.dicebear.com/7.x/avataaars/png?seed=Lilac&backgroundColor=d1d4f9',
+      url: 'assets/images/avatars/lilac.png',
+      color: Color(0xFFd1d4f9),
     ),
     (
       label: 'Amber',
-      url: 'https://api.dicebear.com/7.x/avataaars/png?seed=Amber&backgroundColor=ffdfbf',
+      url: 'assets/images/avatars/amber.png',
+      color: Color(0xFFffdfbf),
     ),
     (
       label: 'Ocean',
-      url: 'https://api.dicebear.com/7.x/avataaars/png?seed=Ocean&backgroundColor=c0e8ff',
+      url: 'assets/images/avatars/ocean.png',
+      color: Color(0xFFc0e8ff),
     ),
   ];
 
@@ -95,22 +101,15 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
       );
       if (croppedBytes == null) return;
 
-      final previousPath = userProvider.avatarUrl;
       final uploadError = await userProvider.uploadAvatarBytes(
         bytes: croppedBytes,
         contentType: 'image/jpeg',
       );
-      if (uploadError == null) {
-        _showMessage(success: true, message: 'Avatar updated.');
+      
+      if (uploadError != null) {
+        _showMessage(success: false, message: uploadError);
         return;
       }
-
-      final storedPath = await AvatarStorage.persistBytes(
-        croppedBytes,
-        replacePath:
-            AvatarStorage.isDeviceAvatar(previousPath) ? previousPath : null,
-      );
-      await userProvider.updateAvatar(storedPath);
 
       _showMessage(
         success: true,
@@ -229,41 +228,68 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-              ),
-              itemCount: AvatarPickerSheet._presetAvatars.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  final selected = user.avatarUrl == null;
-                  return _AvatarOption(
+            Builder(
+              builder: (context) {
+                final List<Widget> avatarOptions = [];
+                
+                // 1. Initials
+                avatarOptions.add(
+                  _AvatarOption(
                     label: 'Initials',
-                    selected: selected,
+                    selected: user.avatarUrl == null,
                     onTap: () => _select(context, null),
                     child: UserAvatar(
                       avatarUrl: null,
                       initials: user.initials,
                       radius: 28,
                     ),
+                  ),
+                );
+
+                // 2. Google Avatar
+                final googleUrl = user.googleAvatarUrl;
+                if (googleUrl != null) {
+                  avatarOptions.add(
+                    _AvatarOption(
+                      label: 'Google',
+                      selected: user.avatarUrl == googleUrl,
+                      onTap: () => _select(context, googleUrl),
+                      child: UserAvatar(
+                        avatarUrl: googleUrl,
+                        initials: 'G',
+                        radius: 28,
+                      ),
+                    ),
                   );
                 }
 
-                final preset = AvatarPickerSheet._presetAvatars[index - 1];
-                final selected = user.avatarUrl == preset.url;
-                return _AvatarOption(
-                  label: preset.label,
-                  selected: selected,
-                  onTap: () => _select(context, preset.url),
-                  child: CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.insetSurfaceOf(context),
-                    backgroundImage: NetworkImage(preset.url),
+                // 3. Presets
+                for (final preset in AvatarPickerSheet._presetAvatars) {
+                  avatarOptions.add(
+                    _AvatarOption(
+                      label: preset.label,
+                      selected: user.avatarUrl == preset.url,
+                      onTap: () => _select(context, preset.url),
+                      child: UserAvatar(
+                        avatarUrl: preset.url,
+                        initials: preset.label[0],
+                        backgroundColor: preset.color,
+                        radius: 28,
+                      ),
+                    ),
+                  );
+                }
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
                   ),
+                  itemCount: avatarOptions.length,
+                  itemBuilder: (context, index) => avatarOptions[index],
                 );
               },
             ),

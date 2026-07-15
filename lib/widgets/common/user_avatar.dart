@@ -20,22 +20,55 @@ class UserAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final image = AvatarStorage.imageProvider(avatarUrl);
+    final bg = backgroundColor ?? AppColors.primaryOf(context);
 
-    return CircleAvatar(
-      key: ValueKey(avatarUrl ?? initials),
-      radius: radius,
-      backgroundColor: backgroundColor ?? AppColors.primaryOf(context),
-      backgroundImage: image,
-      child: image == null
-          ? Text(
-              initials,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: radius * 0.68,
+    if (image == null) {
+      return Container(
+        key: ValueKey(initials),
+        width: radius * 2,
+        height: radius * 2,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: bg,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          initials,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: radius * 0.68,
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      key: ValueKey(avatarUrl),
+      width: radius * 2,
+      height: radius * 2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: bg,
+      ),
+      child: ClipOval(
+        child: Image(
+          image: image,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Center(
+              child: Text(
+                initials,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: radius * 0.68,
+                ),
               ),
-            )
-          : null,
+            );
+          },
+        ),
+      ),
     );
   }
 }
