@@ -7,11 +7,17 @@ import '../../utils/formatters/app_date_time_format.dart';
 class NotificationListItem extends StatelessWidget {
   final NotificationRecord record;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final bool isSelected;
+  final bool isSelectionMode;
 
   const NotificationListItem({
     super.key,
     required this.record,
     required this.onTap,
+    this.onLongPress,
+    this.isSelected = false,
+    this.isSelectionMode = false,
   });
 
   IconData get _icon {
@@ -54,21 +60,40 @@ class NotificationListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = isSelected
+        ? AppColors.primaryLightTintOf(context, alpha: 0.5)
+        : AppColors.cardSurfaceFillOf(context);
+    final borderColor = isSelected
+        ? AppColors.primaryOf(context)
+        : AppColors.borderOf(context);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.cardSurfaceFillOf(context),
+            color: bgColor,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.borderOf(context)),
+            border: Border.all(color: borderColor),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (isSelectionMode)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12, top: 4),
+                  child: Icon(
+                    isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: isSelected
+                        ? AppColors.primaryOf(context)
+                        : AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
+                    size: 22,
+                  ),
+                ),
               Icon(_icon, color: _accentColor(context), size: 22),
               const SizedBox(width: 12),
               Expanded(

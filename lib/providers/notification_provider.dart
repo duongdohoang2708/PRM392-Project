@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,18 +18,18 @@ import 'settings_provider.dart';
 
 class NotificationProvider with ChangeNotifier {
   static const String _firedKeysPref = 'notification_fired_keys';
-  static const String _historyPref = 'notification_history';
   static const String _unlockedAchievementsPref = 'notification_unlocked_achievements';
   static const String _dailyFlagsPref = 'notification_daily_flags';
   static const String _dailyDayPref = 'notification_daily_day';
   static const String _statsMilestonePref = 'notification_stats_milestone';
+  static const String _firedMilestonesPref = 'notification_fired_milestones';
   static const String _welcomeNotificationId = 'system_welcome';
-  static const int _maxHistoryRecords = 100;
 
   final List<NotificationRecord> _records = [];
   final Set<String> _firedReminderKeys = {};
   final Set<String> _unlockedAchievementKeys = {};
   final Set<String> _dailyFlags = {};
+  final Set<int> _firedMilestones = {};
   int _lastCompletedTasksAllTime = 0;
 
   List<Task> _tasks = [];
@@ -153,7 +152,6 @@ class NotificationProvider with ChangeNotifier {
     await _loadAchievementState();
     await _seedAchievementsIfNeeded(goalsProvider);
     await _loadDailyFlags();
-    _lastCompletedTasksAllTime = goalsProvider.completedTasksAllTime;
     await syncDeliveredReminders(_tasks);
   }
 
@@ -168,6 +166,12 @@ class NotificationProvider with ChangeNotifier {
       }
     }
     _lastCompletedTasksAllTime = goalsProvider.completedTasksAllTime;
+    const milestones = [10, 25, 50, 100, 200, 500];
+    for (final milestone in milestones) {
+      if (_lastCompletedTasksAllTime >= milestone) {
+        _firedMilestones.add(milestone);
+      }
+    }
     await _persistAchievementState();
   }
 
@@ -268,6 +272,20 @@ class NotificationProvider with ChangeNotifier {
       prefs.getStringList(_unlockedAchievementsPref) ?? [],
     );
     _lastCompletedTasksAllTime = prefs.getInt(_statsMilestonePref) ?? 0;
+    
+    final firedList = prefs.getStringList(_firedMilestonesPref);
+    if (firedList != null) {
+      _firedMilestones.addAll(
+        firedList.map((e) => int.tryParse(e) ?? 0).where((e) => e > 0),
+      );
+    } else {
+      const milestones = [10, 25, 50, 100, 200, 500];
+      for (final milestone in milestones) {
+        if (_lastCompletedTasksAllTime >= milestone) {
+          _firedMilestones.add(milestone);
+        }
+      }
+    }
     _achievementStateLoaded = true;
   }
 
@@ -278,6 +296,10 @@ class NotificationProvider with ChangeNotifier {
       _unlockedAchievementKeys.toList(),
     );
     await prefs.setInt(_statsMilestonePref, _lastCompletedTasksAllTime);
+    await prefs.setStringList(
+      _firedMilestonesPref,
+      _firedMilestones.map((e) => e.toString()).toList(),
+    );
   }
 
   String _todayKey() {
@@ -483,13 +505,14 @@ class NotificationProvider with ChangeNotifier {
       final milestone = InsightNotificationBuilder.statisticsMilestone(
         completedTasksAllTime: completedAllTime,
       );
-      if (milestone != null) {
+      if (milestone != null && !_firedMilestones.contains(completedAllTime)) {
         await _deliverInsightNow(
           notificationId: _insightEventId('stats_$completedAllTime'),
           type: 'stats_milestone',
           title: milestone.title,
           body: milestone.body,
         );
+        _firedMilestones.add(completedAllTime);
       }
       _lastCompletedTasksAllTime = completedAllTime;
       await _persistAchievementState();
@@ -748,6 +771,16 @@ class NotificationProvider with ChangeNotifier {
     }
     _records[index] = updated;
     notifyListeners();
+  }
+
+  void deleteNotifications(List<String> notificationIds) {
+    final uid = _uid;
+    if (uid == null || notificationIds.isEmpty) return;
+
+    _records.removeWhere((record) => notificationIds.contains(record.id));
+    notifyListeners();
+
+    unawaited(_notificationRepository.deleteNotifications(uid, notificationIds));
   }
 
   void markAllRead() {

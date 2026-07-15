@@ -32,6 +32,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   ];
 
   String _activeFilter = 'All';
+  bool _isSelectionMode = false;
+  final Set<String> _selectedIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -136,10 +138,32 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                                   ),
                                                   child: NotificationListItem(
                                                     record: record,
-                                                    onTap: () => _openRecord(
-                                                      context,
-                                                      record,
-                                                    ),
+                                                    isSelectionMode: _isSelectionMode,
+                                                    isSelected: _selectedIds.contains(record.id),
+                                                    onLongPress: () {
+                                                      if (!_isSelectionMode) {
+                                                        setState(() {
+                                                          _isSelectionMode = true;
+                                                          _selectedIds.add(record.id);
+                                                        });
+                                                      }
+                                                    },
+                                                    onTap: () {
+                                                      if (_isSelectionMode) {
+                                                        setState(() {
+                                                          if (_selectedIds.contains(record.id)) {
+                                                            _selectedIds.remove(record.id);
+                                                            if (_selectedIds.isEmpty) {
+                                                              _isSelectionMode = false;
+                                                            }
+                                                          } else {
+                                                            _selectedIds.add(record.id);
+                                                          }
+                                                        });
+                                                      } else {
+                                                        _openRecord(context, record);
+                                                      }
+                                                    },
                                                   ),
                                                 );
                                               },
@@ -233,6 +257,45 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     BuildContext context, {
     required bool isDesktop,
   }) {
+    if (_isSelectionMode) {
+      return AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          '${_selectedIds.length} Selected',
+          style: TextStyle(
+            color: AppColors.textPrimaryOf(context),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.close, color: AppColors.textPrimaryOf(context)),
+          onPressed: () {
+            setState(() {
+              _isSelectionMode = false;
+              _selectedIds.clear();
+            });
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+            tooltip: 'Delete selected',
+            onPressed: _selectedIds.isEmpty
+                ? null
+                : () {
+                    context.read<NotificationProvider>().deleteNotifications(_selectedIds.toList());
+                    setState(() {
+                      _isSelectionMode = false;
+                      _selectedIds.clear();
+                    });
+                  },
+          ),
+        ],
+      );
+    }
+
     return AppBar(
       backgroundColor: AppColors.backgroundOf(context),
       elevation: 0,
@@ -249,6 +312,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           },
         ),
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.done_all),
+          tooltip: 'Mark all as read',
+          onPressed: () {
+            context.read<NotificationProvider>().markAllRead();
+          },
+        ),
+      ],
     );
   }
 

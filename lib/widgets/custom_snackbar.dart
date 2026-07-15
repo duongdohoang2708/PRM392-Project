@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../screens/main_shell.dart';
+import '../providers/user_provider.dart';
 import 'common/animations/app_bottom_slide_fade.dart';
 import 'common/animations/app_top_slide_fade.dart';
 import 'common/animations/app_popup_transition.dart';
@@ -106,6 +107,19 @@ class AppNotification {
         navigatorKey.currentState?.overlay;
   }
 
+  static bool _checkHasDrawer(BuildContext context) {
+    if (context.findAncestorWidgetOfExactType<MainShell>() != null) {
+      return true;
+    }
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.isAuthenticated) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   static void _show(
     BuildContext context, {
     required String message,
@@ -120,20 +134,38 @@ class AppNotification {
       _currentEntry = null;
     }
 
-    final overlayState = Overlay.maybeOf(context);
-    if (overlayState == null) {
-      // Fallback for navigator keys
-      final navigator = Navigator.maybeOf(context);
-      if (navigator?.overlay != null) {
-        _insertOverlay(navigator!.overlay!, message, backgroundColor, icon);
+    final hasDrawer = _checkHasDrawer(context);
+
+    // Compute drawer offset here, where DrawerProvider is available.
+    double drawerOffset = 0;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    if (screenWidth >= kDesktopLayoutBreakpoint && hasDrawer) {
+      try {
+        final collapsed = context.read<DrawerProvider>().isDesktopCollapsed;
+        drawerOffset = collapsed ? kDesktopDrawerWidthCollapsed : kDesktopDrawerWidthExpanded;
+      } catch (_) {
+        drawerOffset = kDesktopDrawerWidthExpanded;
       }
-      return;
     }
-    
-    _insertOverlay(overlayState, message, backgroundColor, icon);
+
+    // Always use root overlay so the snackbar spans the full screen.
+    final overlayState =
+        Overlay.maybeOf(context, rootOverlay: true) ??
+        navigatorKey.currentState?.overlay ??
+        Overlay.maybeOf(context);
+
+    if (overlayState == null) return;
+
+    _insertOverlay(overlayState, message, backgroundColor, icon, drawerOffset);
   }
 
-  static void _insertOverlay(OverlayState overlayState, String message, Color backgroundColor, IconData icon) {
+  static void _insertOverlay(
+    OverlayState overlayState,
+    String message,
+    Color backgroundColor,
+    IconData icon,
+    double drawerOffset,
+  ) {
     late OverlayEntry entry;
 
     entry = OverlayEntry(
@@ -141,6 +173,7 @@ class AppNotification {
         message: message,
         backgroundColor: backgroundColor,
         icon: icon,
+        drawerOffset: drawerOffset,
         onDismiss: () {
           if (_currentEntry == entry) {
             try {
@@ -296,12 +329,14 @@ class _NotificationToast extends StatefulWidget {
   final Color backgroundColor;
   final IconData icon;
   final VoidCallback onDismiss;
+  final double drawerOffset;
 
   const _NotificationToast({
     required this.message,
     required this.backgroundColor,
     required this.icon,
     required this.onDismiss,
+    required this.drawerOffset,
   });
 
   @override
@@ -350,17 +385,19 @@ class _NotificationToastState extends State<_NotificationToast> {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.sizeOf(context).width >= kDesktopLayoutBreakpoint) {
-      context.watch<DrawerProvider>();
-    }
-    final insets = notificationOverlayInsets(context);
+    const double horizontal = 16;
+    const double bottomExtra = 16;
+    final bottom = MediaQuery.paddingOf(context).bottom + bottomExtra;
+    final left = widget.drawerOffset + horizontal;
+    const right = horizontal;
+
     final foreground =
         AppColors.notificationFgOn(context, widget.backgroundColor);
 
     return Positioned(
-      bottom: insets.bottom,
-      left: insets.left,
-      right: insets.right,
+      bottom: bottom,
+      left: left,
+      right: right,
       child: AppBottomSlideFade(
         visible: _isVisible,
         child: Material(

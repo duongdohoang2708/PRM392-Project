@@ -37,6 +37,16 @@ class NotificationRepository {
         .update(record.toFirestore());
   }
 
+  Future<void> deleteNotifications(String uid, List<String> notificationIds) async {
+    if (notificationIds.isEmpty) return;
+    final batch = FirestorePaths.notifications(uid).firestore.batch();
+    for (final id in notificationIds) {
+      final docRef = FirestorePaths.notifications(uid).doc(id);
+      batch.delete(docRef);
+    }
+    await batch.commit();
+  }
+
   Future<void> markAllRead(String uid) async {
     final snapshot = await FirestorePaths.notifications(uid)
         .where('isRead', isEqualTo: false)

@@ -18,6 +18,8 @@ import '../screens/task/task_detail_screen.dart';
 import '../utils/reminder/insight_notification_ids.dart';
 import '../utils/reminder/reminder_scheduler.dart';
 import '../navigation/app_navigator.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 typedef NotificationDeliveredCallback = void Function({
   required String title,
@@ -206,9 +208,17 @@ class NotificationService {
     }
   }
 
+  static Future<void> cancelAll() async {
+    await _plugin.cancelAll();
+  }
+
   static void _navigateToRoute(String route) {
     final context = navigatorKey.currentContext;
     if (context == null) return;
+    
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (!userProvider.isAuthenticated) return;
+
     Navigator.of(context).pushNamedAndRemoveUntil(
       '/main',
       (routeName) => false,
@@ -246,6 +256,10 @@ class NotificationService {
   static void _navigateToPomodoro() {
     final context = navigatorKey.currentContext;
     if (context == null) return;
+    
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (!userProvider.isAuthenticated) return;
+
     Navigator.of(context).pushNamedAndRemoveUntil(
       '/main',
       (route) => false,
@@ -256,6 +270,10 @@ class NotificationService {
   static void _navigateToTaskDetail(String taskId) {
     final context = navigatorKey.currentContext;
     if (context == null) return;
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (!userProvider.isAuthenticated) return;
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => TaskDetailScreen(taskId: taskId),
