@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
+import '../common/user_avatar.dart';
 
 class GreetingSection extends StatelessWidget {
   final String? subtitle;
@@ -30,34 +31,47 @@ class GreetingSection extends StatelessWidget {
           _ => 'Time to wind down and reflect!',
         };
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          greeting,
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.textSecondaryOf(context),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                greeting,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondaryOf(context),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                user.fullName,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimaryOf(context),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                resolvedSubtitle,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.projectAccentOf(context, AppColors.primaryDarkOf(context)),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          user.fullName,
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimaryOf(context),
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          resolvedSubtitle,
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.projectAccentOf(context, AppColors.primaryDarkOf(context)),
-            fontWeight: FontWeight.w500,
-          ),
+        const SizedBox(width: 16),
+        UserAvatar(
+          avatarUrl: user.avatarUrl,
+          initials: user.initials,
+          radius: 28,
         ),
       ],
     );

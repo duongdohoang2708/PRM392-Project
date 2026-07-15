@@ -345,53 +345,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     Widget tasksSectionContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          height: 40,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Tasks (${activeTasks.length})',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimaryOf(context),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (activeTasks.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.cardFillOf(
-          context,
-          accentColor: projectColor,
-          lightTintAlpha: 0.08,
-          darkTintAlpha: 0.08,
-          surface: AppColors.surfaceOf(context),
-        ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: projectColor.withValues(alpha: 0.5), width: 1.5),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.assignment_turned_in_outlined,
-                  size: 40,
-                  color: projectColor.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'No active tasks',
-                  style: TextStyle(
-                    color: AppColors.textSecondaryOf(context),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          )
-        else
+        if (activeTasks.isNotEmpty) ...[
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: activeTasks.asMap().entries.map((entry) {
@@ -411,6 +365,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               );
             }).toList(),
           ),
+        ],
         if (completedTasks.isNotEmpty) ...[
           const SizedBox(height: 24),
           InkWell(
