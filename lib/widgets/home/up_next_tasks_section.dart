@@ -39,7 +39,7 @@ class UpNextTasksSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Up Next',
+              'Today Tasks',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

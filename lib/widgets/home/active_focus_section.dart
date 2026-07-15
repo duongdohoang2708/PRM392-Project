@@ -18,7 +18,8 @@ class ActiveFocusSection extends StatelessWidget {
     String title = focusProvider.selectedTask?.title ?? "Ready to focus";
 
     if (focusProvider.sequence.isNotEmpty) {
-      final currentPhase = focusProvider.sequence[focusProvider.currentPhaseIndex];
+      final currentPhase =
+          focusProvider.sequence[focusProvider.currentPhaseIndex];
       int totalSeconds = 0;
       switch (currentPhase) {
         case PhaseType.focus:
@@ -34,13 +35,14 @@ class ActiveFocusSection extends StatelessWidget {
           title = "Long Break";
           break;
       }
-      
+
       if (isIdle && focusProvider.currentPhaseIndex == 0) {
-         // If idle and hasn't started, show full time and 0 progress
-         progress = 0.0;
-         final int minutes = totalSeconds ~/ 60;
-         final int seconds = totalSeconds % 60;
-         timeString = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+        // If idle and hasn't started, show full time and 0 progress
+        progress = 0.0;
+        final int minutes = totalSeconds ~/ 60;
+        final int seconds = totalSeconds % 60;
+        timeString =
+            '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
       } else {
         if (totalSeconds > 0) {
           progress = focusProvider.phaseElapsedFraction(totalSeconds);
@@ -48,14 +50,18 @@ class ActiveFocusSection extends StatelessWidget {
         final int remaining = focusProvider.displayRemainingSeconds;
         final int minutes = remaining ~/ 60;
         final int seconds = remaining % 60;
-        timeString = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+        timeString =
+            '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
       }
     } else {
-      timeString = '${focusProvider.focusMinutes.toString().padLeft(2, '0')}:00';
+      timeString =
+          '${focusProvider.focusMinutes.toString().padLeft(2, '0')}:00';
     }
 
     final isDark = AppColors.isDark(context);
-    final accent = isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context);
+    final accent = isDark
+        ? AppColors.primaryOf(context)
+        : AppColors.primaryDarkOf(context);
     final titleColor = AppColors.textPrimaryOf(context);
     final subtitleColor = AppColors.textSecondaryOf(context);
     final progressTrack = AppColors.primaryLightTintOf(
@@ -67,7 +73,7 @@ class ActiveFocusSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Active Focus',
+          'Focus',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -310,7 +316,9 @@ class _FocusControlButtons extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         _FocusControlButton(
-          icon: isRunning ? Icons.pause_circle_filled : Icons.play_circle_filled,
+          icon: isRunning
+              ? Icons.pause_circle_filled
+              : Icons.play_circle_filled,
           size: 40,
           iconSize: 40,
           onPressed: () {
@@ -349,7 +357,9 @@ class _FocusControlButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppColors.isDark(context);
-    final accent = isDark ? AppColors.primaryOf(context) : AppColors.primaryDarkOf(context);
+    final accent = isDark
+        ? AppColors.primaryOf(context)
+        : AppColors.primaryDarkOf(context);
 
     return Material(
       color: isDark
@@ -363,11 +373,7 @@ class _FocusControlButton extends StatelessWidget {
         child: SizedBox(
           width: size,
           height: size,
-          child: Icon(
-            icon,
-            color: accent,
-            size: iconSize,
-          ),
+          child: Icon(icon, color: accent, size: iconSize),
         ),
       ),
     );

@@ -14,7 +14,7 @@ class SmartListsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Tasks',
+          'Task Categories',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
