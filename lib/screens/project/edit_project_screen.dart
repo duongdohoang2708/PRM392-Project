@@ -266,7 +266,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   }
 
   Widget _buildNameCard() {
-    final accent = AppColors.projectAccentOf(context, _accentColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, _accentColor);
     return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +313,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   }
 
   Widget _buildDescriptionCard() {
-    final accent = AppColors.projectAccentOf(context, _accentColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, _accentColor);
     return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,7 +361,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     final visibleCount = isCompact && !_showAllIcons
         ? _collapsedCount
         : CreateProjectScreen.projectIcons.length;
-    final accent = AppColors.projectAccentOf(context, _accentColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, _accentColor);
 
     return _buildCard(
       child: Column(
@@ -393,7 +393,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedIconIndex == index;
-              final accent = AppColors.projectAccentOf(context, _accentColor);
+              final accent = AppColors.vibrantProjectAccentOf(context, _accentColor);
               return GestureDetector(
                 onTap: () => setState(() => _selectedIconIndex = index),
                 child: AnimatedContainer(
@@ -452,7 +452,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     final visibleCount = isCompact && !_showAllColors
         ? _collapsedCount
         : CreateProjectScreen.projectColors.length;
-    final accent = AppColors.projectAccentOf(context, _accentColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, _accentColor);
 
     return _buildCard(
       child: Column(
@@ -485,7 +485,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             itemBuilder: (context, index) {
               final isSelected = _selectedColorIndex == index;
               final raw = CreateProjectScreen.projectColors[index];
-              final color = AppColors.projectAccentOf(context, raw);
+              final color = AppColors.vibrantProjectAccentOf(context, raw);
               final isDark = AppColors.isDark(context);
               return GestureDetector(
                 onTap: () => setState(() => _selectedColorIndex = index),
@@ -545,7 +545,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   }
 
   Widget _buildActionButtons() {
-    final accent = AppColors.projectAccentOf(context, _accentColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, _accentColor);
     return ElevatedButton(
       onPressed: _saveChanges,
       style: ElevatedButton.styleFrom(

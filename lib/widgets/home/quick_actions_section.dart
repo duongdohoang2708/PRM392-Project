@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
-import '../project/create_project_popup.dart';
-import '../common/app_popup_transition.dart';
 import '../common/tinted_accent_card.dart';
 
 class QuickActionsSection extends StatelessWidget {
@@ -25,7 +23,7 @@ class QuickActionsSection extends StatelessWidget {
       icon: Icons.create_new_folder_outlined,
       title: 'New Project',
       rainbowIndex: 2,
-      opensProjectPopup: true,
+      route: '/create-project',
     ),
     _QuickAction(
       icon: Icons.calendar_month_outlined,
@@ -94,13 +92,6 @@ class QuickActionsSection extends StatelessWidget {
         lightBgAlpha: 0.28,
         darkBgAlpha: 0.28,
         onTap: () {
-          if (action.opensProjectPopup) {
-            showCreateProjectPopup(
-              context,
-              anchor: popupAnchorFromContext(buttonContext),
-            );
-            return;
-          }
           if (action.route != null) {
             Navigator.pushNamed(context, action.route!);
           }
@@ -115,13 +106,11 @@ class _QuickAction {
   final String title;
   final int rainbowIndex;
   final String? route;
-  final bool opensProjectPopup;
 
   const _QuickAction({
     required this.icon,
     required this.title,
     required this.rainbowIndex,
     this.route,
-    this.opensProjectPopup = false,
   });
 }

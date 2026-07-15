@@ -577,7 +577,7 @@ class TaskProvider with ChangeNotifier {
     final normalizedTask = task.isCompleted && task.completedAt == null
         ? task.copyWith(completedAt: DateTime.now())
         : task;
-    await _taskRepository.createTask(uid, normalizedTask);
+    unawaited(_taskRepository.createTask(uid, normalizedTask));
     return true;
   }
 
@@ -595,30 +595,47 @@ class TaskProvider with ChangeNotifier {
       notifyListeners();
     }
 
-    await _taskRepository.updateTask(uid, normalizedTask);
+    unawaited(_taskRepository.updateTask(uid, normalizedTask));
   }
 
   Future<void> deleteTask(String id) async {
     final uid = _uid;
     if (uid == null) return;
-    await _taskRepository.deleteTask(uid, id);
+    unawaited(_taskRepository.deleteTask(uid, id));
   }
 
   // Dashboard Metrics
   int get tasksTodayCount {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    // Count ALL tasks with a due date of today (both completed and pending)
     return _tasks.where((t) {
       if (t.dueDate == null) return false;
       final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
-      return tDate.isAtSameMomentAs(today) && !t.isCompleted;
+      return tDate.isAtSameMomentAs(today);
     }).length;
   }
 
-  int get remainingTodayCount => tasksTodayCount;
-
   int get completedTodayCount {
-    return tasksDueOnCompletedCount(DateTime.now());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // Tasks due today that are completed
+    return _tasks.where((t) {
+      if (t.dueDate == null || !t.isCompleted) return false;
+      final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+      return tDate.isAtSameMomentAs(today);
+    }).length;
+  }
+
+  int get remainingTodayCount {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // Tasks due today that are NOT yet completed
+    return _tasks.where((t) {
+      if (t.dueDate == null || t.isCompleted) return false;
+      final tDate = DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day);
+      return tDate.isAtSameMomentAs(today);
+    }).length;
   }
 
   int totalTasksDueOn(DateTime day) {

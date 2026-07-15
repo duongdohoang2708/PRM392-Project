@@ -15,26 +15,26 @@ class CreateProjectPopup extends StatefulWidget {
   const CreateProjectPopup({super.key});
 
   static const List<Color> projectColors = [
-    Color(0xFF2E7D32),
-    Color(0xFF00A676),
-    Color(0xFF0097A7),
-    Color(0xFF0277BD),
-    Color(0xFF3949AB),
-    Color(0xFF7B1FA2),
-    Color(0xFFC2185B),
-    Color(0xFFD32F2F),
-    Color(0xFFE64A19),
-    Color(0xFFF9A825),
-    Color(0xFF6D4C41),
-    Color(0xFF455A64),
-    Color(0xFF8BC34A),
-    Color(0xFF26C6DA),
-    Color(0xFF42A5F5),
-    Color(0xFF5E35B1),
-    Color(0xFFEC407A),
-    Color(0xFFFF7043),
-    Color(0xFFFFCA28),
-    Color(0xFF78909C),
+    Color(0xFFD32F2F), // Red
+    Color(0xFFC2185B), // Pink
+    Color(0xFF7B1FA2), // Purple
+    Color(0xFF512DA8), // Deep Purple
+    Color(0xFF303F9F), // Indigo
+    Color(0xFF1976D2), // Blue
+    Color(0xFF0288D1), // Light Blue
+    Color(0xFF0097A7), // Cyan
+    Color(0xFF00796B), // Teal
+    Color(0xFF388E3C), // Green
+    Color(0xFF689F38), // Light Green
+    Color(0xFFAFB42B), // Lime
+    Color(0xFFFBC02D), // Yellow
+    Color(0xFFFFA000), // Amber
+    Color(0xFFF57C00), // Orange
+    Color(0xFFE64A19), // Deep Orange
+    Color(0xFF5D4037), // Brown
+    Color(0xFF455A64), // Blue Grey
+    Color(0xFFE91E63), // Bright Pink
+    Color(0xFF607D8B), // Slate
   ];
 
   static const List<IconData> projectIcons = ProjectIcons.all;
@@ -372,7 +372,7 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedIconIndex == index;
-              final accent = AppColors.projectAccentOf(context, _accentColor);
+              final accent = AppColors.vibrantProjectAccentOf(context, _accentColor);
               return GestureDetector(
                 onTap: () => setState(() => _selectedIconIndex = index),
                 child: AnimatedContainer(
@@ -463,7 +463,7 @@ class _CreateProjectPopupState extends State<CreateProjectPopup> {
             itemBuilder: (context, index) {
               final isSelected = _selectedColorIndex == index;
               final raw = CreateProjectPopup.projectColors[index];
-              final color = AppColors.projectAccentOf(context, raw);
+              final color = AppColors.vibrantProjectAccentOf(context, raw);
               final isDark = AppColors.isDark(context);
               return GestureDetector(
                 onTap: () => setState(() => _selectedColorIndex = index),

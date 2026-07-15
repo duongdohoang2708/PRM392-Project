@@ -439,7 +439,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildTitleCard(Color projectColor) {
-    final accent = AppColors.projectAccentOf(context, projectColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, projectColor);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: AppColors.taskCardDecorationOf(
@@ -484,6 +484,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               children: [
                 TextField(
                   controller: _titleController,
+                  maxLines: null,
+                  keyboardType: TextInputType.text,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -569,16 +571,20 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           IconButton(
             icon: Icon(
               _isImportant ? Icons.star : Icons.star_border,
-              color: _isImportant
-                  ? AppColors.accentYellow
-                  : AppColors.textSecondaryOf(context).withValues(alpha: 0.5),
+              color: _isCompleted
+                  ? AppColors.textSecondaryOf(context).withValues(alpha: 0.3)
+                  : (_isImportant
+                      ? AppColors.accentYellow
+                      : AppColors.textSecondaryOf(context).withValues(alpha: 0.5)),
               size: 28,
             ),
-            onPressed: () {
-              setState(() {
-                _isImportant = !_isImportant;
-              });
-            },
+            onPressed: _isCompleted
+                ? null
+                : () {
+                    setState(() {
+                      _isImportant = !_isImportant;
+                    });
+                  },
           ),
         ],
       ),
@@ -586,7 +592,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildInfoCard(List<String> projects, Color projectColor) {
-    final accent = AppColors.projectAccentOf(context, projectColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, projectColor);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -830,7 +836,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildPomodoroCard(Color projectColor) {
-    final accent = AppColors.projectAccentOf(context, projectColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, projectColor);
     final focusProvider = context.watch<FocusProvider>();
     final isCurrentTaskActive =
         focusProvider.selectedTask?.id == widget.taskId &&
@@ -1090,7 +1096,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildSubtasksCard(Color projectColor) {
-    final accent = AppColors.projectAccentOf(context, projectColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, projectColor);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: AppColors.taskCardDecorationOf(context, projectColor),
@@ -1188,7 +1194,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
           const SizedBox(height: 8),
           TextButton.icon(
-            onPressed: _addNewSubTask,
+            onPressed: _isCompleted ? null : _addNewSubTask,
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Add subtask'),
             style: TextButton.styleFrom(foregroundColor: accent),
@@ -1199,7 +1205,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildNotesCard(Color projectColor) {
-    final accent = AppColors.projectAccentOf(context, projectColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, projectColor);
     return Container(
       decoration: AppColors.taskCardDecorationOf(context, projectColor),
       child: Column(
@@ -1255,7 +1261,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Widget _buildActionButtons(Color projectColor) {
-    final accent = AppColors.projectAccentOf(context, projectColor);
+    final accent = AppColors.vibrantProjectAccentOf(context, projectColor);
     return Column(
       children: [
         ElevatedButton.icon(

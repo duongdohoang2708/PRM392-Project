@@ -341,6 +341,8 @@ class _CalendarCreateTaskPopupState extends State<CalendarCreateTaskPopup> {
           Expanded(
             child: TextField(
               controller: _titleController,
+              maxLines: null,
+              keyboardType: TextInputType.text,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

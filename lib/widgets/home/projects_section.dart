@@ -87,14 +87,17 @@ class ProjectsSection extends StatelessWidget {
     required double progress,
     required Color accentColor,
   }) {
-    final color = AppColors.projectAccentOf(context, accentColor);
+    final color = AppColors.vibrantProjectAccentOf(context, accentColor);
     return Container(
       width: 180,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardSurfaceFillOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderOf(context)),
+        border: Border.all(
+          color: AppColors.projectBorderOf(context, accentColor),
+          width: 2.0,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.textPrimaryOf(context).withValues(alpha: 0.03),

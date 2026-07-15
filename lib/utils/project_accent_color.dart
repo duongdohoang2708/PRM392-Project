@@ -9,7 +9,7 @@ class ProjectAccentColor {
   static const Color defaultColor = AppColors.primaryDark;
 
   static Color fromValue(BuildContext context, int colorValue) =>
-      AppColors.projectAccentOf(context, Color(colorValue));
+      AppColors.vibrantProjectAccentOf(context, Color(colorValue));
 
   static Color resolve(
     BuildContext context,
@@ -17,7 +17,7 @@ class ProjectAccentColor {
     String projectName,
   ) {
     if (projectName.isEmpty || projectName == 'None') {
-      return AppColors.projectAccentOf(context, defaultColor);
+      return AppColors.vibrantProjectAccentOf(context, defaultColor);
     }
 
     for (final project in provider.projects) {
@@ -26,6 +26,6 @@ class ProjectAccentColor {
       }
     }
 
-    return AppColors.projectAccentOf(context, defaultColor);
+    return AppColors.vibrantProjectAccentOf(context, defaultColor);
   }
 }

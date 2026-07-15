@@ -270,25 +270,26 @@ class StatisticsProvider with ChangeNotifier {
     final start = bounds.$1;
     final end = bounds.$2;
 
+    // All tasks that are DUE in this period
     final cohortTasks = taskProvider.tasks
-        .where((task) => _isTaskRelevantInRange(task, start, end))
+        .where((task) =>
+            task.dueDate != null &&
+            _isInRange(task.dueDate!, start, end))
         .toList();
 
-    final completedInRange = cohortTasks
-        .where(
-          (task) =>
-              task.completedAt != null &&
-              _isInRange(task.completedAt!, start, end),
-        )
-        .toList();
+    final completedTasks = cohortTasks.where((task) => task.isCompleted).toList();
+    final pendingTasks = cohortTasks.where((task) => !task.isCompleted).toList();
 
-    final pendingCount =
-        cohortTasks.where((task) => !task.isCompleted).length;
-
-    final overdueCount = _countOverdueTasks(taskProvider.tasks, start);
+    final pendingCount = pendingTasks.length;
+    
+    // Overdue tasks are pending tasks that were due before today
+    final today = _todayDate();
+    final overdueCount = pendingTasks.where((task) {
+      return _normalizeDay(task.dueDate!).isBefore(today);
+    }).length;
 
     final denominator = cohortTasks.isEmpty ? 1 : cohortTasks.length;
-    final completionRate = ((completedInRange.length / denominator) * 100)
+    final completionRate = ((completedTasks.length / denominator) * 100)
         .clamp(0, 100)
         .round();
 
@@ -300,12 +301,12 @@ class StatisticsProvider with ChangeNotifier {
 
     return TaskStatisticsData(
       total: cohortTasks.length,
-      completed: completedInRange.length,
+      completed: completedTasks.length,
       pending: pendingCount,
       overdue: overdueCount,
       completionRate: completionRate,
       priorityBreakdown: priorityBreakdown,
-      completionBars: _buildTaskCompletionBars(completedInRange),
+      completionBars: _buildTaskCompletionBars(completedTasks),
       dueSummary: _computeTaskDueSummary(start, end),
     );
   }
@@ -405,16 +406,6 @@ class StatisticsProvider with ChangeNotifier {
     if (!_isSameDay(day, today)) return false;
     final bounds = _currentRangeBounds();
     return _isInRange(today, bounds.$1, bounds.$2);
-  }
-
-  DateTime _overdueReferenceDate() {
-    final today = _todayDate();
-    final bounds = _currentRangeBounds();
-    final periodEnd = bounds.$2.subtract(const Duration(days: 1));
-    final periodEndDay =
-        DateTime(periodEnd.year, periodEnd.month, periodEnd.day);
-    if (periodEndDay.isAfter(today)) return today;
-    return periodEndDay;
   }
 
   DateTime _normalizeDay(DateTime value) =>
@@ -542,43 +533,6 @@ class StatisticsProvider with ChangeNotifier {
     }
 
     return completed.isBefore(due) || completed.isAtSameMomentAs(due);
-  }
-
-  bool _isTaskRelevantInRange(
-    Task task,
-    DateTime startInclusive,
-    DateTime endExclusive,
-  ) {
-    if (_isInRange(task.createdAt, startInclusive, endExclusive)) {
-      return true;
-    }
-    if (task.completedAt != null &&
-        _isInRange(task.completedAt!, startInclusive, endExclusive)) {
-      return true;
-    }
-    if (task.dueDate != null &&
-        _isInRange(task.dueDate!, startInclusive, endExclusive)) {
-      return true;
-    }
-    return false;
-  }
-
-  int _countOverdueTasks(List<Task> tasks, DateTime rangeStart) {
-    final referenceDay = _overdueReferenceDate();
-    final referenceExclusive = referenceDay.add(const Duration(days: 1));
-
-    return tasks.where((task) {
-      if (task.isCompleted || task.dueDate == null) return false;
-      if (!task.dueDate!.isBefore(referenceExclusive)) return false;
-
-      switch (_activeRange) {
-        case StatisticsRange.today:
-          return true;
-        case StatisticsRange.week:
-        case StatisticsRange.month:
-          return !task.dueDate!.isBefore(rangeStart);
-      }
-    }).length;
   }
 
   List<StatisticsBarPoint> _buildTaskCompletionBars(List<Task> completedTasks) {

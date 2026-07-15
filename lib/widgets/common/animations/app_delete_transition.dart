@@ -52,7 +52,7 @@ class AppCollapseDeleteAnimations {
       size: Tween<double>(begin: 1.0, end: 0.0).animate(
         CurvedAnimation(
           parent: controller,
-          curve: Curves.easeInCubic,
+          curve: Curves.easeInOutCubic,
         ),
       ),
     );

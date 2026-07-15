@@ -42,27 +42,25 @@ class OverviewSection extends StatelessWidget {
               childAspectRatio: aspectRatio,
               children: [
                 TintedAccentCard(
-                  accentColor: const Color(0xFF0277BD),
+                  accentColor: AppColors.statBlue,
                   icon: Icons.task_alt,
                   label: 'Tasks Today',
                   value: '${taskProvider.tasksTodayCount}',
                 ),
                 TintedAccentCard(
-                  accentColor: AppColors.primaryDarkOf(context),
+                  accentColor: AppColors.statGreen,
                   icon: Icons.check_circle_outline,
                   label: 'Completed',
                   value: '${taskProvider.completedTodayCount}',
-                  lightBgAlpha: 0.52,
-                  darkBgAlpha: 0.26,
                 ),
                 TintedAccentCard(
-                  accentColor: AppColors.accentYellow,
+                  accentColor: AppColors.statYellow,
                   icon: Icons.pending_actions_outlined,
                   label: 'Remaining',
                   value: '${taskProvider.remainingTodayCount}',
                 ),
                 TintedAccentCard(
-                  accentColor: const Color(0xFFD32F2F),
+                  accentColor: AppColors.statRed,
                   icon: Icons.event_busy_outlined,
                   label: 'Overdue',
                   value: '${taskProvider.overdueCount}',

@@ -377,7 +377,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
             itemCount: visibleCount,
             itemBuilder: (context, index) {
               final isSelected = _selectedIconIndex == index;
-              final accent = AppColors.projectAccentOf(context, _accentColor);
+              final accent = AppColors.vibrantProjectAccentOf(context, _accentColor);
               return GestureDetector(
                 onTap: () => setState(() => _selectedIconIndex = index),
                 child: AnimatedContainer(
@@ -468,7 +468,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
             itemBuilder: (context, index) {
               final isSelected = _selectedColorIndex == index;
               final raw = CreateProjectScreen.projectColors[index];
-              final color = AppColors.projectAccentOf(context, raw);
+              final color = AppColors.vibrantProjectAccentOf(context, raw);
               final isDark = AppColors.isDark(context);
               return GestureDetector(
                 onTap: () => setState(() => _selectedColorIndex = index),

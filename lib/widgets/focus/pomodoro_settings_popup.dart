@@ -84,6 +84,8 @@ class PomodoroSettingsPopup extends StatelessWidget {
                     initialLongBreakMinutes: initialLongBreakMinutes,
                     initialRounds: initialRounds,
                     initialLongBreakInterval: initialLongBreakInterval,
+                    showSaveButton: false,
+                    autoSaveOnDispose: true,
                     onSave: (focus, shortBreak, longBreak, rounds, interval) {
                       onSave(
                         focus,
@@ -92,7 +94,6 @@ class PomodoroSettingsPopup extends StatelessWidget {
                         rounds,
                         interval,
                       );
-                      Navigator.pop(context);
                     },
                   ),
                 ),

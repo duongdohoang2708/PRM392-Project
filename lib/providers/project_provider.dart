@@ -9,6 +9,7 @@ import 'task_provider.dart';
 
 class ProjectProvider with ChangeNotifier {
   final List<Project> _projects = [];
+  final Set<String> _optimisticallyDeletedIds = {};
   final ProjectRepository _projectRepository = ProjectRepository();
   final TaskRepository _taskRepository = TaskRepository();
   TaskProvider? _taskProvider;
@@ -31,10 +32,11 @@ class ProjectProvider with ChangeNotifier {
       return;
     }
     _projectsSubscription = _projectRepository.watchProjects(uid).listen((projects) {
-      if (_hasSameProjectSnapshot(_projects, projects)) return;
+      final filteredProjects = projects.where((p) => !_optimisticallyDeletedIds.contains(p.id)).toList();
+      if (_hasSameProjectSnapshot(_projects, filteredProjects)) return;
       _projects
         ..clear()
-        ..addAll(projects);
+        ..addAll(filteredProjects);
       _checkAndUpdateProjectStatuses();
       notifyListeners();
     });
@@ -143,7 +145,7 @@ class ProjectProvider with ChangeNotifier {
   Future<void> addProject(Project project) async {
     final uid = _uid;
     if (uid == null) return;
-    await _projectRepository.createProject(uid, project);
+    unawaited(_projectRepository.createProject(uid, project));
   }
 
   Future<void> updateProject(Project updated) async {
@@ -157,12 +159,14 @@ class ProjectProvider with ChangeNotifier {
       notifyListeners();
     }
 
-    await _projectRepository.updateProject(uid, updated);
+    unawaited(_projectRepository.updateProject(uid, updated));
   }
 
   Future<void> deleteProject(String id) async {
     final uid = _uid;
     if (uid == null) return;
+
+    _optimisticallyDeletedIds.add(id);
 
     final removedIndex = _projects.indexWhere((project) => project.id == id);
     if (removedIndex != -1) {
@@ -170,8 +174,8 @@ class ProjectProvider with ChangeNotifier {
       notifyListeners();
     }
 
-    await _taskRepository.deleteTasksByProjectId(uid, id);
-    await _projectRepository.deleteProject(uid, id);
+    unawaited(_taskRepository.deleteTasksByProjectId(uid, id));
+    unawaited(_projectRepository.deleteProject(uid, id));
   }
 
   Project? findById(String id) {

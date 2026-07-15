@@ -393,7 +393,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   }
 
   Widget _buildTitleCard(Color projectAccent) {
-    final projectDot = AppColors.projectAccentOf(context, projectAccent);
+    final projectDot = AppColors.vibrantProjectAccentOf(context, projectAccent);
 
     return _buildCard(
       padding: const EdgeInsets.all(20),
@@ -422,6 +422,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               children: [
                 TextField(
                   controller: _titleController,
+                  maxLines: null,
+                  keyboardType: TextInputType.text,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

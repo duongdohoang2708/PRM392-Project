@@ -673,7 +673,7 @@ class _TodayGoalsSection extends StatelessWidget {
             valueText: '${focusGoal.current}/${focusGoal.goal} min',
             captionText: _focusCaption,
             progress: focusGoal.progress,
-            accent: isRestDay ? freezeAccent : AppColors.primaryDarkOf(context),
+            accent: isRestDay ? freezeAccent : const Color(0xFF5E8F5D),
             icon: Icons.timer_outlined,
           ),
         ];

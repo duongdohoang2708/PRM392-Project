@@ -456,8 +456,6 @@ class _AchievementCard extends StatelessWidget {
         return Icons.timer_outlined;
       case AchievementCategory.streak:
         return Icons.local_fire_department;
-      case AchievementCategory.perfectDays:
-        return Icons.workspace_premium_outlined;
       case AchievementCategory.tasksCompleted:
         return Icons.task_alt;
     }
@@ -473,8 +471,6 @@ class _AchievementCard extends StatelessWidget {
     final bgColor = unlocked
         ? AppColors.primaryLightTintOf(context, alpha: isDark ? 0.35 : 0.45)
         : AppColors.cardSurfaceFillOf(context);
-    final iconAccent =
-        unlocked ? AppColors.primaryDarkOf(context) : AppColors.textSecondaryOf(context);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -495,15 +491,12 @@ class _AchievementCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               AccentIconWell(
-                accentColor: iconAccent,
+                accentColor: accent,
                 icon: _icon,
                 size: 35,
                 iconSize: 16,
                 borderRadius: 10,
                 muted: !unlocked,
-                iconColor: unlocked && isDark
-                    ? const Color(0xFF9AE8A0)
-                    : null,
               ),
               Icon(
                 unlocked ? Icons.check_circle : Icons.lock_outline,

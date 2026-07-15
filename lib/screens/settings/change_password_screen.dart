@@ -66,15 +66,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'For this demo, your current password is "password123".',
-                style: TextStyle(
-                  color: AppColors.textSecondaryOf(context),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 20),
               CustomTextField(
                 hintText: 'Current password',
                 controller: _currentController,

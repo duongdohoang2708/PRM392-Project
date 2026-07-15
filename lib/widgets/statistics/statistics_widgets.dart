@@ -516,7 +516,7 @@ class FocusGoalProgressPanel extends StatelessWidget {
       valueText: _valueText,
       captionText: _captionText,
       progress: data.isSingleDay && data.isRestDay ? 1 : data.progress,
-      accent: AppColors.primaryDarkOf(context),
+      accent: const Color(0xFF5E8F5D),
       icon: Icons.flag_rounded,
     );
   }

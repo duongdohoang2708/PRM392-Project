@@ -13,7 +13,6 @@ enum AchievementCategory {
   sessions,
   focusMinutes,
   streak,
-  perfectDays,
   tasksCompleted,
 }
 
@@ -31,7 +30,7 @@ class DailyGoalData {
   int get remaining => (goal - current) <= 0 ? 0 : goal - current;
   bool get isCompleted => goal == 0 || current >= goal;
   double get progress =>
-      goal == 0 ? 1 : (current / goal).clamp(0, 1).toDouble();
+      goal == 0 ? 0 : (current / goal).clamp(0, 1).toDouble();
 }
 
 class Achievement {
@@ -481,13 +480,11 @@ class GoalsProvider with ChangeNotifier {
     final sessionCount = totalSessions;
     final minutes = totalFocusMinutes;
     final streak = currentStreak;
-    final perfectDays = completeDaysCount;
     final completedTasks = completedTasksAllTime;
 
     const sessionTargets = [1, 5, 10, 25, 50, 100, 200, 500];
     const minuteTargets = [60, 150, 300, 600, 1500, 3000, 6000];
     const streakTargets = [2, 5, 10, 20, 30, 50];
-    const perfectDayTargets = [1, 3, 7, 14, 30, 60];
     const taskTargets = [10, 25, 50, 100, 200, 500];
 
     return [
@@ -511,13 +508,6 @@ class GoalsProvider with ChangeNotifier {
           category: AchievementCategory.streak,
           target: target,
           current: streak,
-        ),
-      for (final target in perfectDayTargets)
-        Achievement(
-          title: '$target perfect days',
-          category: AchievementCategory.perfectDays,
-          target: target,
-          current: perfectDays,
         ),
       for (final target in taskTargets)
         Achievement(

@@ -50,15 +50,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   }
 
   Future<void> _confirmDeleteProject(BuildContext parentContext, Project project) async {
-    final dialogContext = navigatorKey.currentContext ?? parentContext;
+    if (!parentContext.mounted) return;
     final confirmed = await AppConfirmDialog.show(
-      dialogContext,
+      parentContext,
       title: 'Delete Project',
       content:
           'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
       confirmLabel: 'Delete',
       confirmButtonStyle: AppConfirmButtonStyle.destructive,
-      fillColor: AppColors.popupPanelOverlayFillOf(dialogContext),
     );
     if (confirmed != true || !parentContext.mounted) return;
 
@@ -70,15 +69,15 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
     try {
       await provider.deleteProject(projectId);
-      AppNotification.showError(
-        navigatorKey.currentContext ?? parentContext,
-        'Project "$projectName" deleted',
-      );
+      final notifyCtx = navigatorKey.currentContext;
+      if (notifyCtx != null && notifyCtx.mounted) {
+        AppNotification.showSuccess(notifyCtx, 'Project "$projectName" deleted');
+      }
     } catch (_) {
-      AppNotification.showError(
-        navigatorKey.currentContext ?? parentContext,
-        'Failed to delete project. Please try again.',
-      );
+      final notifyCtx = navigatorKey.currentContext;
+      if (notifyCtx != null && notifyCtx.mounted) {
+        AppNotification.showError(notifyCtx, 'Failed to delete project. Please try again.');
+      }
     }
   }
 

@@ -30,16 +30,14 @@ Future<void> _handleDeleteProject(
   if (!context.mounted) return;
 
   final slidable = Slidable.of(context);
-  final dialogContext = navigatorKey.currentContext ?? context;
 
   final confirmed = await AppConfirmDialog.show(
-    dialogContext,
+    context,
     title: 'Delete Project',
     content:
         'Are you sure you want to delete "${project.name}"? All tasks associated with this project will be deleted permanently.',
     confirmLabel: 'Delete',
     confirmButtonStyle: AppConfirmButtonStyle.destructive,
-    fillColor: AppColors.popupPanelOverlayFillOf(dialogContext),
   );
 
   if (confirmed != true) {
@@ -279,7 +277,9 @@ class _ProjectCollection extends StatelessWidget {
           final int rows = (projects.length / cols).ceil();
           final double totalHeight = rows > 0 ? (rows * rowHeight - spacing) : 0;
 
-          return SizedBox(
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOutCubic,
             width: double.infinity,
             height: totalHeight,
             child: Stack(
@@ -300,7 +300,6 @@ class _ProjectCollection extends StatelessWidget {
                   height: itemHeight,
                   child: StaggeredListEntry(
                     index: index,
-                    disableEntranceAnimation: true,
                     child: _ProjectGridCard(project: project),
                   ),
                 );
@@ -310,20 +309,18 @@ class _ProjectCollection extends StatelessWidget {
         },
       );
     } else {
-      content = ListView.builder(
+      content = Column(
         key: ValueKey('list_${provider.activeFilter}'),
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: projects.length,
-        itemBuilder: (context, index) {
-          final project = projects[index];
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: projects.asMap().entries.map((entry) {
+          final index = entry.key;
+          final project = entry.value;
           return StaggeredListEntry(
             key: ValueKey('proj_list_${project.id}'),
             index: index,
-            disableEntranceAnimation: true,
             child: _ProjectListItem(project: project),
           );
-        },
+        }).toList(),
       );
     }
 
@@ -376,13 +373,6 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
     });
 
     _animationController.forward().then((_) {
-      if (!mounted || _deleteTriggered) return;
-      _deleteTriggered = true;
-      unawaited(_performDelete());
-    });
-
-    // Fallback
-    Future.delayed(const Duration(milliseconds: 650), () {
       if (!mounted || _deleteTriggered) return;
       _deleteTriggered = true;
       unawaited(_performDelete());
@@ -442,7 +432,10 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
           decoration: BoxDecoration(
             color: AppColors.panelFillOf(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderOf(context)),
+            border: Border.all(
+              color: AppColors.projectBorderOf(context, accentColor),
+              width: 2.0,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -455,12 +448,8 @@ class _ProjectGridCardState extends State<_ProjectGridCard> with SingleTickerPro
             borderRadius: BorderRadius.circular(16),
             child: Stack(
               children: [
-                Positioned(
-                  left: 0, top: 0, bottom: 0, width: 5,
-                  child: Container(color: accentColor),
-                ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -680,17 +669,6 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
         unawaited(_performDelete());
       }
     });
-
-    Future.delayed(const Duration(milliseconds: 550), () {
-      if (mounted && _isAnimating && !_deleteTriggered) {
-        _deleteTriggered = true;
-        unawaited(_performDelete());
-        _animationController.reset();
-        setState(() {
-          _isAnimating = false;
-        });
-      }
-    });
   }
 
   Future<void> _performDelete() async {
@@ -746,7 +724,10 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
           decoration: BoxDecoration(
             color: AppColors.panelFillOf(context),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.borderOf(context)),
+            border: Border.all(
+              color: AppColors.projectBorderOf(context, accentColor),
+              width: 2.0,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
@@ -755,18 +736,10 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Stack(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Row(
               children: [
-                Positioned(
-                  left: 0, top: 0, bottom: 0, width: 5,
-                  child: Container(color: accentColor),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                  child: Row(
-                    children: [
                       // Icon
                       AccentIconWell(
                         accentColor: accentColor,
@@ -854,9 +827,6 @@ class _ProjectListItemState extends State<_ProjectListItem> with SingleTickerPro
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
         ),
       ),
     );

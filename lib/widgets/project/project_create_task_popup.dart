@@ -353,6 +353,8 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
           Expanded(
             child: TextField(
               controller: _titleController,
+              maxLines: null,
+              keyboardType: TextInputType.text,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -398,6 +400,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
           _buildInfoRow(
             icon: Icons.calendar_today,
             label: 'Date',
+            projectColor: projectColor,
             child: Builder(
               builder: (tapContext) => InkWell(
                 onTap: () => _selectDate(tapContext),
@@ -422,6 +425,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
           _buildInfoRow(
             icon: Icons.access_time,
             label: 'Time',
+            projectColor: projectColor,
             child: Builder(
               builder: (tapContext) => InkWell(
                 onTap: () => _selectTime(tapContext),
@@ -448,10 +452,11 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
           _buildInfoRow(
             icon: Icons.all_inclusive,
             label: 'All Day',
+            projectColor: projectColor,
             child: Switch(
               value: _isAllDay,
-              activeTrackColor: AppColors.primaryDarkOf(context).withValues(alpha: 0.5),
-              activeThumbColor: AppColors.primaryDarkOf(context),
+              activeTrackColor: projectColor.withValues(alpha: 0.5),
+              activeThumbColor: projectColor,
               onChanged: (val) {
                 setState(() {
                   _isAllDay = val;
@@ -464,6 +469,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
           _buildInfoRow(
             icon: Icons.flag_outlined,
             label: 'Priority',
+            projectColor: projectColor,
             child: AppDropdown<String>(
               value: _priority,
               isExpanded: true,
@@ -485,6 +491,7 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
           _buildInfoRow(
             icon: Icons.notifications,
             label: 'Reminder',
+            projectColor: projectColor,
             child: ReminderSelector(
               value: _reminder,
               isAllDay: _isAllDay,
@@ -500,10 +507,11 @@ class _ProjectCreateTaskPopupState extends State<ProjectCreateTaskPopup> {
     required IconData icon,
     required String label,
     required Widget child,
+    required Color projectColor,
   }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppColors.primaryDarkOf(context)),
+        Icon(icon, size: 20, color: projectColor),
         const SizedBox(width: 12),
         Text(
           label,

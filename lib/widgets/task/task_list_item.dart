@@ -394,7 +394,7 @@ class _TaskListItemState extends State<TaskListItem>
     final Color projectColor = Color(project.colorValue);
     final showProject = _hasAssignedProject(projectLabel, project);
     final accent = showProject
-        ? AppColors.projectAccentOf(context, projectColor)
+        ? AppColors.vibrantProjectAccentOf(context, projectColor)
         : AppColors.primaryDarkOf(context);
 
     final mainContent = Container(
@@ -550,21 +550,25 @@ class _TaskListItemState extends State<TaskListItem>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        context.read<TaskProvider>().toggleTaskImportance(
-                          widget.task.id,
-                        );
-                      },
+                      onTap: _isCompletedLocal
+                          ? null
+                          : () {
+                              context.read<TaskProvider>().toggleTaskImportance(
+                                    widget.task.id,
+                                  );
+                            },
                       child: Icon(
                         widget.task.isImportant
                             ? Icons.star
                             : Icons.star_border,
-                        color: widget.task.isImportant
-                            ? AppColors.accentYellow
-                            : AppOpacity.fixed(
-                                AppColors.textSecondaryOf(context),
-                                AppOpacity.textMuted,
-                              ),
+                        color: _isCompletedLocal
+                            ? AppColors.textSecondaryOf(context).withValues(alpha: 0.3)
+                            : (widget.task.isImportant
+                                ? AppColors.accentYellow
+                                : AppOpacity.fixed(
+                                    AppColors.textSecondaryOf(context),
+                                    AppOpacity.textMuted,
+                                  )),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -644,8 +648,9 @@ class _TaskListItemState extends State<TaskListItem>
                         Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
-                            onPressed: widget.task.subTasks
-                                    .any((st) => st.title.trim().isEmpty)
+                            onPressed: _isCompletedLocal ||
+                                    widget.task.subTasks
+                                        .any((st) => st.title.trim().isEmpty)
                                 ? null
                                 : _addSubTask,
                             icon: const Icon(Icons.add, size: 18),

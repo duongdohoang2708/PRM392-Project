@@ -196,13 +196,15 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         initialRounds: focusProvider.rounds,
         initialLongBreakInterval: focusProvider.longBreakInterval,
         onSave: (focus, shortBreak, longBreak, rounds, interval) {
-          focusProvider.updateSettings(
-            focus: focus,
-            shortBreak: shortBreak,
-            longBreak: longBreak,
-            rounds: rounds,
-            interval: interval,
-          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            focusProvider.updateSettings(
+              focus: focus,
+              shortBreak: shortBreak,
+              longBreak: longBreak,
+              rounds: rounds,
+              interval: interval,
+            );
+          });
         },
       ),
     );
